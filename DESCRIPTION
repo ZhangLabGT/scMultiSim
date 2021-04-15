@@ -1,0 +1,39 @@
+Package: scMultiSim
+Title: Simulation of Multi-Modality Single Cell Data Guided By Regulatory Networks
+Version: 0.0.0.1
+Authors@R: as.person(c(
+    "Xiuwei Zhang <zhangxiuwei03@gmail.com> [aut, cre]", 
+    "Michael Squires <squiresmf@gatech.edu> [aut, cre]"
+  ))
+Description: This package simulates single cell RNA sequencing and RNA velocity data, incorporating mechanisms of regulatory networks and chromatin accessibility, allowing users to tune various parameters relating to the variation of gene-expression levels, the influence of chromatin accessibility on RNA sequence data, and the splicing and degredation rate associated with each gene. It can be used to benchmark compulational methods for single cell RNA-Seq data, and to assist in experimental design of wet-lab experiments.
+License: Artistic-2.0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0.9000
+Depends:
+    R (>= 3.5.0),
+    plyr,
+    ggplot2, 
+    Rtsne,
+    grid,
+    reshape,
+    RColorBrewer,
+    Biobase,
+    ape,
+    MASS,
+    stringi,
+    roxygen2,
+    phytools,
+    repr,
+    IRanges,
+    S4Vectors,
+    SummarizedExperiment,
+    KernelKnn,
+    gplots
+Suggests:
+   knitr,
+   rmarkdown
+VignetteBuilder: knitr
+Author: Xiuwei Zhang [aut, cre],
+  Michael Squires [aut, cre]
+Maintainer: Michael Squires <squiresmf@gatech.edu>
