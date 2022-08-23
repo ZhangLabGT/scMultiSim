@@ -16,15 +16,21 @@ ClusterQuality(
 )
 }
 \arguments{
-\item{data:}{transcriptomics matrix}
+\item{data}{transcriptomics matrix}
 
-\item{meta:}{information about cells, must contain 'pop' column}
+\item{meta}{information about cells, must contain 'pop' column}
 
-\item{n_pc:}{number of principal components that is fed to tsne}
+\item{n_pc}{number of principal components that is fed to tsne}
 
-\item{perplexity:}{perplexity parameter for tsne}
+\item{perplexity}{perplexity parameter for tsne}
 
-\item{dims:}{number of dimensions kept after tsne}
+\item{dims}{number of dimensions kept after tsne}
+
+\item{npop}{number of populations}
+
+\item{return_kmeans}{if true returns kmeans information}
+
+\item{pca_scale}{whether or not to scale pca}
 }
 \description{
 how well can the cell population be reconstructed by dimensionality reduction methods

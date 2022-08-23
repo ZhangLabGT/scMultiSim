@@ -1,35 +1,18 @@
-# SymSim
-SymSim (Synthetic model of multiple variability factors for Simulation) is an R package for simulation of single cell RNA-Seq data. 
+# scMultiSim
+scMultiSim is an in-silico simulator that generates multi-modality data of single cells, including gene-expression data and chromatin accessibility data, guided by gene regulatory networks. In particular, we generate both unspliced counts and spliced counts as measures of gene-expression, as well as the true RNA velocity.  Technical noise can be added to generate observed RNA-seq counts (which can be read counts or UMI counts) from true transcript counts.   Technical noise considers capture efficiency, amplification bias, sequencing depth and batch effects.  
+
+Refer to the [scMultiSim vignette](https://github.com/squiresmf/scMultiSim/blob/master/vignettes/scMultiSimTutorial.Rmd) for examples of using scMultiSim to simulate datasets and for a description of tool functionalities.
 
 ### Install from Github
-This package can be installed with R package devtools. First, pull the package with git clone to your working directory. Make sure that you have installed the packages listed in the DESCRIPTION file.
-
-The required Bioconductor packages can be installed as follows in R:
-```
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("IRanges")
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("Biobase")
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("S4Vectors")
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("SummarizedExperiment")
-```
-To install SymSim, run:
-```{r}
+This package can be installed with R package devtools.  The following installs scMultiSim and other necessary packages:
+```{r, message=F, warning=F, eval=T}
 library("devtools")
-devtools::install_github("YosefLab/SymSim")
+devtools::install_github("squiresmf/scMultiSim")
+library("scMultiSim")
+list.of.packages <- c("reshape", "ape", "phytools", "repr", "KernelKnn")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 ```
-
-### Generating datasets with SymSim
-
-Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vignettes/SymSimTutorial.Rmd) for examples of using SymSim to simulate datasets.
-
-[New feature] SymSim can now generate co-expressed gene modules. A new argument to the function `SimulateTrueCounts()` which is `gene_module_prop` represent the proportion of genes the user wants to be in gene modules. The smallest module size is 10 genes. For example, if the total number of genes in modules is 100, and the total number of populations is 5, then the 100 genes are randomy assigned to 5 gene modules. A gene module often correspond to a population, meaning that that set of genes tend to be highly expressed in a given population, but there is no guarantee on this. In the output of the function `SimulateTrueCounts()` there is an element `is_in_module` which gives the module ID for each gene (0 means the gene is not in any module).
 
 ### References
 

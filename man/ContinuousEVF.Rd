@@ -15,7 +15,8 @@ ContinuousEVF(
   Sigma,
   plotting = T,
   plotname = "cont_evf.pdf",
-  seed
+  seed,
+  num_regulators
 )
 }
 \arguments{
@@ -41,7 +42,7 @@ ContinuousEVF(
 
 \item{seed}{the random seed}
 
-\item{tip}{The leaf that the path with impulse lead to}
+\item{num_regulators}{number of regulator genes}
 }
 \value{
 a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)

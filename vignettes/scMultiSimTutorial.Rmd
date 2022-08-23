@@ -1,0 +1,297 @@
+---
+title: "scMultiSim: simulation of multi-modality single cell data guided by gene regulatory networks"
+#author: "Xiuwei Zhang, Michael Squires"
+#date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r "setup", include=FALSE}
+require("knitr")
+opts_chunk$set(fig.width=4, fig.height=3)
+```
+
+
+scMultiSim is an in-silico simulator that generates multi-modality data of single cells, including gene-expression data and chromatin accessibility data, guided by gene regulatory networks. In particular, we generate both unspliced counts and spliced counts as measures of gene-expression, as well as the true RNA velocity.  Technical noise can be added to generate observed RNA-seq counts (which can be read counts or UMI counts) from true transcript counts.   Technical noise considers capture efficiency, amplification bias, sequencing depth and batch effects. At different steps, users have control on the amount of extrinsic variation, intrinsic variation and technical variation.  Technical noise can be added to chromatin accessibility data as well, and batch effects can be added to both gene-expression and chromatin accessibility data.
+
+scMultiSim can be used to benchmark challenging computational tasks, including:
+
+1. Inference of gene regulatory networks,
+
+2. Estimation of RNA velocity,
+
+3. Integration of single cell datasets from multiple batches and multiple modalities.
+
+In scMultiSim each cell has an EVF (external variability factor) vector which defines the identity of the cell.  Each gene has a gene effect vector of the same length as the EVF vector, and can be thought of as the weights of EVFs.  We use the two-state kinetic model to sample the true transcript count for each gene in each cell, and the parameters of the kinetic model (k~on~, k~off~, s) are calculated from external variability factors (EVFs) and gene-specific effects (or gene effect). The gene effect vectors allow us to simulate differentially expressed genes or co-expressed genes.  The transcription factors in the regulatory networks are added to the EVFs to represent extra factors that determine a cell’s identity. We add another set of EVFs which control the scATAC-Seq data. The relationship between scATAC-Seq and scRNA-Seq data is modeled through the kinetic parameter k~on~, that is, we consider that the chromatin accessibility affects the probability a gene is switched on.
+
+
+### Install scMultiSim and necessary packages
+```{r, message=F, warning=F, eval=T}
+library("devtools")
+# REMOVE AUTH TOKEN WHEN TAKING REPO PUBLIC
+# devtools::install_github("squiresmf/scMultiSim", auth_token = "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")
+devtools::load_all("~/repo/scMultiSim")
+library("scMultiSim")
+list.of.packages <- c("reshape", "ape", "phytools", "repr", "KernelKnn", "gridExtra")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+library(gridExtra)
+```
+
+## Main functions
+
+**SimulateTrueCounts( )** and **True2ObservedCounts( )** are the two major functions to generate datasets. SimulateTrueCounts generates true transcript counts for the given number of genes and cells.  SimulateTrueCounts can be performed two ways:
+1. Using a velocity module, in which unspliced counts are generated according to the two-state kinetic model, and spliced counts are generated from unspliced counts at a given rate and degrade at a given rate. This module is implemented via the parameter do_velocity=TRUE, and will generate true unspliced counts and true RNA velocity in addition to true spliced counts.
+2. Using an approximation of the kinetic model via the beta poisson distribution to directly generate true (spliced) counts.  This module is implemented via the parameter do_velocity=FALSE, and does not generate unspliced counts or RNA velocity.
+
+True2ObservedCounts then simulates the library preparation and sequencing procedures, and converts the true transcript counts into observed read counts or UMI counts.
+
+The input parameters of the package allow users to control intrinsic variation, technical variation and biological variation in the data. Intrinsic variation is modeled through the kinetic model; technical variation takes into account dropouts, amplification biases including length bias and GC bias, and batch effects; biological variation is modeled by EVFs (extrinsic variation factors).
+
+**SimulateTrueCounts( )** returns a list of eleven elements:
+
+1. A matrix containing the true (spliced) transcript counts
+
+2. Gene level meta information
+
+3. Cell level meta information, including a matrix of EVFs and a vector of cell identity (for example, the population the cell belongs to)
+
+4. The parameters k~on~, k~off~ and s used to simulation the true counts
+
+5. A matrix containing the true unspliced transcript counts
+
+6. The true RNA velocity information for each cell
+
+7. The pseudotime at which the cell counts were generated
+
+8. The scATAC-seq data
+
+9. The matrix region2gene, a 0 1 matrix of shape (nregions) x (num_genes), where a value of 1 indicates the gene is affected by the accessibility of the particular chromatin region
+
+10. Gene effects of each regulator gene (column) on every gene ID (row)
+
+11. The number of genes used in the experiment
+
+**True2ObservedCounts( )** returns a matrix containing the observed read counts or UMI counts
+
+**True2ObservedATAC( )** takes the ATAC-seq matrix and adds returns a ATAC-seq matrix with technical noise added.  This is accomplished by considering each integer count in the ATAC-seq matrix to be present in the observed data with a given probability, by sampling from a binomial distribution with number of trials equal to number of ATAC-seq counts and probability equal to the given probability.  Normally distributed noise is then added, with mean zero and standard deviation equal to the ATAC-seq value multiplied by a fractional value provided by the user.
+
+**DivideBatches( )** takes the output of True2ObservedCounts( ) or True2ObservedATAC( ) as input and splits the data into multiple batches while adding batch effect for each batch. The batch information of each cell is in the output cell level meta information.
+
+Description of input parameters for these functions can be found at the end of this document.
+
+## Simulating multiple continuous populations
+scMultiSim simulates multiple continuously differentiated cell populations, requiring a user-provided cell differentiation tree. A tree with five leaves (five populations) can be generated as follows:
+```{r,cache=T}
+phyla1 <- Phyla5()
+```
+or read from a file with the tree in Newick format:
+```{r,cache=T}
+phyla2 <- read.tree(system.file("extdata", "Newick_ABCDE.txt", package = "scMultiSim"))
+```
+To visualize the continuous populations, we color the cells by the edges they belong to on the tree. We then label both the internal and tip nodes of the tree.
+```{r,cache=T, warning=FALSE,fig.width=7, fig.height=3}
+par(mfrow=c(1,2))
+plot(phyla1); nodelabels()
+plot(phyla2); nodelabels()
+```
+
+
+Simulation results in scMultiSim are guided by gene regulatory networks, and gene regulatory network data is required to run the simulation.  Specifically, a GRN parameters matrix is required which contains 3 columns, where:
+
+- column 1 is the integer target (regulated) gene ID,
+
+- column 2 is the integer gene ID which acts as a transcription factor for the target (regulated) gene
+
+- column 3 is the numeric effect of the column 2 gene ID on the column 1 gene ID
+
+scMultiSim is prepackaged with 2 example GRN datasets, one with 100 genes, 6 of which are regulators
+```{r,cache=T}
+data(GRN_params_100); GRN_params = GRN_params_100
+```
+and another GRN dataset with 1139 genes, 6 of which are regulators
+```{r,cache=T}
+data(GRN_params_1139); GRN_params = GRN_params_1139
+```
+In addition to the cell differentiation tree and GRN, gene expression is influenced by chromatin accessibility, as represented by ATAC-seq data.  Each gene can be associated with 0, 1, or more chromatin regions.  Users can specify the likelihood of each gene in being associated with a certain number of consecutive regions by providing a list of cumulative probabilities to the parameter *nregions_distribution*, the probability that a gene is regulated by respectively 0, 1, ..., (length(nregions_distribution) - 1) consecutive regions.
+
+True counts generated for the five population tree incorporating the 100 gene GRN and the RNA velocity module can thus be simulated:
+```{r,cache=T}
+data(GRN_params_100); GRN_params = GRN_params_100
+myTree <- ape::read.tree(text='(A);')
+myTree <- compute.brlen(myTree, 1)
+p3 <- Phyla3()
+results <- SimulateTrueCounts(GRN_params, num_cells = 1000, unregulated_to_regulated_gene_ratio = 0.1, num_evfs = 500, diffEVF_fraction = 0.9, Sigma = 0.1,
+                              atac_effect = 0.5, beta = 0.4, d = 1, num_cycles = 2, cycle_length = 1.0, intrinsic_noise = 1, phyla = p3, randseed = 0,
+                              do_velocity = T, nregions_distribution = cumsum(c(0.1, 0.5, 0.4)))
+```
+True spliced count results can be visualized in Tsne space as follows:
+```{r,cache=T}
+plot = PlotTsne(meta = results$cell_meta$pop, data = log2(results$counts + 1), label = 'pop', saving = F, plotname = 'True RNA Counts Tsne')
+print(plot[[2]])
+```
+
+Similarly, for true unspliced counts:
+```{r,cache=T}
+plot = PlotTsne(meta = results$cell_meta$pop, data = log2(results$unspliced_counts + 1), label = 'pop', saving = F, plotname = 'True Unspliced RNA Counts Tsne')
+print(plot[[2]])
+```
+
+And for true ATAC-seq:
+```{r,cache=T}
+plot = PlotTsne(meta = results$cell_meta$pop, data = log2(results$atacseq_data + 1), label = 'pop', saving = F, plotname = 'True ATAC-seq Data Tsne')
+print(plot[[2]])
+```
+
+For the true counts computed above, taking them through the library preparation and sequencing procedures will yield read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
+```{r, warning=FALSE,cache=T}
+data(gene_len_pool)
+gene_len <- sample(gene_len_pool, results$num_genes, replace = FALSE)
+observed_counts <- True2ObservedCounts(true_counts = results$counts, meta_cell = results$cell_meta, randseed = 0, protocol = "nonUMI", alpha_mean = 0.1, alpha_sd = 0.05, gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3)
+tsne_rnaseq_noisy <- PlotTsne(meta = results$cell_meta$pop, data = log2(observed_counts+1), label = 'pop', saving = F, plotname = "Observed RNA Counts")
+print(tsne_rnaseq_noisy[[2]])
+```
+
+One can plot the mean-variance relationship in the observed read counts:
+```{r,cache=T,fig.width=4, fig.height=4}
+plot(log2(rowMeans(observed_counts)+1), log2(apply(observed_counts,1,cv)), col=adjustcolor("blue", alpha.f = 0.5), pch=19, xlab="log2(mean+1)", ylab="log2(CV)")
+```
+
+The same process can be used to produce observed unspliced RNA counts.
+```{r, warning=FALSE,cache=T}
+observed_unspliced_counts <- True2ObservedCounts(true_counts = results$unspliced_counts, meta_cell = results$cell_meta, randseed = 0, protocol = "nonUMI", alpha_mean = 0.1, alpha_sd = 0.05, gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3)
+tsne_unspliced_rnaseq_noisy <- PlotTsne(meta = results$cell_meta$pop, data = log2(observed_unspliced_counts+1), label = 'pop', saving = F, plotname = "Observed Unspliced RNA Counts")
+print(tsne_unspliced_rnaseq_noisy[[2]])
+```
+
+A simple model of technical noise can also be added to produce observed ATAC-seq data as follows:
+```{r, warning=FALSE,cache=T}
+observed_atacseq <- True2ObservedATAC(results$atacseq_data, randseed = 0, observation_prob = 0.3, sd_frac = 0.5)
+tsne_observed_atacseq <- PlotTsne(meta = results$cell_meta$pop, data = log2(observed_atacseq + 1), label = 'pop', saving = F, plotname = "Observed ATAC-seq")
+print(tsne_observed_atacseq[[2]])
+```
+## Add batch effects
+We can divide the data we simulated using the previous steps into multiple batches and add batch effects to each batch.  This can be done for spliced RNA-seq counts:
+```{r, warning=FALSE,cache=T, fig.width=7, fig.height=4}
+observed_counts_2batches <- DivideBatches(counts = observed_counts, meta_cell = results$cell_meta, nbatch = 2, batch_effect_size = 3)
+tsne_batches_b <- PlotTsne(meta = observed_counts_2batches$cell_meta$batch, data = log2(observed_counts_2batches$counts + 1), label = 'batch', saving = F, plotname = "Observed RNA Counts in Batches")
+tsne_batches_p <- PlotTsne(meta = observed_counts_2batches$cell_meta$pop, data = log2(observed_counts_2batches$counts + 1), label = 'pop', saving = F, plotname = "Observed RNA Counts in Batches")
+tsne_batches = grid.arrange(tsne_batches_b[[2]], tsne_batches_p[[2]], ncol=2)
+```
+
+For unspliced RNA-seq counts:
+```{r, warning=FALSE,cache=T, fig.width=7, fig.height=4}
+observed_unspliced_counts_2batches <- DivideBatches(counts = observed_unspliced_counts, meta_cell = results$cell_meta, nbatch = 2, batch_effect_size = 3)
+tsne_batches_b <- PlotTsne(meta = observed_unspliced_counts_2batches$cell_meta$batch, data = log2(observed_unspliced_counts_2batches$counts + 1), label = 'batch', saving = F, plotname = "Observed Unspliced RNA Counts in Batches")
+tsne_batches_p <- PlotTsne(meta = observed_unspliced_counts_2batches$cell_meta$pop, data = log2(observed_unspliced_counts_2batches$counts + 1), label = 'pop', saving = F, plotname = "Observed Unspliced RNA Counts in Batches")
+tsne_batches = grid.arrange(tsne_batches_b[[2]] + theme(plot.title = element_text(size=10)),
+                            tsne_batches_p[[2]] + theme(plot.title = element_text(size=10)), ncol=2)
+```
+
+For ATAC-seq counts:
+```{r, warning=FALSE,cache=T, fig.width=7, fig.height=4}
+observed_atacseq_2batches <- DivideBatches(counts = observed_atacseq, meta_cell = results$cell_meta, nbatch = 2, batch_effect_size = 3)
+tsne_batches_b <- PlotTsne(meta = observed_atacseq_2batches$cell_meta$batch, data = log2(observed_atacseq_2batches$counts + 1), label = 'batch', saving = F, plotname = "Observed ATAC-seq Counts in Batches")
+tsne_batches_p <- PlotTsne(meta = observed_atacseq_2batches$cell_meta$pop, data = log2(observed_atacseq_2batches$counts + 1), label = 'pop', saving = F, plotname = "Observed ATAC-seq Counts in Batches")
+tsne_batches = grid.arrange(tsne_batches_b[[2]] + theme(plot.title = element_text(size=12)),
+                            tsne_batches_p[[2]] + theme(plot.title = element_text(size=12)), ncol=2)
+```
+
+When the velocity module is used to generate simulation results, scMultiSim will generate true unspliced counts and true RNA velocity in addition to true spliced counts.  Velocity result plots can be generated as follows:
+```{r, warning=FALSE,cache=T}
+velo_plots = plotVelo(counts_s = results$counts, velocity = results$velocity, cell_time = results$cell_time, cell_pop = results$cell_meta$pop, saving = F)
+```
+
+This code generates a list of three velocity plots.  The first plot is the raw velocity values overlayed onto the RNA-seq data, as jointly plotted in Tsne space:
+```{r, warning=FALSE,cache=T, fig.width=8, fig.height=8}
+print(velo_plots[[1]])
+```
+
+The second plot is the raw velocity directions which have been normalized to equivalent magnitudes:
+```{r, warning=FALSE,cache=T, fig.width=8, fig.height=8}
+print(velo_plots[[2]])
+```
+
+And the third plot is a gaussian kernel applied to the raw velocity directions to produce a smoothed velocity representation for each cell averaged with the weighted velocity of nearby cells.  These smoothed velocity values are then normalized to equivalent magnitudes:
+```{r, warning=FALSE,cache=T, fig.width=8, fig.height=8}
+print(velo_plots[[3]])
+```
+
+The single cell data generated by scMultiSim is guided by a gene regulatory network.  The following function produces a heat map visualizations indicating the level of gene expression correlation between each pair of genes, where each gene's location on the heatmap axes is determined using hierarchical clustering to place genes with similar patters of expression together on the axes.  The axis color associated with each gene denotes that it is most affected by the regulator gene associated with the gene's color.  If the GRN strongly influences gene expression, then we expect high correlation between genes which are most effected by the same regulator gene, and thus we expect genes with the same axis color are more likely to be placed next to each other by the hierarchical clustering process.
+```{r, warning=FALSE,cache=T, fig.width=6, fig.height=6}
+PlotGeneModuleCorrelationHeatmap(results$counts, GRN_params, results$gene_effects_by_regulator, results$num_genes, GRN_genes_only = F, saving = F)
+```
+
+Additionally, we can calculate the average (mean) correlation between genes which are most affected by the same regulator gene with the following function:
+
+```{r, warning=FALSE,cache=T}
+gene_module_correlation = GetGeneModuleCorrelation(results$counts, GRN_params, results$gene_effects_by_regulator, results$num_genes)
+print(gene_module_correlation)
+```
+
+In addition to the GRN effect on simulated gene expression data, chromatin accessibility (as represented by ATAC-seq data) also influences gene expression data.  Thus, we expect that if chromatin accessibility has a strong effect of on gene expression, then we should be able to detect a correlation between RNA-seq and ATAC-seq data.  This correlation will be weak when many genes are influenced by multiple chromatin regions.
+
+```{r, warning=FALSE,cache=T}
+ATAC_correlation = Get_ATAC_correlation(results$counts, results$atacseq_data, results$num_genes)
+print(ATAC_correlation)
+```
+
+We can detect a stronger correlation between RNA-seq and ATAC-seq data be finding the correlation only for genes which are influenced by a single chromatin region, as follows:
+```{r, warning=FALSE,cache=T}
+ATAC_1region_correlation = Get_1region_ATAC_correlation(results$counts, results$atacseq_data, results$region2gene)
+print(ATAC_1region_correlation)
+```
+
+
+## Description of input parameters for major functions
+Parameters for function SimulateTrueCounts( ) are:  
+**GRN_params** GRN_params is a matrix where: column 1 is the target gene ID, column 2 is the gene ID which acts as a transcription factor for the target (regulated) gene, column 3 is the effect of the column 2 gene ID on the column 1 gene ID\
+**num_cells** total number of cells from all populations\
+**unregulated_to_regulated_gene_ratio** ratio of unregulated genes to regulated genes.  The final number of genes is rounded up to the nearest 10\
+**intrinsic_noise** a 0 to 1 value which is the weight assigned to the random sample from the Beta-Poisson distribution, where the weight of the Beta-Poisson mean value is given a weight of 1 minus the intrinsic noise value.\
+**Sigma** parameter of the std of evf values within the same cell type, controls heterogeneity for each cell type\
+**num_evfs** number of EVFs for each kinetic parameter\
+**diffEVF_fraction** fraction of evfs which are differential evfs between cell types\
+**phyla** a tree which defines relationship between populations\
+**beta** splicing rate of each gene\
+**d** degradation rate of each gene\
+**num_cycles** for generating velocity data, the number of cycles run before sampling the gene expression of a cell\
+**cycle_length** for generating velocity data, a factor which is multiplied by the expected time to transition from kon to koff and back to to form the the length of a cycle\
+**atac_effect** a 0 to 1 value which is the weight assigned to the influence of chromatin accessability data on gene expression\
+**randseed** should produce same result if all other parameters are all the same\
+**do_velocity** set to TRUE to incorporate the RNA velocity simulation module to simulate unspliced and spliced RNA sequence counts and ground truth velocity\
+**nregions_distribution** the probability that a gene is regulated by respectively 0, 1, ..., (length(nregions_distribution) - 1) consecutive regions\
+**p_zero** the proportion of 0s we see in the ATAC-seq data\
+**vary** which kinetic parameters have differential evfs. Can be "all", "kon", "koff", "s", "except_kon", "except_koff", "except_s"\
+**evf_center** the value which evf mean is generated from (default=1)\
+**impulse** when generating continuous populations, use the impulse model or not. Default is FALSE\
+**bimod** adjusts the bimodality of gene expression, thus controlling intrinsic variation\
+**geffect_mean** the mean of gene effect size\
+**gene_effect_prob** probability of non-zero values in the gene effect vectors\
+**gene_effects_sd** controls differences between genes\
+**reffect_mean** the mean of region effect size\
+**region_effect_prob** probability of non-zero values in the region effect vectors\
+**region_effects_sd** controls differences between regions\
+**scale_s** the cell size parameter in (0,1). Use smaller value for cell types known to be small (like naive cells)\
+
+
+Parameters for function True2ObservedCounts( ) are:  
+**true_counts** true transcript counts from function SimulateTrueCounts\
+**meta_cell** cell identity from function SimulateTrueCounts\
+**nbatch** number of batches the cells are sequenced on\
+**protocol** protocol for library preparation, can be "nonUMI" (without UMIs) or "10x" (with UMIs)\
+**alpha_mean** mean capture effeciency of all cells\
+**alpha_sd** standard deviation of capture efficiency of all cells\
+**lenslope** controls the amount of gene length bias\
+**nbins** number of bins to simulate gene length bias\
+**gene_len** gene lengths\
+**amp_bias_limit**  amount of amplification bias\
+**rate_2PCR** PCR efficiency during amplification\
+**nPCR1**  number of PCR cycles in the pre-amplification step\
+**nPCR2**  number of PCR cycles in the second amplification step for fragments\
+**LinearAmp** if linear amplification should be used instead of PCR amplification for the pre-amplification step. Default is FALSE\
+**LinearAmp_coef** the number by which the number of transcript is multiplied if linear amplification is used\
+**depth_mean** mean sequencing depth of all cells\
+**depth_sd** standard deviation of sequencing depth of all cells\

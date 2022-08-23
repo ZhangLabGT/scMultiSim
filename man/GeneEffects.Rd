@@ -5,20 +5,24 @@
 \title{Getting GeneEffects matrices}
 \usage{
 GeneEffects(
-  ngenes,
-  nevf,
+  num_genes,
+  num_evfs,
   randseed,
   prob,
   geffect_mean,
   geffect_sd,
-  evf_res,
-  is_in_module
+  num_diffEVF,
+  regulator_ID_list,
+  target_gene_ID_list,
+  gene_effects_by_regulator
 )
 }
 \arguments{
-\item{ngenes}{number of genes}
+\item{num_genes}{number of genes}
 
-\item{nevf}{number of evfs}
+\item{num_evfs}{number of evfs}
+
+\item{randseed}{should produce same result if all other parameters are all the same}
 
 \item{prob}{the probability that the effect size is not 0}
 
@@ -26,11 +30,13 @@ GeneEffects(
 
 \item{geffect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
 
-\item{evf_res}{the EVFs generated for cells}
+\item{num_diffEVF}{number of diff EVFs}
 
-\item{is_in_module}{a vector of length ngenes. 0 means the gene is not in any gene module. In case of non-zero values, genes with the same value in this vector are in the same module.}
+\item{regulator_ID_list}{list of the IDs of regulator genes}
 
-\item{randomseed}{(should produce same result if ngenes, nevf and randseed are all the same)}
+\item{target_gene_ID_list}{list of the IDs of target genes}
+
+\item{gene_effects_by_regulator}{gene effects of each regulator gene (column) on every gene ID (row)}
 }
 \value{
 a list of 3 matrices, each of dimension ngenes * nevf

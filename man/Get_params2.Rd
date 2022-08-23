@@ -7,22 +7,19 @@
 Get_params2(gene_effects, evf, bimod, ranges)
 }
 \arguments{
-\item{gene_effects}{a list of three matrices (generated using the GeneEffects function), 
+\item{gene_effects}{a list of three matrices (generated using the GeneEffects function),
 each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows.}
 
 \item{evf}{a vector of length nevf, the cell specific extrinsic variation factor}
 
 \item{bimod}{the bimodality constant}
 
-\item{param_realdata}{the fitted parameter distribution to sample from}
+\item{ranges}{range of param values}
 }
 \value{
 params a matrix of ngenes * 3
 }
 \description{
-This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
+This function takes gene_effect and EVF, take their dot product and scale the product to the correct range
 by using first a logistic function and then adding/dividing by constant to their correct range
-}
-\examples{
-Get_params()
 }

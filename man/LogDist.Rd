@@ -7,9 +7,9 @@
 LogDist(counts, log_count_bins)
 }
 \arguments{
-\item{log_count_bins}{a vector of the cut-offs for the histogram}
+\item{counts}{the expression matrix}
 
-\item{dist}{the expression matrix}
+\item{log_count_bins}{a vector of the cut-offs for the histogram}
 }
 \value{
 a matrix where the rows are the genes and columns are the number of samples within a count category

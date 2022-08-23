@@ -1,0 +1,157 @@
+---
+title: "scMultiSim: simulation of multi-modality single cell data guided by gene regulatory networks"
+#author: "Xiuwei Zhang, Michael Squires"
+#date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r "setup", include=FALSE}
+require("knitr")
+opts_chunk$set(fig.width=4, fig.height=3)
+```
+
+### Install scMultiSim and necessary packages
+```{r, message=F, warning=F, eval=T}
+library("devtools")
+ReloadProj <- function() {
+  # devtools::load_all("C:\\Users\\lhc19\\Projects\\scMultiSim")
+  devtools::load_all("~/repo/scMultiSim")
+  library("scMultiSim")
+}
+ReloadProj()
+list.of.packages <- c("reshape", "ape", "phytools", "repr", "KernelKnn", "gridExtra")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+library(gridExtra)
+```
+
+## Main functions
+
+## Simulating multiple continuous populations
+
+Use a tree that only has one edge.
+```{r,cache=T}
+myTree <- ape::read.tree(text='(A);')
+myTree <- compute.brlen(myTree, 1)
+```
+
+Supply `dyn_grn_params` to enable dynamic GRN.
+- `steps`: how many steps (cells) to run before each structure change
+- `change_edges_portion`: how many edges added/deleted each time
+- `weight_mean` and `weight_sd`: params for generating new edge weights
+
+Currently, `do_velocity` must be `FALSE` to make dynamic GRN work.
+```{r,cache=T}
+data(GRN_params_100); GRN_params = GRN_params_100
+results <- SimulateTrueCounts(
+  GRN_params,
+  #phyla = myTree,
+  num_cells = 1000, unregulated_to_regulated_gene_ratio = 0.1,
+  num_evfs = 500, diffEVF_fraction = 0.9,
+  Sigma = 0.1, beta = 0.4, d =  1,
+  do_velocity = T, num_cycles = 2, cycle_length = 1.0,
+  intrinsic_noise = 1, randseed = 0,
+  atac_effect = 0.5, nregions_distribution = cumsum(c(0.1, 0.5, 0.4)),
+  #dyn_grn_params = list(
+  #  steps = 200, change_edges_portion = 0.4, weight_mean = 2.8, weight_sd = 1
+  #)
+  dyn_grn_params = NULL
+)
+```
+
+Export data. Info about the dynamic GRN is available in `results$dyn_grn`.
+```{r,cache=T}
+i <- 1
+for (edges in results$dyn_grn$history) {
+  write.table(as.matrix(edges), file=paste0('grn', i, '.tsv'), sep='\t', quote=F, col.names=NA)
+  i <- i + 1
+}
+```
+
+True spliced count results can be visualized in Tsne space as follows:
+```{r,cache=T}
+plot = PlotTsne(meta = results$cell_meta$pop, data = log2(results$counts + 1), label = 'pop', saving = F, plotname = 'True RNA Counts Tsne')
+print(plot[[2]])
+```
+
+Get observed counts.
+```{r, warning=FALSE,cache=T}
+data(gene_len_pool)
+gene_len <- sample(gene_len_pool, results$num_genes, replace = FALSE)
+observed_counts <- True2ObservedCounts(true_counts = results$counts, meta_cell = results$cell_meta, randseed = 0, protocol = "nonUMI", alpha_mean = 0.1, alpha_sd = 0.05, gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3)
+tsne_rnaseq_noisy <- PlotTsne(meta = results$cell_meta$pop, data = log2(observed_counts+1), label = 'pop', saving = F, plotname = "Observed RNA Counts")
+print(tsne_rnaseq_noisy[[2]])
+```
+
+Write counts to file.
+```{r}
+write.table(observed_counts, file='counts.tsv', sep='\t', quote=F, col.names = NA)
+```
+
+A simple model of technical noise can also be added to produce observed ATAC-seq data as follows:
+```{r, warning=FALSE,cache=T}
+observed_atacseq <- True2ObservedATAC(results$atacseq_data, randseed = 0, observation_prob = 0.3, sd_frac = 0.5)
+tsne_observed_atacseq <- PlotTsne(meta = results$cell_meta$pop, data = log2(observed_atacseq + 1), label = 'pop', saving = F, plotname = "Observed ATAC-seq")
+print(tsne_observed_atacseq[[2]])
+```
+
+---
+
+## Add batch effects
+We can divide the data we simulated using the previous steps into multiple batches and add batch effects to each batch.  This can be done for spliced RNA-seq counts:
+```{r, warning=FALSE,cache=T, fig.width=7, fig.height=4}
+observed_counts_2batches <- DivideBatches(counts = observed_counts, meta_cell = results$cell_meta, nbatch = 2, batch_effect_size = 3)
+tsne_batches_b <- PlotTsne(meta = observed_counts_2batches$cell_meta$batch, data = log2(observed_counts_2batches$counts + 1), label = 'batch', saving = F, plotname = "Observed RNA Counts in Batches")
+tsne_batches_p <- PlotTsne(meta = observed_counts_2batches$cell_meta$pop, data = log2(observed_counts_2batches$counts + 1), label = 'pop', saving = F, plotname = "Observed RNA Counts in Batches")
+tsne_batches = grid.arrange(tsne_batches_b[[2]], tsne_batches_p[[2]], ncol=2)
+```
+
+```{r, warning=FALSE,cache=T, fig.width=6, fig.height=6}
+dif_m <- list()
+for (i in 1:16) {
+  g1 <- results$geff[[i]]$gene_effects_by_regulator
+  g2 <- results$geff[[i+1]]$gene_effects_by_regulator
+  dif <- g2 - g1
+  dif_m <- rbind(dif_m, which(dif != 0, arr.ind = T))
+}
+changed_genes <- unique(unlist(dif_m))
+```
+
+```{r, warning=FALSE,cache=T, fig.width=6, fig.height=6}
+# PlotGeneModuleCorrelationHeatmap(results$counts, GRN_params, results$gene_effects_by_regulator, results$num_genes, GRN_genes_only = F, saving = F)
+
+hc_scores <- c()
+for (i in 1:16) {
+  tb <- results$geff[[i]]$gene_effects_by_regulator
+  tc <- results$counts[,which(results$cell_time >= (i - 1) * 40 & results$cell_time < i * 40)]
+  idx <- which(tb!=0,arr.ind = T)
+  grn_params <- cbind(idx, tb[idx])
+  names(grn_params) <- c("regulated.gene", "regulator.gene", "regulator.effect")
+  sc <- PlotGeneModuleCorrelationHeatmap(tc, grn_params, tb, results$num_genes, GRN_genes_only = F, saving = F)
+  hc_scores <- c(hc_scores, sc)
+}
+```
+```{r, warning=FALSE,cache=T, fig.width=6, fig.height=6}
+hc_scores2 <- matrix(0, 16, 16)
+for (i in 1:16) {
+  for (j in 1:16) {
+  tb <- results$geff[[j]]$gene_effects_by_regulator
+  tc <- results$counts[,which(results$cell_time >= (i - 1) * 40 & results$cell_time < i * 40)]
+  idx <- which(tb!=0,arr.ind = T)
+  grn_params <- cbind(idx, tb[idx])
+  names(grn_params) <- c("regulated.gene", "regulator.gene", "regulator.effect")
+  sc <- PlotGeneModuleCorrelationHeatmap(tc, grn_params, tb, results$num_genes, GRN_genes_only = F, saving = F, genes = changed_genes)
+  hc_scores2[i,j] <- sc
+  }
+}
+```
+Additionally, we can calculate the average (mean) correlation between genes which are most affected by the same regulator gene with the following function:
+
+```{r, warning=FALSE,cache=T}
+gene_module_correlation = GetGeneModuleCorrelation(results$counts, GRN_params, results$gene_effects_by_regulator, results$num_genes)
+print(gene_module_correlation)
+```
+

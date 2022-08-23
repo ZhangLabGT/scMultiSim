@@ -7,13 +7,17 @@
 PlotPCA(meta, data, plotname, label, discrete = T, saving = F)
 }
 \arguments{
-\item{meta:}{simulation parameters}
+\item{meta}{simulation parameters}
 
-\item{data:}{expression matrix}
+\item{data}{expression matrix}
 
-\item{plotname:}{the name of the jpeg file}
+\item{plotname}{the name of the jpeg file}
 
-\item{label:}{the column name of the meta data that the points needs to be colored by}
+\item{label}{the column name of the meta data that the points needs to be colored by}
+
+\item{discrete}{whether or not the population is discrete versus continuous}
+
+\item{saving}{whether or not to save the plot}
 }
 \description{
 This function takes the ground truth (meta), the expresssion matrix (data), and performs tSNE, saves the result to a jpeg file with user specified name

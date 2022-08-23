@@ -9,10 +9,12 @@ Description: This package simulates single cell RNA sequencing and RNA velocity 
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0.9000
+RoxygenNote: 7.1.1
 Depends:
     R (>= 3.5.0),
-    plyr,
+    foreach,
+    rlang,
+    dplyr,
     ggplot2, 
     Rtsne,
     grid,
@@ -29,7 +31,11 @@ Depends:
     S4Vectors,
     SummarizedExperiment,
     KernelKnn,
-    gplots
+    gplots,
+    gtools,
+    gridExtra,
+    parallel,
+    zeallot
 Suggests:
    knitr,
    rmarkdown

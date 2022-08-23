@@ -17,11 +17,11 @@ QQplot2RealData(
 
 \item{sim_data}{gene expression matrix of simulated data}
 
+\item{expressed_prop}{the minimum proportion of cells a gene should be expressed in}
+
 \item{plot_file_name}{the pdf file name for the output plots}
 
-\item{print_data_dir}{the directory to print the source data for plots; if NA then do not print}
-
-\item{express_prop}{the minimum proportion of cells a gene should be expressed in}
+\item{print_data_dir}{the directory to `print` the source data for plots; if NA then do not print}
 }
 \description{
 function QQplot2RealData; plot both with ggplot2 and with basic plot

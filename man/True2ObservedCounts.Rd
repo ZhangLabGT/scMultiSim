@@ -8,6 +8,7 @@ True2ObservedCounts(
   true_counts,
   meta_cell,
   protocol,
+  randseed,
   alpha_mean = 0.1,
   alpha_sd = 0.002,
   gene_len,
@@ -29,6 +30,8 @@ True2ObservedCounts(
 \item{meta_cell}{the meta information related to cells, will be combined with technical cell level information and returned}
 
 \item{protocol}{a string, can be "nonUMI" or "UMI"}
+
+\item{randseed}{(should produce same result if nregions, nevf and randseed are all the same)}
 
 \item{alpha_mean}{the mean of rate of subsampling of transcripts during capture step, default at 10 percent efficiency}
 

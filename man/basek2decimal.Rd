@@ -6,6 +6,11 @@
 \usage{
 basek2decimal(k, basek_vec)
 }
+\arguments{
+\item{k}{number base}
+
+\item{basek_vec}{input vector to convert}
+}
 \description{
 convert a k based number to decimal number
 }

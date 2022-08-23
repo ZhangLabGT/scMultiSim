@@ -2,81 +2,99 @@
 % Please edit documentation in R/simulation_functions.R
 \name{SimulateTrueCounts}
 \alias{SimulateTrueCounts}
-\title{Generate both evf and gene effect and simulate true transcript counts}
+\title{Generate true results according to simulation parameters}
 \usage{
 SimulateTrueCounts(
-  ncells_total,
-  min_popsize,
-  i_minpop = 1,
-  ngenes,
-  evf_center = 1,
-  evf_type = "one.population",
-  nevf = 10,
-  phyla,
-  randseed,
-  n_de_evf = 0,
+  GRN_params,
+  num_cells = 1000,
+  unregulated_to_regulated_gene_ratio = 0.1,
+  num_evfs = 500,
+  diffEVF_fraction = 0.9,
+  Sigma = 0.1,
+  atac_effect = 0.5,
+  beta = 0.4,
+  d = 1,
+  num_cycles = 3,
+  cycle_length = 1,
+  intrinsic_noise = 1,
+  randseed = 0,
+  do_velocity = FALSE,
+  phyla = Phyla5(),
+  nregions_distribution = cumsum(c(0.1, 0.5, 0.4)),
+  p_zero = 0.8,
   vary = "s",
-  Sigma = 0.4,
-  geffect_mean = 0,
-  gene_effects_sd = 1,
-  gene_effect_prob = 0.3,
-  bimod = 0,
-  param_realdata = "zeisel.imputed",
-  scale_s = 1,
+  evf_center = 1,
   impulse = F,
-  gene_module_prop = 0,
-  prop_hge = 0.015,
-  mean_hge = 5
+  bimod = 0,
+  geffect_mean = 0,
+  gene_effect_prob = 0.3,
+  gene_effects_sd = 1,
+  reffect_mean = 0,
+  region_effect_prob = 0.3,
+  region_effects_sd = 1,
+  scale_s = 1
 )
 }
 \arguments{
-\item{ncells_total}{number of cells}
+\item{GRN_params}{GRN_params is a matrix where: #    - column 1 is the target gene ID, #    - column 2 is the gene ID which acts as a transcription factor for the target (regulated) gene #    - column 3 is the effect of the column 2 gene ID on the column 1 gene ID}
 
-\item{min_popsize}{the number of cells in the smallest population}
+\item{num_cells}{total number of cells from all populations}
 
-\item{i_minpop}{specifies which population has the smallest size}
+\item{unregulated_to_regulated_gene_ratio}{ratio of unregulated genes to regulated genes.  The final number of genes is rounded up to the nearest 10}
 
-\item{ngenes}{number of genes}
+\item{num_evfs}{number of EVFs for each kinetic parameter}
 
-\item{evf_center}{the value which evf mean is generated from}
+\item{diffEVF_fraction}{fraction of evfs which are differential evfs between cell types}
 
-\item{evf_type}{string that is one of the following: 'one.population','discrete','continuous'}
+\item{Sigma}{parameter of the std of evf values within the same cell type, controls heterogeneity for each cell type}
 
-\item{nevf}{number of evfs}
+\item{atac_effect}{a 0 to 1 value which is the weight assigned to the influence of chromatin accessability data on gene expression}
 
-\item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly (using pbtree(nclusters) function from phytools package) or read from newick format file using the ape package}
+\item{beta}{splicing rate of each gene}
 
-\item{randseed}{random seed}
+\item{d}{degradation rate of each gene}
 
-\item{n_de_evf}{number of differential evfs between populations}
+\item{num_cycles}{for generating velocity data, the number of cycles run before sampling the gene expression of a cell}
 
-\item{vary}{which kinetic parameters should the differential evfs affect. Default is 's'. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s".}
+\item{cycle_length}{for generating velocity data, a factor which is multiplied by the expected time to transition from kon to koff and back to to form the the length of a cycle}
 
-\item{Sigma}{parameter of the std of evf values within the same population}
+\item{intrinsic_noise}{a 0 to 1 value which is the weight assigned to the random sample from the Beta-Poisson distribution, where the weight of the Beta-Poisson mean value is given a weight of 1 minus the intrinsic noise value.}
 
-\item{geffect_mean}{the mean of the normal distribution where the non-zero gene effect sizes are sampled from}
+\item{randseed}{should produce same result if all other parameters are all the same}
 
-\item{gene_effect_prob}{the probability that the effect size is not 0}
+\item{do_velocity}{set to TRUE to incorporate the RNA velocity simulation module to simulate unspliced and spliced RNA sequence counts and ground truth velocity}
 
-\item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
+\item{phyla}{a tree which defines relationship between populations}
 
-\item{param_realdata}{pick from zeisel.imputed or NULL; zeisel.imputed means using the distribution of kinetic parameters learned from the Zeisel 2015 dataset. This option is recommended.}
+\item{nregions_distribution}{the probability that a gene is regulated by respectively 0, 1, ..., (length(nregions_distribution) - 1) consecutive regions}
 
-\item{scale_s}{a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)}
+\item{p_zero}{the proportion of 0s we see in the ATAC-seq data}
 
-\item{impulse}{use the impulse function when generating continuous population or not. Default is F.}
+\item{vary}{which kinetic parameters have differential evfs. Can be "all", "kon", "koff", "s", "except_kon", "except_koff", "except_s"}
 
-\item{gene_module_prop}{proportion of genes which are in co-expressed gene module}
+\item{evf_center}{the value which evf mean is generated from (default=1)}
 
-\item{prop_hge}{the proportion of very highly expressed genes}
+\item{impulse}{when generating continuous populations, use the impulse model or not. Default is FALSE}
 
-\item{mean_hge}{the parameter to amplify the gene-expression levels of the very highly expressed genes}
+\item{bimod}{adjusts the bimodality of gene expression, thus controlling intrinsic variation}
 
-\item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero gene effect sizes are sampled from}
+\item{geffect_mean}{the mean of gene effect size}
+
+\item{gene_effect_prob}{probability of non-zero values in the gene effect vectors}
+
+\item{gene_effects_sd}{controls differences between genes}
+
+\item{reffect_mean}{the mean of region effect size}
+
+\item{region_effect_prob}{probability of non-zero values in the region effect vectors}
+
+\item{region_effects_sd}{controls differences between regions}
+
+\item{scale_s}{the cell size parameter in (0,1). Use smaller value for cell types known to be small (like naive cells)}
 }
 \value{
-a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
+a list of eleven elements: 1. A matrix containing the true (spliced) transcript counts, 2. Gene level meta information, 3. Cell level meta information, including a matrix of EVFs and a vector of cell identity (for example, the population the cell belongs to), 4. The parameters k~on~, k~off~ and s used to simulation the true counts, 5. A matrix containing the true unspliced transcript counts, 6. The true RNA velocity information for each cell, 7. The pseudotime at which the cell counts were generated, 8. The scATAC-seq data, 9. The matrix region2gene, a 0 1 matrix of shape (nregions) x (num_genes), where a value of 1 indicates the gene is affected by the accessibility of the particular chromatin region, 10. Gene effects of each regulator gene (column) on every gene ID (row), 11. The number of genes used in the experiment
 }
 \description{
-Generate both evf and gene effect and simulate true transcript counts
+Generate true results according to simulation parameters
 }

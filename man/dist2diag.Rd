@@ -10,6 +10,8 @@ dist2diag(x, y, nbins)
 \item{x}{a vector on x axis}
 
 \item{y}{a vector on y axis with the same length as x}
+
+\item{nbins}{number of bins to use}
 }
 \description{
 how well do dots fit to the diagonal (for evaluating our qqplots)

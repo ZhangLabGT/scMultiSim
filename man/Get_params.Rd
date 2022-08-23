@@ -4,10 +4,19 @@
 \alias{Get_params}
 \title{Getting the parameters for simulating gene expression from EVf and gene effects}
 \usage{
-Get_params(gene_effects, evf, match_param_den, bimod, scale_s)
+Get_params(
+  gene_effects,
+  evf,
+  match_param_den,
+  bimod,
+  scale_s,
+  atacseq_data,
+  region2gene,
+  atac_effect
+)
 }
 \arguments{
-\item{gene_effects}{a list of three matrices (generated using the GeneEffects function), 
+\item{gene_effects}{a list of three matrices (generated using the GeneEffects function),
 each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows.}
 
 \item{evf}{a vector of length nevf, the cell specific extrinsic variation factor}
@@ -17,14 +26,17 @@ each corresponding to one kinetic parameter. Each matrix has nevf columns, and n
 \item{bimod}{the bimodality constant}
 
 \item{scale_s}{a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)}
+
+\item{atacseq_data}{atac seq data}
+
+\item{region2gene}{of shape (nregions) x (num_genes), indicates which genes are associated with which regions}
+
+\item{atac_effect}{a 0 to 1 value which is the weight assigned to the influence of chromatin accessability data on gene expression}
 }
 \value{
 params a matrix of ngenes * 3
 }
 \description{
-This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
+This function takes gene_effect and EVF, take their dot product and scale the product to the correct range
 by using first a logistic function and then adding/dividing by constant to their correct range
-}
-\examples{
-Get_params()
 }

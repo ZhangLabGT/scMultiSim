@@ -26,6 +26,8 @@ BestMatchParams(
 \item{depth_range}{if one knows the rough range of sequencing depth, it can be input here.}
 
 \item{alpha_range}{if one knows the rough range of mRNA capture efficiency, it can be input here.}
+
+\item{idx_set}{set of indices}
 }
 \value{
 three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset

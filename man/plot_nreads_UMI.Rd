@@ -6,6 +6,11 @@
 \usage{
 plot_nreads_UMI(hist_res, plot_title)
 }
+\arguments{
+\item{hist_res}{contains information for creating histogram}
+
+\item{plot_title}{plot title}
+}
 \description{
 plot the histogram of number of reads per UMI
 }

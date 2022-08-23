@@ -7,24 +7,27 @@
 PlotTsne(
   meta,
   data,
-  evf_type,
-  pca = T,
-  n_pc,
-  perplexity = 30,
+  perplexity = 60,
   label,
-  saving = F,
+  saving = T,
   plotname,
-  system.color = T
+  randseed = 0
 )
 }
 \arguments{
-\item{meta:}{simulation parameters}
+\item{meta}{simulation parameters}
 
-\item{data:}{expression matrix}
+\item{data}{expression matrix}
 
-\item{plotname:}{the name of the jpeg file}
+\item{perplexity}{the perplexity parameter used in the tsne visualization}
 
-\item{label:}{the column name of the meta data that the points needs to be colored by}
+\item{label}{the column name of the meta data that the points needs to be colored by}
+
+\item{saving}{whether or not to save the plot}
+
+\item{plotname}{the name of the jpeg file}
+
+\item{randseed}{should produce same result if all other parameters are all the same}
 }
 \description{
 This function takes the ground truth (meta), the expresssion matrix (data), and performs tSNE, saves the result to a jpeg file with user specified name
