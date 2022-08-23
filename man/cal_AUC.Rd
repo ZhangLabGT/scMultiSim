@@ -6,6 +6,11 @@
 \usage{
 cal_AUC(x_vec, y_vec)
 }
+\arguments{
+\item{x_vec}{vector of x values}
+
+\item{y_vec}{vector of y values}
+}
 \description{
 calculate area under curve
 }

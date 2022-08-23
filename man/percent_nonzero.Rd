@@ -6,6 +6,9 @@
 \usage{
 percent_nonzero(x)
 }
+\arguments{
+\item{x}{input vector x}
+}
 \description{
 Calculate the percentage of non-zero values in a vector x
 }

@@ -4,10 +4,12 @@
 \alias{DivideBatches}
 \title{Divide the observed counts into multiple batches by adding batch effect to each batch}
 \usage{
-DivideBatches(observed_counts_res, nbatch, batch_effect_size = 1)
+DivideBatches(counts, meta_cell, nbatch, batch_effect_size = 1)
 }
 \arguments{
-\item{observed_counts_res}{the output from True2ObservedCounts}
+\item{counts}{gene cell matrix}
+
+\item{meta_cell}{the meta information related to cells, will be combined with technical cell level information and returned}
 
 \item{nbatch}{number of batches}
 

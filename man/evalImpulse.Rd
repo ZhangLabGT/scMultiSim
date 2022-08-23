@@ -13,11 +13,11 @@ evalImpulse(vecImpulseParam, vecTimepoints)
 \{beta, h0, h1, h2, t1, t2\}
 Vector of impulse model parameters.}
 
-\item{vecTimepoints}{(numeric vector length number of time points) 
+\item{vecTimepoints}{(numeric vector length number of time points)
 Time points to be evaluated.}
 }
 \value{
-vecImpulseValue (vec number of vecTimepoints) 
+vecImpulseValue (vec number of vecTimepoints)
 Model values for given time points.
 }
 \description{

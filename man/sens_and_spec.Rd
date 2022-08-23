@@ -6,6 +6,11 @@
 \usage{
 sens_and_spec(isDE_gold, isDE_pred)
 }
+\arguments{
+\item{isDE_gold}{true values}
+
+\item{isDE_pred}{predicted values}
+}
 \description{
 calculate sensitivity and specificity
 }

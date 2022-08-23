@@ -1,36 +1,20 @@
-# SymSim
-SymSim (Synthetic model of multiple variability factors for Simulation) is an R package for simulation of single cell RNA-Seq data. 
+# scMultiSim
 
-### Install from Github
-This package can be installed with R package devtools. First, pull the package with git clone to your working directory. Make sure that you have installed the packages listed in the DESCRIPTION file.
+scMultiSim is an in silico simulator that generates multi-modality data of single-cells, including gene expression, chromatin accessibility, RNA velocity, and spatial location of cells. It takes a cell differential tree and a gene regulatory network (GRN) as input, and simulates spliced and unspliced counts while accounting for the relationships between modalities. The output single cell gene expression data is determined by three factors: cell-cell interactions, within-cell GRNs and chromatin accessibility. Users can tune the effect of each factor on the output data and set various parameters for the underlying model. Furthermore, the GRN can be set in a time-varying mode where the network's structure changes temporally to reflect the dynamic nature of biological networks. We also provide options to simulate technical variations such as batch effects. scMultiSim can be used to benchmark challenging computational tasks on single-cell multi-omics data, including the inference of GRNs, estimation of RNA velocity, integration of single-cell datasets from multiple batches and modalities, and analysis of cell-cell interaction using the cell spatial location data.
 
-The required Bioconductor packages can be installed as follows in R:
-```
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("IRanges")
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("Biobase")
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("S4Vectors")
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("SummarizedExperiment")
-```
-To install SymSim, run:
-```{r}
-library("devtools")
-devtools::install_github("YosefLab/SymSim")
-```
+Refer to the [vignette](https://zhanglabgt.github.io/scMultiSim/vignettes/sim_new.nb.html) for examples of using scMultiSim to simulate datasets and for a description of tool functionalities.
 
-### Generating datasets with SymSim
+![Overview](https://github.com/ZhangLabGT/scMultiSim/raw/img/img/scMultisim.png)
 
-Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vignettes/SymSimTutorial.Rmd) for examples of using SymSim to simulate datasets.
+## Results
 
-[New feature] SymSim can now generate co-expressed gene modules. A new argument to the function `SimulateTrueCounts()` which is `gene_module_prop` represent the proportion of genes the user wants to be in gene modules. The smallest module size is 10 genes. For example, if the total number of genes in modules is 100, and the total number of populations is 5, then the 100 genes are randomy assigned to 5 gene modules. A gene module often correspond to a population, meaning that that set of genes tend to be highly expressed in a given population, but there is no guarantee on this. In the output of the function `SimulateTrueCounts()` there is an element `is_in_module` which gives the module ID for each gene (0 means the gene is not in any module).
+The following figure briefly shows results from the same cell differential tree:
 
-### References
+1. Connected scATAC-seq and scRNA-seq, in continuous or discrete mode. Visualized by t-SNE.
+2. GRN correlation heatmap, where genes regulated by the same regulator have similar correlations with others.
+3. Unspliced counts and RNA velocity ground truth visualized by t-SNE.
+4. Spatial cell locations and cell-cell interaction ground truth.
+5. Discrete cell population with added batch effects.
 
-Xiuwei Zhang &ast;, Chenling Xu &ast;, Nir Yosef. **Simulating multiple faceted variability in Single Cell RNA sequencing**. _Nature Communications_, 10:2611, 2019. (https://www.nature.com/articles/s41467-019-10500-w).
+![Results](https://github.com/ZhangLabGT/scMultiSim/raw/img/img/results.png)
+

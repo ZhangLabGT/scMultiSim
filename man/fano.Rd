@@ -6,6 +6,9 @@
 \usage{
 fano(x)
 }
+\arguments{
+\item{x}{input vector x}
+}
 \description{
 Calculate the fano factor of a vector x
 }

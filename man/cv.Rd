@@ -6,6 +6,9 @@
 \usage{
 cv(x)
 }
+\arguments{
+\item{x}{input vector x}
+}
 \description{
 Calculate the coefficient of variation of a vector x
 }

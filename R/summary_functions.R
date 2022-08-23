@@ -1,24 +1,21 @@
 #' Visualize the simulated velocity, colored using the simulated time
-#' @param filename name of the saved figure
-#' @param result output from the simulator
-#' @param dr dimension reduction method, default "pca
+#' @param counts_s spliced rna counts
+#' @param velocity true rna velocity
+#' @param cell_time cell pseudotime
+#' @param cell_pop cell population metadata
 #' @param width width of the figure
 #' @param height height of the figure
 #' @param units select from "cm", "mm" and "in", default "in"
 #' @param dpi dpi value of the figure
+#' @param arrow.length number of time units into the future to calculate future cells based on velocity
+#' @param perplexity perplexity used in tsne visualization
+#' @param saving if the plot should be saved into a file
+#' @param randseed should produce same result if all other parameters are all the same
 #' @return None
-#' @import umap ggplot2
+#' @import ggplot2 KernelKnn
 #' @export
-plotVelo <- function(filename, result, meta, beta, d, num_cycles, randseed, phyla, neutral, num_cells=NULL, Sigma=NULL, num_evfs=NULL, diffEVF_fraction=NULL, width = 20*2/3, height = 10, units = "in", dpi = 1000, perplexity = 70, arrow.length = 1) {
-  library(ggplot2)
-
-  # counts_u <- result$counts_u
-  counts_s <- result$counts_s
-  # kinetic_params <- result$kinet_params
-  # state_mat <- result$state_mat
-  cell_time <- result$cell_time
-  velocity <- result$velocity
-
+plotVelo <- function(counts_s, velocity, cell_time, cell_pop, width = 20*2/3, height = 10, units = "in", dpi = 1000, perplexity = 70, arrow.length = 1, saving = F, randseed=0) {
+  set.seed(randseed)
   future_counts_s <- counts_s + velocity
   future_counts_s[which(future_counts_s < 0)] <- 0
 
@@ -74,7 +71,7 @@ plotVelo <- function(filename, result, meta, beta, d, num_cycles, randseed, phyl
 
   index = seq(nrow(data_tsne$Y) / 2)
 
-  plot_tsne <- data.frame(x1 = x1, y1 = y1, x2_raw = x2_raw, y2_raw = y2_raw, x2_normalized = x2_normalized, y2_normalized = y2_normalized, x2_knn_normalized = x2_knn_normalized, y2_knn_normalized = y2_knn_normalized, index = index, label = meta[, 'pop'])
+  plot_tsne <- data.frame(x1 = x1, y1 = y1, x2_raw = x2_raw, y2_raw = y2_raw, x2_normalized = x2_normalized, y2_normalized = y2_normalized, x2_knn_normalized = x2_knn_normalized, y2_knn_normalized = y2_knn_normalized, index = index, label = cell_pop)
 
   v_plot_raw <- ggplot(data = plot_tsne, aes(x1, y1, group = index, color = index)) +
     geom_point(aes(colour = .data[['label']])) +
@@ -94,21 +91,27 @@ plotVelo <- function(filename, result, meta, beta, d, num_cycles, randseed, phyl
     geom_segment(aes(x = x1, y = y1, xend = x2_knn_normalized, yend = y2_knn_normalized), arrow = arrow(length = unit(0.1, "cm")), color = "black", alpha = 1) +
     ggtitle('Velocity - KNN Average Values Normalized ')
 
-  ggsave(filename = 'velocity raw.pdf', plot = v_plot_raw, device = "pdf", path = "./", height = height, width = width, units = units, dpi = dpi)
-  ggsave(filename = 'velocity normalized.pdf', plot = v_plot_normalized, device = "pdf", path = "./", height = height, width = width, units = units, dpi = dpi)
-  ggsave(filename = 'velocity knn normalized.pdf', plot = v_plot_knn_normalized, device = "pdf", path = "./", height = height, width = width, units = units, dpi = dpi)
+  if (saving == T){
+    ggsave(filename = 'velocity raw.pdf', plot = v_plot_raw, device = "pdf", path = "./", height = height, width = width, units = units, dpi = dpi)
+    ggsave(filename = 'velocity normalized.pdf', plot = v_plot_normalized, device = "pdf", path = "./", height = height, width = width, units = units, dpi = dpi)
+    ggsave(filename = 'velocity knn normalized.pdf', plot = v_plot_knn_normalized, device = "pdf", path = "./", height = height, width = width, units = units, dpi = dpi)
+  }
+  return(list(v_plot_raw = v_plot_raw, v_plot_normalized = v_plot_normalized, v_plot_knn_normalized = v_plot_knn_normalized))
 }
 
 
 #' Calculate the coefficient of variation of a vector x
+#' @param x input vector x
 #' @export
 cv <- function(x) { return(sd(x) / mean(x)) }
 
 #' Calculate the fano factor of a vector x
+#' @param x input vector x
 #' @export
 fano <- function(x) { return((sd(x))^2 / mean(x)) }
 
 #' Calculate the percentage of non-zero values in a vector x
+#' @param x input vector x
 #' @export
 percent_nonzero <- function(x) { return(sum(x > 0) / length(x)) }
 
@@ -116,6 +119,7 @@ percent_nonzero <- function(x) { return(sum(x > 0) / length(x)) }
 #' how well do dots fit to the diagonal (for evaluating our qqplots)
 #' @param x a vector on x axis
 #' @param y a vector on y axis with the same length as x
+#' @param nbins number of bins to use
 #' @export
 dist2diag <- function(x, y, nbins) {
   min_val <- min(c(x, y)); max_val <- max(c(x, y))
@@ -131,7 +135,7 @@ dist2diag <- function(x, y, nbins) {
 }
 
 
-#' Get the best matched parameter 
+#' Get the best matched parameter
 #'
 #' This function matches a real dataset to a database of summary information of simulated datasets, plots a qqplot for user to visualize similarity between their dataset and the simulated dataset, and suggests parameters to use in the simulation
 #' @param tech 'nonUMI','UMI' the match database are constructed based on reasonable values for each technology
@@ -140,6 +144,7 @@ dist2diag <- function(x, y, nbins) {
 #' @param n_optimal number of top parameter configurations to return
 #' @param depth_range if one knows the rough range of sequencing depth, it can be input here.
 #' @param alpha_range if one knows the rough range of mRNA capture efficiency, it can be input here.
+#' @param idx_set set of indices
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
 #' @export
 BestMatchParams <- function(tech, counts, plotfilename, n_optimal = 3,
@@ -225,7 +230,7 @@ BestMatchParams <- function(tech, counts, plotfilename, n_optimal = 3,
 #' Getting logged expression distribution
 #'
 #' Prepares for plotting the Count Heatmap
-#' @param dist the expression matrix
+#' @param counts the expression matrix
 #' @param log_count_bins a vector of the cut-offs for the histogram
 #' @return a matrix where the rows are the genes and columns are the number of samples within a count category
 #' @export
@@ -250,15 +255,11 @@ LogDist <- function(counts, log_count_bins) {
 #' takes an expression matrix and makes a 2D histogram on the log scale where each row is a gene and the number of samples in a bin is shown by the intensity of the color
 #' @param log_real the logged distribution of count distribution, obtained through the LogDist function
 #' @param mean_counts the average expression for each gene, used for sorting purpose
-#' @param given_ord the given order of genes 
+#' @param given_ord the given order of genes
 #' @param zeropropthres the genes with zeroproportion greater than this number is not plotted (default to 0.8)
-#' @param filename the name of the output plot. Will not be used if saving=F. 
+#' @param filename the name of the output plot. Will not be used if saving=F.
 #' @param saving if the plot should be saved into a file
 #' @param data_name a string which is included in the title of the plot to describe the data used
-#' @examples  
-#' heatmapplot <- PlotCountHeatmap(LogDist(countmatrix,seq(0, 4, 0.4)),rowMeans(countmatrix),
-#' given_ord= NA,zeropropthres=1,filename=NA,data_name='true counts',saving=F)
-#' heatmapplot[[2]]
 #' @export
 PlotCountHeatmap <- function(log_real, mean_counts, data_name, given_ord = NA, zeropropthres = 0.8,
                              filename = NA, saving = F) {
@@ -335,13 +336,15 @@ plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
        main = figuretitle)
 }
 
-#' arrange multiple plots from ggplot2 to one figure. 
+#' arrange multiple plots from ggplot2 to one figure.
 #' From http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
 #' ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
 #' @param cols Number of columns in layout
 #' @param layout A matrix specifying the layout. If present, 'cols' is ignored.
+#' @param ... plots to make a list of
+#' @param plotlist a list of plots
 #' @export
-multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
+multiplot <- function(..., plotlist = NULL, cols = 1, layout = NULL) {
 
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
@@ -377,6 +380,8 @@ multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
 }
 
 #' plot the histogram of number of reads per UMI
+#' @param hist_res contains information for creating histogram
+#' @param plot_title plot title
 plot_nreads_UMI <- function(hist_res, plot_title) {
   toplot <- hist_res$counts / sum(hist_res$counts[2:length(hist_res$counts)]) * 100;
   names(toplot) <- hist_res$mids
@@ -390,7 +395,7 @@ plot_nreads_UMI <- function(hist_res, plot_title) {
 #' function QQplot2RealData; plot both with ggplot2 and with basic plot
 #' @param real_data gene expression matrix of experimental data
 #' @param sim_data gene expression matrix of simulated data
-#' @param express_prop the minimum proportion of cells a gene should be expressed in
+#' @param expressed_prop the minimum proportion of cells a gene should be expressed in
 #' @param plot_file_name the pdf file name for the output plots
 #' @param print_data_dir the directory to `print` the source data for plots; if NA then do not print
 #' @import ggplot2
@@ -458,20 +463,21 @@ QQplot2RealData <- function(real_data, sim_data, expressed_prop, plot_file_name,
 
 
 #' retrieve genes' differential expression information
-#' it outputs three measures for every gene: 
+#' it outputs three measures for every gene:
 #' nDiffEVF: the number of DiffEVFs used for each gene
 #' logFC_theoretical: log2 fold change based on kinetic parameters
 #' wil.p_true_counts: adjusted wilcoxon p-value based on true counts
 #' @param true_counts_res the output of function SimulateTrueCounts()
 #' @param popA the first population to be compared with (usually a number)
 #' @param popB the second population to be compared with
+#' @param num_genes number of genes
 #' @export
-getDEgenes <- function(true_counts_res, popA, popB) {
+getDEgenes <- function(true_counts_res, popA, popB, num_genes) {
   meta_cell <- true_counts_res$cell_meta
   meta_gene <- true_counts_res$gene_effects
   popA_idx <- which(meta_cell$pop == popA)
   popB_idx <- which(meta_cell$pop == popB)
-  ngenes <- dim(true_counts_res$gene_effects[[1]])[1]
+  ngenes <- num_genes
 
   DEstr <- sapply(strsplit(colnames(meta_cell)[which(grepl("evf", colnames(meta_cell)))], "_"), "[[", 2)
   param_str <- sapply(strsplit(colnames(meta_cell)[which(grepl("evf", colnames(meta_cell)))], "_"), "[[", 1)
@@ -510,4 +516,12 @@ getTrajectoryGenes <- function(cell_meta) {
   colnames(temp) <- c("branch", "pseudotime")
   rownames(temp) <- cell_meta[, 1]
   return(temp)
+}
+
+#' loads an RData file, and returns it
+#' @param fileName RData file name
+#' @export
+loadRData <- function(fileName){
+    load(fileName)
+    get(ls()[ls() != "fileName"])
 }

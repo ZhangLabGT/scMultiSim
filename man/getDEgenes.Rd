@@ -3,12 +3,12 @@
 \name{getDEgenes}
 \alias{getDEgenes}
 \title{retrieve genes' differential expression information
-it outputs three measures for every gene: 
+it outputs three measures for every gene:
 nDiffEVF: the number of DiffEVFs used for each gene
 logFC_theoretical: log2 fold change based on kinetic parameters
 wil.p_true_counts: adjusted wilcoxon p-value based on true counts}
 \usage{
-getDEgenes(true_counts_res, popA, popB)
+getDEgenes(true_counts_res, popA, popB, num_genes)
 }
 \arguments{
 \item{true_counts_res}{the output of function SimulateTrueCounts()}
@@ -16,10 +16,12 @@ getDEgenes(true_counts_res, popA, popB)
 \item{popA}{the first population to be compared with (usually a number)}
 
 \item{popB}{the second population to be compared with}
+
+\item{num_genes}{number of genes}
 }
 \description{
 retrieve genes' differential expression information
-it outputs three measures for every gene: 
+it outputs three measures for every gene:
 nDiffEVF: the number of DiffEVFs used for each gene
 logFC_theoretical: log2 fold change based on kinetic parameters
 wil.p_true_counts: adjusted wilcoxon p-value based on true counts

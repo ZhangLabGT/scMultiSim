@@ -7,6 +7,11 @@ true pseudotime is a list where each element corresponds to an lineage}
 \usage{
 cor_pseudotime(true_time, pred_time)
 }
+\arguments{
+\item{true_time}{true pseudotime}
+
+\item{pred_time}{predicted pseudotime}
+}
 \description{
 calculate pseudotime correlation between our true pseudotime and predicted pseudotime
 true pseudotime is a list where each element corresponds to an lineage

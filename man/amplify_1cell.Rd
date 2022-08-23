@@ -33,6 +33,8 @@ amplify_1cell(
 
 \item{nPCR1}{the number of PCR cycles}
 
+\item{nPCR2}{the number of PCR cycles}
+
 \item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
 
 \item{LinearAmp_coef}{the coeficient of linear amplification, that is, how many times each molecule is amplified by}

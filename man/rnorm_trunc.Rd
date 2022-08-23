@@ -7,6 +7,12 @@
 rnorm_trunc(n, mean, sd, a, b)
 }
 \arguments{
+\item{n}{number of values to create}
+
+\item{mean}{mean of the normal distribution}
+
+\item{sd}{standard deviation of the normal distribution}
+
 \item{a}{the minimum value allowed}
 
 \item{b}{the maximum value allowed}

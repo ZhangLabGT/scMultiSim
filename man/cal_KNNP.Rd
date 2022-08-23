@@ -6,6 +6,11 @@
 \usage{
 cal_KNNP(data, label)
 }
+\arguments{
+\item{data}{input data}
+
+\item{label}{known label of the cells}
+}
 \description{
 calculate knn purity of a data space with given labels
 }
