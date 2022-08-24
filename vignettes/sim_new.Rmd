@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "scMultiSim Examples"
 output: html_notebook
 ---
 ```{r "setup", include=FALSE}
@@ -90,11 +90,24 @@ results <- sim_true_counts(options_)
 names(results)
 ```
 
-Visualize the true counts using `plot_tsne()`:
+Visualize the true counts and ATAC-seq data using `plot_tsne()`:
 ```{r}
 plot_tsne(log2(results$counts + 1),
           results$cell_meta$pop,
           legend = 'pop', plot.name = 'True RNA Counts Tsne')
+plot_tsne(log2(results$atacseq_data + 1),
+          results$cell_meta$pop,
+          legend = 'pop', plot.name = 'True ATAC-seq Tsne')
+```
+
+We can also add the technical variation and batch effect to the true counts:
+```{r}
+add_expr_noise(results)
+divide_batches(results, nbatch = 2)
+
+plot_tsne(log2(results$counts_with_batches + 1),
+          results$cell_meta$pop,
+          legend = 'pop', plot.name = 'RNA Counts Tsne with Batches')
 ```
 
 ## Simulating cell-cell interaction
@@ -102,26 +115,34 @@ plot_tsne(log2(results$counts + 1),
 The cell-cell interaction works similar to a GRN; supply the `spatial.params` to
 simulate spatial cell-cell interactions.
 ```{r,cache=T}
-lig_params <- data.frame(
-  target    = c( 101, 102),
-  regulator = c( 103, 104),
-  effect    = c(5.2,  5.9)
+options_ <- list2(
+  GRN = data.frame(
+    target = 1:10,
+    regulator = 11:20,
+    effect = 3
+  ),
+  num.genes = 50,
+  num.cells = 500,
+  num.cifs = 500,
+  tree = Phyla3(),
+  do.velocity = F,
+  cci = list(
+    params = data.frame(
+      target = 21:25,
+      regulator = 26:30,
+      effect = 3
+    ),
+    max.neighbors = 2
+  )
 )
 
-options_ = list(
-  rand.seed = 1,
-  threads = 1,
-  GRN = GRN_params,
-  num.cells = 500,
-  num.cifs = 50,
-  tree = Phyla5(),
-  do.velocity = F,
-  debug = T,
-  spatial.params = lig_params
-)
 results <- sim_true_counts(options_)
 ```
 
+Now we plot the cell locations:
+```{r fig.width = 6, fig.asp = 1}
+plot_cell_loc(results)
+```
 
 ## Simulating dynamic GRN
 
