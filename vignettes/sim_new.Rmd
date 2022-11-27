@@ -1,6 +1,8 @@
 ---
 title: "scMultiSim Examples"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
@@ -36,7 +38,7 @@ First, load the package locally:
 ```{r}
 library("devtools")
 devtools::load_all(".")
-library(gridExtra)
+# library(gridExtra)
 library("scMultiSim")
 ```
 
@@ -102,7 +104,9 @@ plot_tsne(log2(results$atacseq_data + 1),
 
 We can also add the technical variation and batch effect to the true counts:
 ```{r}
+# adds `counts_obs` to `results`
 add_expr_noise(results)
+# adds `counts_with_batches` to `results`
 divide_batches(results, nbatch = 2)
 
 plot_tsne(log2(results$counts_with_batches + 1),
@@ -110,57 +114,22 @@ plot_tsne(log2(results$counts_with_batches + 1),
           legend = 'pop', plot.name = 'RNA Counts Tsne with Batches')
 ```
 
-## Simulating cell-cell interaction
-
-The cell-cell interaction works similar to a GRN; supply the `spatial.params` to
-simulate spatial cell-cell interactions.
-```{r,cache=T}
-options_ <- list2(
-  GRN = data.frame(
-    target = 1:10,
-    regulator = 11:20,
-    effect = 3
-  ),
-  num.genes = 50,
-  num.cells = 500,
-  num.cifs = 500,
-  tree = Phyla3(),
-  do.velocity = F,
-  cci = list(
-    params = data.frame(
-      target = 21:25,
-      regulator = 26:30,
-      effect = 3
-    ),
-    max.neighbors = 2
-  )
-)
-
-results <- sim_true_counts(options_)
-```
-
-Now we plot the cell locations:
-```{r fig.width = 6, fig.asp = 1}
-plot_cell_loc(results)
-```
-
 ## Simulating dynamic GRN
 
 First, call the following function to check the usage of dynamic GRN.
 ```{r}
-scmultisim_help("dynamicGRN")
+scmultisim_help("dynamic.GRN")
 ```
 
 Here we use `Phyla1()` as the differentiation tree to remove the effect of the trajectory. Additionally, we can use `discrete.cif = T` to simulate discrete cell population.
 ```{r}
-options_ = list(
+options_ = list2(
   rand.seed = 0,
   GRN = GRN_params,
   num.cells = 1000,
   num.cifs = 500,
-  tree = read.tree(text="(t1:10);"),
+  tree = Phyla1(),
   diff.cif.fraction = 0.8,
-  # discrete.cif = T,
   do.velocity = F,
   dynamic.GRN = list(
     cell.per.step = 3,
@@ -169,7 +138,7 @@ options_ = list(
     weight.sd = 4
   ),
   intrinsic.noise = 0.5,
-  debug = T
+  # debug = T
 )
 
 results <- sim_true_counts(options_)
@@ -186,4 +155,66 @@ Since we set `cell.per.step = 3`, we expect each adjacent 3 cells share the same
 print(all(results$cell_specific_grn[[1]] == results$cell_specific_grn[[2]]))
 print(all(results$cell_specific_grn[[2]] == results$cell_specific_grn[[3]]))
 print(all(results$cell_specific_grn[[3]] == results$cell_specific_grn[[4]]))
+```
+
+## Simulating Cell-cell interactions
+
+Next, we use the `cci` option to enable cell-cell interactions.
+Check out the details of this option:
+```{r}
+scmultisim_help("cci")
+```
+
+Simulating cell-cell interactions may take some time.
+```{r}
+lig_params <- data.frame(
+  target    = c(101, 102),
+  regulator = c(103, 104),
+  effect    = c(5.2, 5.9)
+)
+
+options_ <- list2(
+  rand.seed = 0,
+  GRN = GRN_params_100,
+  num.genes = 200,
+  num.cells = 500,
+  num.cifs = 50,
+  tree = Phyla3(),
+  intrinsic.noise = 0.5,
+  cci = list(
+    params = lig_params,
+    max.neighbors = 4,
+    cell.type.interaction = "random",
+    step.size = 0.5
+  )
+)
+
+results <- sim_true_counts(options_)
+```
+
+We can use `plot_cell_loc` to view the spatial location of cells.
+```{r fig.width = 3, fig.asp = 1}
+plot_cell_loc(results)
+```
+
+Get the coordinates of each cell:
+```{r}
+results$cci_locs[1:5,]
+```
+
+Get the cell types used in CCI. Since we specified `step.size = 0.5`,
+An intermediate cell type was added on each tree branch.
+```{r}
+results$cci_cell_types
+```
+
+A new column `cell.type.idx` is available in cell metadata, indicating each cell's
+cell type used when simulating cell-cell ineraction.
+```{r}
+results$cell_meta[1:5,]
+```
+
+Get the CCI ground truth between each cell type.
+```{r}
+results$cci_cell_type_param
 ```

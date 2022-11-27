@@ -114,7 +114,7 @@
   dynamic.GRN                                                            = list(
     .default(NA),
     NULL,
-    "Specification of the dynamic GRN. See scmultisim_help(\"dynamicGRN\") for details."
+    "Specification of the dynamic GRN. See scmultisim_help(\"dynamic.GRN\") for details."
   ),
   # ========================== Cell ============================================
   "CELL",
@@ -253,11 +253,11 @@
   ),
   # ========================== Spatial =========================================
   "SIMULATION - SPATIAL",
-  cci.                                                                   = list(
+  cci                                                                    = list(
     .default(NA),
     list(
-      \(x) is.data.frame(x) && ncol(x) >= 3 && is.numeric(x[[3]]),
-      "The value should be a data frame with 3 columns (target, regulator, effect)."
+      \(x) is.list(x) && is.data.frame(x[["params"]]),
+      "Enables cell-cell interaction. See scmultisim_help(\"cci\") for details."
     ),
     "The regulation network for spatial cell-cell interaction."
   )
@@ -301,11 +301,21 @@
 }
 
 
-.print_opt <- function() {
+.print_opt <- function(name = NULL) {
   opt_list <- .opt_list()
-  
   names <- names(opt_list)
-  for (i in seq_along(names)) {
+  
+  opts <- if (is.null(name)) {
+    seq_along(names)
+  } else {
+    which(names %in% name)
+  }
+  
+  if (is.null(opts) || length(opts) == 0) {
+    stop(sprintf("Option %s doesn't exist.\n", name))
+  }
+  
+  for (i in opts) {
     n <- names[i]
     opt <- opt_list[[i]]
     if (n == "") {
@@ -377,15 +387,4 @@ See the returned list for the default values.
     weight.mean = NA,
     weight.sd = 1
   )  
-}
-
-
-.cci_help <- function() {
-  cat("
-- params: The spatial effect between neighbor cells.
-    It should be a data frame similar to the GRN parameter.
-- cell.type.interaction: The interaction level between different cell types.
-    They act as factors multiplied to the ligand effect.
-    Use cci_cell_type_params() to generate the data structure.
-      ") 
 }
