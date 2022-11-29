@@ -11,6 +11,8 @@ True2ObservedCounts(
   randseed,
   alpha_mean = 0.1,
   alpha_sd = 0.002,
+  alpha_gene_mean = 1,
+  alpha_gene_sd = 0,
   gene_len,
   depth_mean,
   depth_sd,

@@ -7,7 +7,7 @@
 cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
 }
 \arguments{
-\item{lenslope}{amount of length bias. This value sould be less than 2*amp_bias_limit[2]/(nbins-1)}
+\item{lenslope}{amount of length bias. This value sould be less than 2*amp_bias_limit\link{2}/(nbins-1)}
 
 \item{nbins}{number of bins for gene length}
 

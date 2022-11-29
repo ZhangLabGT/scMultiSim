@@ -21,7 +21,7 @@ QQplot2RealData(
 
 \item{plot_file_name}{the pdf file name for the output plots}
 
-\item{print_data_dir}{the directory to `print` the source data for plots; if NA then do not print}
+\item{print_data_dir}{the directory to \code{print} the source data for plots; if NA then do not print}
 }
 \description{
 function QQplot2RealData; plot both with ggplot2 and with basic plot

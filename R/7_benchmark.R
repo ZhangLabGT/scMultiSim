@@ -3,6 +3,15 @@
 }
 
 
+#' Plot a R phylogenic tree
+#'
+#' @param tree The tree
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' plot_plyla(Phyla5())
 plot_phyla <- function(tree) {
   plotTree(tree, offset = -0.5)
   tiplabels(cex = 2)
@@ -29,20 +38,24 @@ plot_hist <- function(res, log = FALSE, title = NULL) {
 }
 
 
-#' Plot a (D x cells) data matrix using TSNE.
+#' Plot t-SNE visualization of a data matrix
 #'
-#' @param labels
-#' @param data 
-#' @param perplexity 
-#' @param label 
-#' @param saving 
-#' @param plotname 
-#' @param rand.seed 
+#' @param data The `d`x`n` matrix
+#' @param labels A vector of length `n`, usually cell clusters
+#' @param perplexity Perplexity value used for t-SNE
+#' @param legend A list of colors for the labels
+#' @param plot.name The plot title
+#' @param save If `TRUE`, save as `plot.name`.pdf
+#' @param rand.seed The random seed
+#' @param continuous Whether `labels` should be treated as continuous, e.g. pseudotime
+#' @param labels2 Additional label
+#' @param lim Specify the xlim and y lim c(x_min, x_max, y_min, y_max)
 #'
 #' @return
 #' @export
 #'
 #' @examples
+#' plot_tsne(log2(result$counts + 1), result$cell_meta$pop)
 plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = F, rand.seed = 0,
                       continuous = F, labels2 = NULL, lim = NULL) {
   set.seed(rand.seed)
@@ -87,6 +100,16 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
 }
 
 
+#' Plot the CCI grid
+#' 
+#' In normal cases, please use `plot_cell_loc` instead.
+#'
+#' @param results The scMultisim result object
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_grid <- function(results = .get_results_from_global()) {
   grid <- results$sim$grid
   locs <- sapply(grid$locs, \(a) a)
@@ -121,6 +144,17 @@ plot_grid <- function(results = .get_results_from_global()) {
 }
 
 
+#' Plot the gene module correlation heatmap
+#'
+#' @param results The scMultisim result object
+#' @param seed The random seed
+#' @param grn.genes.only Plot the GRN gens only
+#' @param save 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_gene_module_cor_heatmap <- function(
   results = .get_results_from_global(),
   seed = 0,
@@ -161,7 +195,20 @@ plot_gene_module_cor_heatmap <- function(
   return()
 }
 
-
+#' Plot cell locations
+#'
+#' @param results The scMultisim result object
+#' @param size Fig size
+#' @param show.label Show cell numbers
+#' @param show.arrows Show arrows representing cell-cell interactions
+#' @param lr.pair The ligand-receptor pair used to plot CCI arrows
+#' `results$cci_cell_type_param[lr.pair]`
+#' @param .cell.pop 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_cell_loc <- function(
     results = .get_results_from_global(),
     size = 4, show.label = F, show.arrows = T, lr.pair = 1, .cell.pop = NULL
@@ -233,6 +280,15 @@ plot_cell_loc <- function(
 }
 
 
+#' Plot the GRN network
+#'
+#' @param params The GRN params data frame
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' plot_grn(GRN_params_100)
 plot_grn <- function(params) {
   data <- data.frame(
     from = params[,2],
@@ -249,6 +305,15 @@ plot_grn <- function(params) {
 }
 
 
+#' Print the correlations between targets of each regulator
+#'
+#' @param results The scMultisim result object
+#' @param regulator The regulator ID in the GRN params
+#'
+#' @return
+#' @export
+#'
+#' @examples
  gene_corr_regulator <- function(results = .get_results_from_global(), regulator) {
   grn_params <- results$.options$GRN
   regu <- grn_params[grn_params[, 2] == regulator, 1] %>% as.character()
@@ -304,6 +369,14 @@ gene_corr <- function(
 }
 
 
+#' Plot the ligand-receptor correlation summary
+#'
+#' @param results The scMultisim result object
+#'
+#' @return
+#' @export
+#'
+#' @examples
 gene_corr_cci <- function(
   results = .get_results_from_global(),
   all.genes = F,

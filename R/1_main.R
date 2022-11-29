@@ -1,3 +1,45 @@
+#' Simulate true scRNA and scATAC counts from the parameters
+#' 
+#' @md
+#' @param options See scMultiSim_help().
+#'
+#' @return scMultiSim returns an environment with the following fields:
+#'
+#' - `counts`: Gene-by-cell scRNA-seq counts.
+#' - `atac_counts`: Region-by-cell scATAC-seq counts.
+#' - `region_to_gene`: Region-by-gene 0-1 marix indicating the corresponding relationship between chtomatin regions and genes.
+#' - `atacseq_data`: The "clean" scATAC-seq counts without added intrinsic noise.
+#' - `cell_meta`: A dataframe containing cell type labels and pseudotime information.
+#' - `cif`: The CIF used during the simulation.
+#' - `giv`: The GIV used during the simulation.
+#' - `kinetic_params`: The kinetic parameters used during the simulation.
+#' - `.grn`: The GRN used during the simulation.
+#' - `.grn$regulators`: The list of TFs used by all gene-by-TF matrices.
+#' - `.grn$geff`: Gene-by-TF matrix representing the GRN used during the simulation.
+#' - `.n`: Other metadata, e.g. `.n$cells` is the number of cells.
+#' 
+#' If `do.velocity` is enabled, it has these additional fields:
+#'   
+#'   - `unspliced_counts`: Gene-by-cell unspliced RNA counts.
+#' - `velocity`: Gene-by-cell RNA velocity ground truth.
+#' - `cell_time`: The pseudotime at which the cell counts were generated.
+#' 
+#' If dynamic GRN is enabled, it has these additional fields:
+#'   
+#'   - `cell_specific_grn`: A list of length `n_cells`. Each element is a gene-by-TF matrix, indicating the cell's GRN.
+#' 
+#' If cell-cell interaction is enabled, it has these additional fields:
+#' 
+#' - `grid`: The grid object used during the simulation.
+#'   - `grid$get_neighbours(i)`: Get the neighbour cells of cell `i`.
+#' - `cci_locs`: A dataframe containing the X and Y coordinates of each cell.
+#' - `cci_cell_type_param`: A dataframe containing the CCI network ground truth: all ligand-receptor pairs between each pair of cell types.
+#' - `cci_cell_types`: For continuous cell population, the sub-divided cell types along the trajectory used when simulating CCI.
+#' 
+#' If it is a debug session (`debug = TRUE`), a `sim` field is available,
+#' which is an environment contains all internal states and data structures.
+#'
+#' @export
 sim_true_counts <- function(options) {
   # ==== options ===============================================================
 

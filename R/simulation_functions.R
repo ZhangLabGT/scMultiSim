@@ -32,7 +32,6 @@
 #' @param region_effects_sd controls differences between regions
 #' @param scale_s the cell size parameter in (0,1). Use smaller value for cell types known to be small (like naive cells)
 #' @return a list of eleven elements: 1. A matrix containing the true (spliced) transcript counts, 2. Gene level meta information, 3. Cell level meta information, including a matrix of EVFs and a vector of cell identity (for example, the population the cell belongs to), 4. The parameters k~on~, k~off~ and s used to simulation the true counts, 5. A matrix containing the true unspliced transcript counts, 6. The true RNA velocity information for each cell, 7. The pseudotime at which the cell counts were generated, 8. The scATAC-seq data, 9. The matrix region2gene, a 0 1 matrix of shape (nregions) x (num_genes), where a value of 1 indicates the gene is affected by the accessibility of the particular chromatin region, 10. Gene effects of each regulator gene (column) on every gene ID (row), 11. The number of genes used in the experiment
-#' @export
 SimulateTrueCounts <- function(GRN_params, num_cells = 1000, unregulated_to_regulated_gene_ratio = 0.1, num_evfs = 500, diffEVF_fraction = 0.9, Sigma = 0.1, atac_effect = 0.5,
                                beta = 0.4, d = 1, num_cycles = 3, cycle_length = 1, intrinsic_noise = 1, randseed = 0, do_velocity = FALSE, phyla = Phyla5(),
                                nregions_distribution = cumsum(c(0.1, 0.5, 0.4)), p_zero = 0.8, vary = "s", evf_center = 1, impulse = F, bimod = 0, geffect_mean = 0,
@@ -152,7 +151,6 @@ SimulateTrueCounts <- function(GRN_params, num_cells = 1000, unregulated_to_regu
 #' @param cell the cell number currently having counts generated
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 #' @import phytools
-#' @export
 gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1, ncells1, ngenes, beta_vec, d_vec, cycle_length_factor, cell) {
 
   # totaltime equals to total numeber of cells
@@ -743,7 +741,6 @@ Get_params2 <- function(gene_effects, evf, bimod, ranges) {
 #' Get probability based on gene length
 #' @param glength the the gene length
 #' @return prob, the probability
-#' @export
 get_prob <- function(glength) {
   if (glength >= 1000) { prob <- 0.7 } else {
     if (glength >= 100 & glength < 1000) { prob <- 0.78 }
@@ -765,7 +762,6 @@ get_prob <- function(glength) {
 #' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI)
-#' @export
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap_ref, rate_2cap, gene_len, amp_bias,
                           rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ) {
   ngenes <- length(gene_len)

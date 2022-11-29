@@ -1,3 +1,21 @@
+#' Add experimental noise to true counts
+#'
+#' @param results The scMultisim result object
+#' @param ... 
+#' `randseed`: The random seed
+#' `protocol`: `UMI` or `non-UMI`
+#' `gene_len`:  A vector with lengths of all genes
+#' `alpha_mean`, `alpha_sd`: rate of subsampling of transcripts during capture step
+#' `depth_mean`, `depth_sd`: The sequencing depth
+#' 
+#' @seealso
+#' The underlying methods
+#' \link{True2ObservedCounts} and \link{True2ObservedATAC}
+#'
+#' @return
+#' @export
+#'
+#' @examples
 add_expr_noise <- function(results, ...) {
   cat("Adding experimental noise...\n")
   data(gene_len_pool)
@@ -31,6 +49,18 @@ add_expr_noise <- function(results, ...) {
 }
 
 
+#' Divide batches for observed counts
+#'
+#' @param results The scMultisim result object, after running `add_expr_noise`
+#' @param nbatch Number of batches
+#' @param effect Batch effect size, default is 3
+#' 
+#' @seealso The underlying method \link{DivideBatches}
+#'
+#' @return
+#' @export
+#'
+#' @examples
 divide_batches <- function(results, nbatch = 2, effect = 3) {
   cat("Adding batch effects...\n")
   obs <- results$counts_obs

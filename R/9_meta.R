@@ -1,5 +1,12 @@
 .ver <- "1.0.0"
 
+#' Show detailed documentations of scMultiSim's parameters
+#'
+#' @param topic Can be `options`, `dynamic.GRN`, or `cci`
+#'
+#' @export
+#'
+#' @examples
 scmultisim_help <- function(topic = NULL) {
   if (is.null(topic)) {
     meta_help <- "Call scmultisim_help(topic) where topic can be \"options\" or an option name. Printing help for options by default.\n"

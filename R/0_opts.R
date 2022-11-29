@@ -348,7 +348,6 @@
 #' @param .name get option from this object
 #'
 #' @return the parameter value
-#' @export
 #'
 #' @examples OP(num.cifs)
 OP <- function(..., .name = 'options') {

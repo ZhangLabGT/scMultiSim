@@ -13,7 +13,6 @@
 #' @param randseed should produce same result if all other parameters are all the same
 #' @return None
 #' @import ggplot2 KernelKnn
-#' @export
 plotVelo <- function(counts_s, velocity, cell_time, cell_pop, width = 20*2/3, height = 10, units = "in", dpi = 1000, perplexity = 70, arrow.length = 1, saving = F, randseed=0) {
   set.seed(randseed)
   future_counts_s <- counts_s + velocity
@@ -102,17 +101,14 @@ plotVelo <- function(counts_s, velocity, cell_time, cell_pop, width = 20*2/3, he
 
 #' Calculate the coefficient of variation of a vector x
 #' @param x input vector x
-#' @export
 cv <- function(x) { return(sd(x) / mean(x)) }
 
 #' Calculate the fano factor of a vector x
 #' @param x input vector x
-#' @export
 fano <- function(x) { return((sd(x))^2 / mean(x)) }
 
 #' Calculate the percentage of non-zero values in a vector x
 #' @param x input vector x
-#' @export
 percent_nonzero <- function(x) { return(sum(x > 0) / length(x)) }
 
 
@@ -120,7 +116,6 @@ percent_nonzero <- function(x) { return(sum(x > 0) / length(x)) }
 #' @param x a vector on x axis
 #' @param y a vector on y axis with the same length as x
 #' @param nbins number of bins to use
-#' @export
 dist2diag <- function(x, y, nbins) {
   min_val <- min(c(x, y)); max_val <- max(c(x, y))
   # make nbins equal interval bins
@@ -146,7 +141,6 @@ dist2diag <- function(x, y, nbins) {
 #' @param alpha_range if one knows the rough range of mRNA capture efficiency, it can be input here.
 #' @param idx_set set of indices
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
-#' @export
 BestMatchParams <- function(tech, counts, plotfilename, n_optimal = 3,
                             depth_range = c(-Inf, Inf), alpha_range = c(-Inf, Inf), idx_set = NULL) {
   #counts <- counts[rowSums(counts>0)>10, ]
@@ -233,7 +227,6 @@ BestMatchParams <- function(tech, counts, plotfilename, n_optimal = 3,
 #' @param counts the expression matrix
 #' @param log_count_bins a vector of the cut-offs for the histogram
 #' @return a matrix where the rows are the genes and columns are the number of samples within a count category
-#' @export
 LogDist <- function(counts, log_count_bins) {
   log_dist = apply(log(counts + 1, base = 10), 1, function(x) {
     if (sum(is.na(x)) != length(x)) {
@@ -260,7 +253,6 @@ LogDist <- function(counts, log_count_bins) {
 #' @param filename the name of the output plot. Will not be used if saving=F.
 #' @param saving if the plot should be saved into a file
 #' @param data_name a string which is included in the title of the plot to describe the data used
-#' @export
 PlotCountHeatmap <- function(log_real, mean_counts, data_name, given_ord = NA, zeropropthres = 0.8,
                              filename = NA, saving = F) {
   mean_counts = mean_counts[log_real[, 1] < zeropropthres]
@@ -327,7 +319,6 @@ rescale2range <- function(vec, n) {
 #' @param PCAres the PCA results
 #' @param col_vec a vector to specify the colors for each point
 #' @param figuretitle title for the plot
-#' @export
 plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
   variance_perc <- 100 * (PCAres$sdev)^2 / sum((PCAres$sdev)^2)
   plot(PCAres$x[, 1], PCAres$x[, 2], col = col_vec, pch = 20,
@@ -343,7 +334,6 @@ plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
 #' @param layout A matrix specifying the layout. If present, 'cols' is ignored.
 #' @param ... plots to make a list of
 #' @param plotlist a list of plots
-#' @export
 multiplot <- function(..., plotlist = NULL, cols = 1, layout = NULL) {
 
   # Make a list from the ... arguments and plotlist
@@ -399,7 +389,6 @@ plot_nreads_UMI <- function(hist_res, plot_title) {
 #' @param plot_file_name the pdf file name for the output plots
 #' @param print_data_dir the directory to `print` the source data for plots; if NA then do not print
 #' @import ggplot2
-#' @export
 QQplot2RealData <- function(real_data, sim_data, expressed_prop, plot_file_name, print_data_dir = NA) {
   real_data <- real_data[rowSums(real_data > 0) > floor(dim(real_data)[2] * expressed_prop),]
   sim_data <- sim_data[rowSums(sim_data > 0) > floor(dim(sim_data)[2] * expressed_prop),]
@@ -471,7 +460,6 @@ QQplot2RealData <- function(real_data, sim_data, expressed_prop, plot_file_name,
 #' @param popA the first population to be compared with (usually a number)
 #' @param popB the second population to be compared with
 #' @param num_genes number of genes
-#' @export
 getDEgenes <- function(true_counts_res, popA, popB, num_genes) {
   meta_cell <- true_counts_res$cell_meta
   meta_gene <- true_counts_res$gene_effects
@@ -510,7 +498,6 @@ getDEgenes <- function(true_counts_res, popA, popB, num_genes) {
 #' Outputs a data frame, where each row corresponds to a cell
 #' Each cell has information "pseudotime" (distance from root) and "branch" (on which branch is the cell)
 #' @param cell_meta the cell meta information stored in the output of SimulateTrueCounts() or True2ObservedCounts()
-#' @export
 getTrajectoryGenes <- function(cell_meta) {
   temp <- cell_meta[, 2:3]
   colnames(temp) <- c("branch", "pseudotime")
@@ -520,7 +507,6 @@ getTrajectoryGenes <- function(cell_meta) {
 
 #' loads an RData file, and returns it
 #' @param fileName RData file name
-#' @export
 loadRData <- function(fileName){
     load(fileName)
     get(ls()[ls() != "fileName"])

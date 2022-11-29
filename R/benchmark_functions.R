@@ -63,7 +63,6 @@ rand.index <- function(group1, group2)
 #' @param num_genes number of genes
 #' @param gene_effects_by_regulator gene effects of each regulator gene (column) on every gene ID (row)
 #' @param randseed should produce same result if all other parameters are all the same
-#' @export
 GetGeneModuleColors <- function(GRN_params, gene_effects_by_regulator, num_genes, randseed=0) {
   set.seed(randseed)
   regulator_ID_list <- sort(unique(GRN_params[, 2]))
@@ -89,7 +88,6 @@ GetGeneModuleColors <- function(GRN_params, gene_effects_by_regulator, num_genes
 
 #' This function finds the correlation between every pair of genes
 #' @param counts rna seq counts
-#' @export
 GetCountCorrMatrix <- function(counts) {
 count_correlation_matrix <- cor(t(counts), method = "spearman")
 if (any(is.na(count_correlation_matrix))) {
@@ -107,7 +105,6 @@ if (any(is.na(count_correlation_matrix))) {
 #' @param saving if the plot should be saved into a file
 #' @param GRN_genes_only if the plot shot be generated only for the GRN genes
 #' @param randseed should produce same result if all other parameters are all the same
-#' @export
 PlotGeneModuleCorrelationHeatmap <- function(counts, GRN_params, gene_effects_by_regulator, num_genes, GRN_genes_only = F, saving = F, randseed=0) {
   set.seed(randseed)
   regulator_ID_list <- sort(unique(GRN_params[, 2]))
@@ -138,7 +135,6 @@ PlotGeneModuleCorrelationHeatmap <- function(counts, GRN_params, gene_effects_by
 #' @param GRN_params GRN_params is a matrix where: #    - column 1 is the target gene ID, #    - column 2 is the gene ID which acts as a transcription factor for the target (regulated) gene #    - column 3 is the effect of the column 2 gene ID on the column 1 gene ID
 #' @param gene_effects_by_regulator gene effects of each regulator gene (column) on every gene ID (row)
 #' @param num_genes number of genes
-#' @export
 GetGeneModuleCorrelation <- function(counts, GRN_params, gene_effects_by_regulator, num_genes) {
   regulator_ID_list <- sort(unique(GRN_params[, 2]))
   target_gene_ID_list <- sort(unique(GRN_params[, 1]))
@@ -210,7 +206,6 @@ Get_ATAC_correlation <- function(counts, atacseq_data, num_genes) {
 #' @param randseed should produce same result if all other parameters are all the same
 #' @import Rtsne
 #' @import ggplot2
-#' @export
 PlotTsne <- function(meta, data, perplexity = 60, label, saving = T, plotname, randseed=0) {
   set.seed(randseed)
   data_tsne = Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
@@ -309,7 +304,6 @@ basek2decimal <- function(k, basek_vec) {
 #' calculate adjusted rand index between labels from a clustering algorithm and known labels
 #' @param cluster_res results from a cluster algorithm
 #' @param label known label of the cells
-#' @export
 cal_ARI <- function(cluster_res, label) {
   ri_all <- adj.rand.index(cluster_res, label)
   ri_pop <- sapply(sort(unique(label)), function(i) {
