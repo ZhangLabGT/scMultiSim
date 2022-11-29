@@ -7,6 +7,7 @@
 amplify_1cell(
   true_counts_1cell,
   protocol,
+  rate_2cap_ref,
   rate_2cap,
   gene_len,
   amp_bias,

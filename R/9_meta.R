@@ -1,5 +1,5 @@
 .ver <- "1.0.0"
-
+#' @export
 scmultisim_help <- function(topic = NULL) {
   if (is.null(topic)) {
     meta_help <- "Call scmultisim_help(topic) where topic can be \"options\" or an option name. Printing help for options by default.\n"

@@ -66,7 +66,7 @@ Phyla3 <- function(plotting = F) {
   return(phyla)
 }
 
-
+#' @export
 Phyla1 <- function(len = 1) {
   myTree <- ape::read.tree(text='(A);')
   myTree <- compute.brlen(myTree, len)

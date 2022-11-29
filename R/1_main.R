@@ -1,3 +1,4 @@
+#' @export
 sim_true_counts <- function(options) {
   # ==== options ===============================================================
 

@@ -147,7 +147,7 @@ plot_gene_module_cor_heatmap <- function(
   return()
 }
 
-
+#' @export
 plot_cell_loc <- function(
     results = .get_results_from_global(),
     size = 4, show.label = F, .cell.pop = NULL

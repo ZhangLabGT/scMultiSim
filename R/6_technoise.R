@@ -1,3 +1,4 @@
+#' @export
 add_expr_noise <- function(results, ...) {
   cat("Adding experimental noise...\n")
   data(gene_len_pool)
@@ -11,6 +12,7 @@ add_expr_noise <- function(results, ...) {
   results$atacseq_obs <- True2ObservedATAC(results$atacseq_data, randseed = 0, observation_prob = 0.3, sd_frac = 0.5) 
 }
 
+#' @export
 divide_batches <- function(results, nbatch = 2) {
   cat("Adding batch effects...\n")
   obs <- results$counts_obs
