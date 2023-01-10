@@ -393,6 +393,7 @@
 
   # results
   sim$counts_s <- matrix(nrow = N$cell, ncol = N$gene)
+  sim$sp_atac <- matrix(nrow = N$cell, ncol = N$region)
 
   dim_kon <- dim(sim$params_spatial[[1]]$kon)
   sim$params <- list(
@@ -530,6 +531,8 @@
       if (layer == max_layer || t == N$cell) {
         sim$meta_spatial[icell, ] <- CIF$meta_by_path[[path_i]][layer, ]
         sim$counts_s[icell, ] <- counts
+        cell_idx <- CIF$layer_idx_by_path[[path_i]][layer]
+        sim$sp_atac[icell, ] <- sim$atac_data[cell_idx, ]
       }
     }
   }

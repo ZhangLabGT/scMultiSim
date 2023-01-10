@@ -57,9 +57,10 @@ sim_true_counts <- function(options) {
       sim$sp_effect,
       sim$sp_ctype_param,
       sim$cell_type_map,
-      N$step_size
+      N$step_size,
+      same_type_prob
     )
-    sim$grid <- CreateSpatialGrid(N$cell, N$max_nbs)
+    sim$grid <- CreateSpatialGrid(N$cell, N$max_nbs, .same.type.prob = same_type_prob)
     c(paths, total_ncell) %<-% .get_paths(N, options)
     sim$paths <- paths
     N$max_layer <- total_ncell
@@ -194,7 +195,7 @@ sim_true_counts <- function(options) {
     giv = sim$GIV,
     cell_meta = cell_meta,
     kinetic_params = sim$params,
-    atacseq_data = t(sim$atac_data),
+    atacseq_data = if (sim$do_spatial) t(sim$sp_atac) else t(sim$atac_data),
     region_to_gene = sim$region_to_gene,
     num_genes = sim$N$gene,
     grn_params = grn_params,

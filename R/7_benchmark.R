@@ -150,7 +150,7 @@ plot_gene_module_cor_heatmap <- function(
 
 plot_cell_loc <- function(
     results = .get_results_from_global(),
-    size = 4, show.label = F, .cell.pop = NULL
+    size = 4, show.label = F, show.arrows = T, .cell.pop = NULL
 ) {
   if (is.null(.cell.pop))
     .cell.pop <- results$cell_meta$pop
@@ -179,24 +179,38 @@ plot_cell_loc <- function(
   r <- ctp[1, 2]
   ctp <- ctp[ctp$ligand == l & ctp$receptor == r, ]
   
-  for (i in 1:ncol(locs)) {
-    tp1 <- results$cell_meta$cell.type.idx[i]
-    nbs <- results$grid$get_neighbours(i)
-    for (nb in nbs) {
-      tp2 <- results$cell_meta$cell.type.idx[nb]
-      if (any(ctp$ct1 == tp1 & ctp$ct2 == tp2)) {
-        inter_data <- rbind(inter_data, c(locs[, i], locs[, nb]))
+  if (show.arrows) {
+    for (i in 1:ncol(locs)) {
+      tp1 <- results$cell_meta$cell.type.idx[i]
+      nbs <- results$grid$get_neighbours(i)
+      for (nb in nbs) {
+        tp2 <- results$cell_meta$cell.type.idx[nb]
+        if (any(ctp$ct1 == tp1 & ctp$ct2 == tp2)) {
+          inter_data <- rbind(inter_data, c(locs[, i], locs[, nb]))
+        }
       }
     }
+    inter_data <- as.data.frame(inter_data)
+    colnames(inter_data) <- c("x", "y", "xend", "yend")
+    to_right <- inter_data$xend > inter_data$x
+    to_left <- inter_data$xend < inter_data$x
+    to_up <- inter_data$yend > inter_data$y
+    to_down <- inter_data$yend < inter_data$y
+    inter_data[to_right,]$x <- inter_data[to_right,]$x + 0.2
+    inter_data[to_right,]$xend <- inter_data[to_right,]$xend - 0.2
+    inter_data[to_left,]$x <- inter_data[to_left,]$x - 0.2
+    inter_data[to_left,]$xend <- inter_data[to_left,]$xend + 0.2
+    inter_data[to_up,]$y <- inter_data[to_up,]$y + 0.2
+    inter_data[to_up,]$yend <- inter_data[to_up,]$yend - 0.2
+    inter_data[to_down,]$y <- inter_data[to_down,]$y - 0.2
+    inter_data[to_down,]$yend <- inter_data[to_down,]$yend + 0.2
+    
+    p <- p + geom_segment(
+      aes(x = x, y = y, xend = xend, yend = yend),
+      data = inter_data,
+      arrow = arrow(length = unit(4, "pt"))
+    )
   }
-  inter_data <- as.data.frame(inter_data)
-  colnames(inter_data) <- c("x", "y", "xend", "yend")
-  
-  p <- p + geom_segment(
-    aes(x = x, y = y, xend = xend, yend = yend),
-    data = inter_data,
-    arrow = arrow(length = unit(4, "pt"))
-  )
   
   if (show.label) {
     p <- p + geom_text(aes(label = as.character(seq_along(x))), size = 2, color = 'black')
@@ -264,7 +278,8 @@ gene_corr <- function(
 gene_corr_cci <- function(
   results = .get_results_from_global(),
   all.genes = F,
-  .pair = NULL
+  .pair = NULL,
+  .exclude.same.types = T
 ) {
   options <- results$.options
   ncells <- options$num.cells
@@ -356,6 +371,8 @@ gene_corr_cci <- function(
       nct_rg_list <- numeric()
       non_rg_list <- numeric()
       non_tg_list <- numeric()
+      
+      total <- 0
       for (icell in 1:ncells) {
         nbs <- nb_list[[icell]]
         rg_cnt <- results$counts[rg, icell]
@@ -364,7 +381,7 @@ gene_corr_cci <- function(
         for (nb in nbs) {
           tg_cnt <- results$counts[tg, nb]
           ct2 <- results$cell_meta$cell.type.idx[nb]
-          if (ct1 == ct2) next
+          if (.exclude.same.types && ct1 == ct2) next
           if (any(
             ctp$ligand == sprintf("gene%d", rg) &
             ctp$receptor == sprintf("gene%d", tg) &

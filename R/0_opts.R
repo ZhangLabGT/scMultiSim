@@ -44,7 +44,7 @@
   rand.seed                                                              = list(
     .default(0),
     .should.be.int,
-    "Should produce same result if all other parameters are all the same."
+    "scMultiSim should produce the same result if all other parameters are the same."
   ),
   threads                                                                = list(
     .default(1),
@@ -144,7 +144,7 @@
     "Index of the smallest discrete cell population."
   ),
   num.cifs                                                               = list(
-    .default(500),
+    .default(50),
     .should.be.int,
     "Number of Cell Identity Factors for each kinetic parameter."
   ),
@@ -230,7 +230,7 @@
   do.velocity                                                            = list(
     .default(F),
     .should.be.logical,
-    "Simulate using the whole kinetic model and generate velocity data."
+    "Simulate using the whole kinetic model and generate RNA velocity data."
   ),
   beta                                                                   = list(
     .default(0.4),
@@ -249,7 +249,7 @@
   cycle.len                                                              = list(
     .default(1),
     .should.be.num.between(0, Inf),
-    "For velocity mode, a factor multiplied by the expected time to transition from kon to koff and back to to form the the length of a cycle."
+    "For velocity mode, a factor multiplied by the expected time to transition from kon to koff and back to form the the length of a cycle."
   ),
   # ========================== Spatial =========================================
   "SIMULATION - SPATIAL",

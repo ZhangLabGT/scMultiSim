@@ -56,6 +56,8 @@
     NULL
   }
   
+  same_type_prob = params$same.type.prob %||% 0.8
+  
   list(
     params = spatial_list,
     regulators = regulators,
@@ -65,7 +67,8 @@
     effects = effects,
     cell_type_factors = cell_type_factors,
     cell_type_map = cell_type_map, 
-    step_size = step_size
+    step_size = step_size,
+    same_type_prob = same_type_prob
   )
 }
 
