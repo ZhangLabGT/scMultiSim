@@ -150,7 +150,7 @@ plot_gene_module_cor_heatmap <- function(
 
 plot_cell_loc <- function(
     results = .get_results_from_global(),
-    size = 4, show.label = F, show.arrows = T, .cell.pop = NULL
+    size = 4, show.label = F, show.arrows = T, lr.pair = 1, .cell.pop = NULL
 ) {
   if (is.null(.cell.pop))
     .cell.pop <- results$cell_meta$pop
@@ -175,8 +175,8 @@ plot_cell_loc <- function(
   
   inter_data <- NULL 
   ctp <- results$cci_cell_type_param
-  l <- ctp[1, 1]
-  r <- ctp[1, 2]
+  l <- ctp[lr.pair, 1]
+  r <- ctp[lr.pair, 2]
   ctp <- ctp[ctp$ligand == l & ctp$receptor == r, ]
   
   if (show.arrows) {

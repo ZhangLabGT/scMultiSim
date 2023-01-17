@@ -57,6 +57,8 @@
   }
   
   same_type_prob = params$same.type.prob %||% 0.8
+  grid_size = params$grid.size %||% NA
+  del_lr_pair = params$del.lr.pair %||% TRUE
   
   list(
     params = spatial_list,
@@ -68,7 +70,9 @@
     cell_type_factors = cell_type_factors,
     cell_type_map = cell_type_map, 
     step_size = step_size,
-    same_type_prob = same_type_prob
+    del_lr_pair = del_lr_pair,
+    same_type_prob = same_type_prob,
+    grid_size = grid_size
   )
 }
 
@@ -313,8 +317,8 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   }
 )
 
-CreateSpatialGrid <- function(ncells, max_nbs, .same.type.prob = 0.8) {
-  grid_size <- ceiling(sqrt(ncells) * 3)
+CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8) {
+  grid_size <- .grid.size %||% ceiling(sqrt(ncells) * 3)
   grid <- matrix(NA, grid_size, grid_size)
   loc_order <- sample(1:ncells)
   .SpatialGrid$new(

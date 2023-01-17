@@ -364,6 +364,7 @@
   phyla <- OP(tree)
   do_velo <- OP(do.velocity)
   intr_noise <- OP(intrinsic.noise)
+  del_lr_pair <- N$sp_del_lr_pair
   has_ctype_factor <- !is.null(sim$sp_ctype_param)
   
   # hge
@@ -394,6 +395,10 @@
   # results
   sim$counts_s <- matrix(nrow = N$cell, ncol = N$gene)
   sim$sp_atac <- matrix(nrow = N$cell, ncol = N$region)
+  
+  if (sim$is_dyn_grn) {
+    sim$dyngrn_ver_map <- numeric(N$cell)
+  }
 
   dim_kon <- dim(sim$params_spatial[[1]]$kon)
   sim$params <- list(
@@ -461,7 +466,7 @@
         if (is.na(nb)) next
         # n1_lig1  n1_lig2 | n2_lig1  n2_lig2  ...
         base <- (i - 1) * N$sp_regulators
-        inactive_one <- sample(1:N$sp_regulators, 1)
+        inactive_one <- if (del_lr_pair) sample(1:N$sp_regulators, 1) else -1
         for (j in 1:N$sp_regulators) {
           ctype_factor <- if (j == inactive_one) {
             0
@@ -490,10 +495,19 @@
       # }
       # CIF_s <- cbind(cif_$nd, cif_diff, cif_$reg)
 
+      geff <- if (sim$is_dyn_grn) {
+        # dynamic GRN
+        if (sim$dyngrn_ver_map[icell] == 0) {
+          sim$dyngrn_ver_map[icell] <- sim$GRN$update()
+        }
+        GRN$history[[sim$dyngrn_ver_map[icell]]]
+      } else {
+        GRN$geff
+      }
       # get s
       params <- sim$params_spatial[[icell]]
       s_cell <- CIF_s_base[[icell]][layer, ] %*% t(GIV_s) +
-        regu_cif %*% t(cbind(GRN$geff, sim$sp_effect))
+        regu_cif %*% t(cbind(geff, sim$sp_effect))
       s_before_sample <- s_cell
       s_cell <- .match_params_den(s_cell, sim, 3)
       s_cell <- (10^s_cell) * OP(scale.s) * sim$hge_scale %>% as.vector()

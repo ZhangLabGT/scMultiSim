@@ -58,9 +58,11 @@ sim_true_counts <- function(options) {
       sim$sp_ctype_param,
       sim$cell_type_map,
       N$step_size,
-      same_type_prob
+      N$sp_del_lr_pair,
+      same_type_prob,
+      grid_size
     )
-    sim$grid <- CreateSpatialGrid(N$cell, N$max_nbs, .same.type.prob = same_type_prob)
+    sim$grid <- CreateSpatialGrid(N$cell, N$max_nbs, .grid.size = grid_size, .same.type.prob = same_type_prob)
     c(paths, total_ncell) %<-% .get_paths(N, options)
     sim$paths <- paths
     N$max_layer <- total_ncell
