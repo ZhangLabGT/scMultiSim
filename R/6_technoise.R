@@ -11,7 +11,7 @@ add_expr_noise <- function(results, ...) {
   results$atacseq_obs <- True2ObservedATAC(results$atacseq_data, randseed = 0, observation_prob = 0.3, sd_frac = 0.5) 
 }
 
-divide_batches <- function(results, nbatch = 2) {
+divide_batches <- function(results, nbatch = 2, effect = 3) {
   cat("Adding batch effects...\n")
   obs <- results$counts_obs
   if (is.list(obs)) {
@@ -19,7 +19,7 @@ divide_batches <- function(results, nbatch = 2) {
   }
   ngene <- nrow(obs)
   merged <- rbind(obs, results$atacseq_obs)
-  b <- DivideBatches(counts = merged, meta_cell = results$cell_meta, nbatch = nbatch, batch_effect_size = 3)
+  b <- DivideBatches(counts = merged, meta_cell = results$cell_meta, nbatch = nbatch, batch_effect_size = effect)
   results$counts_with_batches <- b$counts[1:ngene,]
   results$atac_with_batches <- b$counts[-(1:ngene),]
   results$cell_meta <- b$cell_meta
