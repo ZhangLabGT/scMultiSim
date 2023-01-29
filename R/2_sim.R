@@ -447,6 +447,8 @@
     if (t == t_real) {
       grid$allocate(t, sim$cell_path[t])
     }
+    
+    if (t_real %% 50 == 0) gc()
 
     # there are t cells now
     for (icell in 1:t) {
@@ -508,7 +510,6 @@
       params <- sim$params_spatial[[icell]]
       s_cell <- CIF_s_base[[icell]][layer, ] %*% t(GIV_s) +
         regu_cif %*% t(cbind(geff, sim$sp_effect))
-      s_before_sample <- s_cell
       s_cell <- .match_params_den(s_cell, sim, 3)
       s_cell <- (10^s_cell) * OP(scale.s) * sim$hge_scale %>% as.vector()
 
@@ -548,6 +549,8 @@
         cell_idx <- CIF$layer_idx_by_path[[path_i]][layer]
         sim$sp_atac[icell, ] <- sim$atac_data[cell_idx, ]
       }
+      
+      rm(s_cell, counts, counts_regu, params, geff, lig_cif)
     }
   }
 
