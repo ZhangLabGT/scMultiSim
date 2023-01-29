@@ -43,7 +43,7 @@ plot_hist <- function(res, log = FALSE, title = NULL) {
 #' @export
 #'
 #' @examples
-plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = F, rand.seed = 0) {
+plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = F, rand.seed = 0, labels2 = NULL) {
   set.seed(rand.seed)
   
   data_tsne = Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
@@ -55,7 +55,11 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
   )
   p <- ggplot(plot_tsne, aes(x, y, group = index, color = index))
   
-  p <- p + geom_point(aes(colour = .data[['label']]), shape = 20) + labs(color = legend)
+  if (is.null(labels2)) {
+    p <- p + geom_point(aes(colour = .data[['label']]), shape = 20) + labs(color = legend)
+  } else {
+    p <- p + geom_point(aes(colour = .data[['label']]), shape = factor(labels2)) + labs(color = legend)
+  }
   
   if (is.character(save)) {
     save_path <- if (is.character(save)) {

@@ -59,6 +59,15 @@
   same_type_prob = params$same.type.prob %||% 0.8
   grid_size = params$grid.size %||% NA
   del_lr_pair = params$del.lr.pair %||% TRUE
+  layout = params$layout %||% "enhanced"
+  
+  if (layout %in% c("basic", "enhanced", "enhanced2")) {
+    grid_method <- layout
+  } else if (layout == "enhanced+oracle" || layout == "basic+oracle") {
+    grid_method <- substring(layout, 1, nchar(layout) - 7)
+  } else {
+    stop(sprintf("CCI grid layout '%s' is not supported.", layout))
+  }
   
   list(
     params = spatial_list,
@@ -72,7 +81,8 @@
     step_size = step_size,
     del_lr_pair = del_lr_pair,
     same_type_prob = same_type_prob,
-    grid_size = grid_size
+    grid_size = grid_size,
+    grid_method = grid_method
   )
 }
 
@@ -282,6 +292,19 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
       } else {
         find_nearby(icell, cell.type)
       }
+    } else if (method == "enhanced2") {
+      if (icell <= 8) {
+        repeat {
+          l <- floor(0.15 * grid_size)
+          h <- floor(0.85 * grid_size)
+          x <- sample(l:h, 1)
+          y <- sample(l:h, 1)
+          if (is.na(grid[x, y])) break
+        }
+        c(x, y)
+      } else {
+        find_nearby(icell, cell.type)
+      }
     } else {
       loc <- loc_order[icell]
       x <- ceiling(loc / grid_size)
@@ -317,12 +340,12 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   }
 )
 
-CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8) {
-  grid_size <- .grid.size %||% ceiling(sqrt(ncells) * 3)
+CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8, .method = "enhanced") {
+  grid_size <- if (is.na(.grid.size)) ceiling(sqrt(ncells) * 3) else .grid.size
   grid <- matrix(NA, grid_size, grid_size)
   loc_order <- sample(1:ncells)
   .SpatialGrid$new(
-    method = "enhanced",
+    method = .method,
     grid_size = grid_size, ncells = ncells, grid = grid,
     same_type_prob = .same.type.prob,
     locs = list(), loc_order = loc_order,
