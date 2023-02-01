@@ -63,13 +63,19 @@ sim_true_counts <- function(options) {
       grid_size,
       sim$sp_layout
     )
+
     sim$grid <- CreateSpatialGrid(
       N$cell, N$max_nbs,
       .grid.size = grid_size, .same.type.prob = same_type_prob, .method = sim$sp_layout)
-    c(paths, total_ncell) %<-% .get_paths(N, options)
-    sim$paths <- paths
-    N$max_layer <- total_ncell
-    sim$cell_path <- sample(1:length(paths), OP(num.cells), replace = T)
+    
+    if (is_discrete) {
+      N$max_layer <- N$cell
+    } else {
+      c(paths, total_ncell) %<-% .get_paths(N, options)
+      sim$paths <- paths
+      N$max_layer <- total_ncell
+      sim$cell_path <- sample(1:length(paths), OP(num.cells), replace = T)
+    }
   }
 
   N$reg_cif <- if (is.null(GRN)) {
@@ -106,31 +112,39 @@ sim_true_counts <- function(options) {
 
   # 1.4 ATAC-seq & CIF (for spatial)
   if (sim$do_spatial) {
+    # ==== spatial ====
     CIF_atac_all <- .continuous_cif(seed[6], N, options, ncell_key = "max_layer")
     # get edge length
     atac_neutral <- CIF_atac_all$neutral[1:N$max_layer, ]
-    sim$path_len <- .get_path_len(atac_neutral, paths, N)
+    if (!is_discrete) {
+      sim$path_len <- .get_path_len(atac_neutral, paths, N)
+    }
     # atac
     sim$CIF_atac <- CIF_atac_all$cif$s
     .atac_seq(seed[7], sim)
     # CIF
     cat("Get CIF...")
-    cif <- .continuous_cif(
-      seed[2], N, options,
-      is_spatial = T,
-      spatial_params = list(total_ncell, sim$paths, sim$cell_path, sim$path_len)
-    )
-    # add cell.type.idx
-    if (!is.null(sim$cell_type_map)) {
-      for (i in seq_along(cif$meta_by_path)) {
-        cif$meta_by_path[[i]] <- cbind(
-          cif$meta_by_path[[i]],
-          data.frame(cell.type.idx = sim$cell_type_map[cif$meta_by_path[[i]]$cell.type])
-        )
+    if (is_discrete) {
+      cif <- .discrete_cif.spatial(seed[2], N, options)
+    } else {
+      cif <- .continuous_cif(
+        seed[2], N, options,
+        is_spatial = T,
+        spatial_params = list(total_ncell, sim$paths, sim$cell_path, sim$path_len)
+      )
+      # add cell.type.idx
+      if (!is.null(sim$cell_type_map)) {
+        for (i in seq_along(cif$meta_by_path)) {
+          cif$meta_by_path[[i]] <- cbind(
+            cif$meta_by_path[[i]],
+            data.frame(cell.type.idx = sim$cell_type_map[cif$meta_by_path[[i]]$cell.type])
+          )
+        }
       }
     }
     sim$CIF_spatial <- cif
   } else {
+    # ==== not spatial ====
     sim$CIF_atac <- if (is_discrete) {
       .discrete_cif(seed[6], N, options)$cif$s
     } else {
@@ -422,6 +436,8 @@ sim_true_counts <- function(options) {
   evfs <- lapply(1:3, function(iparam) {
     n_nd_cif <- N$nd.cif[iparam]
     n_diff_cif <- N$diff.cif[iparam]
+    
+    # ========== nd_cif ==========
     if (n_nd_cif > 0) {
       pop_evf_nonDE <- lapply(c(1:npop), function(ipop) {
         evf <- sapply(c(1:(n_nd_cif)), function(ievf) {
@@ -434,6 +450,8 @@ sim_true_counts <- function(options) {
     } else {
       pop_evf_nonDE <- NULL
     }
+    
+    # ========== de_cif ==========
     if (n_diff_cif > 0) {
       pop_evf_mean_DE <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
       pop_evf_DE <- lapply(c(1:npop), function(ipop) {
@@ -453,6 +471,8 @@ sim_true_counts <- function(options) {
       "%s_%s_cif%d", param_name[iparam], colnames(cif),
       1:(n_nd_cif + n_diff_cif)
     )
+    
+    # ========== generate reg_cif for k_on, k_off ===========
     if (iparam <= 2 && N$reg_cif > 0) {
       reg_cif <- lapply(
         1:N$reg_cif,

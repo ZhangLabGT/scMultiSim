@@ -239,3 +239,106 @@
   names(cif) <- param_names
   cif
 }
+
+
+.discrete_cif.spatial <- function(
+    seed, N, options, ...
+) {
+  set.seed(seed)
+  param_names <- c("kon", "koff", "s")
+  
+  phyla <- OP(tree)
+  cif_center <- OP(cif.center)
+  cif_sigma <- OP(cif.sigma)
+  min_popsize <- OP(discrete.min.pop.size)
+  i_minpop <- OP(discrete.min.pop.index)
+  
+  npop <- length(phyla$tip.label)
+  if (npop == 1) {
+    ncells_pop <- N$cell
+  } else {
+    ncells_pop <- rep(min_popsize, npop)
+    if (N$cell < min_popsize * npop) {
+      stop(sprintf(
+        "The size of the smallest population (%g * %g) is too big for the total number of cells (%g)",
+        min_popsize, npop, N$cell))
+    }
+    
+    larger_pops <- setdiff(1:npop, i_minpop)
+    ncells_pop[larger_pops] <- floor((N$cell - min_popsize) / length(larger_pops))
+    leftover <- N$cell - sum(ncells_pop)
+    if (leftover > 0) {
+      temp <- sample(larger_pops, leftover, replace = F)
+      ncells_pop[temp] <- ncells_pop[temp] + 1
+    }
+  }
+  
+  vcv_evf_mean <- vcv.phylo(phyla, cor = T)
+  param_name <- c("kon", "koff", "s")
+  
+  # nd and reg cif
+  cif <- foreach (i_cell = 1:N$cell) %dopar% {
+    # === each cell ===
+    n_layers <- N$cell
+    
+    # for each cell, generate n_layer x n_cif
+    cif_cell <- lapply(1:3, function(i) {
+      param_name <- param_names[i]
+      n_nd_cif <- N$nd.cif[i]
+      n_diff_cif <- N$diff.cif[i]
+      need_diff_cif <- n_diff_cif > 0    
+      
+      # nd cif
+      nd_cif <- lapply(1:n_nd_cif, \(icif) rnorm(n_layers, cif_center, cif_sigma)) %>% do.call(cbind, .)
+      colnames(nd_cif) <- paste(param_name, "nonDE", 1:n_nd_cif, sep = "_")
+      
+      # reg cif
+      reg_cif <- NULL
+      if (i <= 2 && N$reg_cif > 0) {
+        reg_cif <- lapply(
+          1:N$reg_cif,
+          \(.) rnorm(n_layers, cif_center, cif_sigma)
+        ) %>% do.call(cbind, .)
+        colnames(reg_cif) <- paste(param_name, "reg", 1:N$reg_cif, sep = "_")
+      }
+      
+      list(nd = nd_cif, diff = need_diff_cif, reg = reg_cif)
+    })
+    
+    setNames(cif_cell, param_names)
+    # === end: each cell ===
+  }
+  
+  
+  # diff cif
+  diff_cif <- lapply(1:3, function(i) {
+    n_diff_cif <- N$diff.cif[i]
+    need_diff_cif <- n_diff_cif > 0    
+    if (need_diff_cif) {
+      pop_diff_cif_mean <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
+      dcif <- lapply(1:npop, function(ipop) {
+        evf <- sapply(1:n_diff_cif, function(ievf) {
+          rnorm(ncells_pop[ipop], pop_diff_cif_mean[ievf, ipop], cif_sigma)
+        })
+        return(evf)
+      }) %>% do.call(rbind, .)
+      colnames(dcif) <- rep("DE", n_diff_cif)
+      dcif
+    } else {
+      NULL
+    }
+  })
+  diff_cif <- setNames(diff_cif, param_names)
+  
+  pop <- do.call(c, lapply(c(1:npop), function(i) rep(i, ncells_pop[i])))
+  
+  meta <- data.frame(
+    pop = pop, cell.type = pop, cell.type.idx = pop
+  )
+  
+  list(
+    cif = cif,
+    meta = meta,
+    diff_cif = diff_cif
+  )
+}

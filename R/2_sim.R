@@ -30,18 +30,28 @@
 .get_params <- function(seed, sim, sp_cell_i = NULL, sp_path_i = NULL) {
   set.seed(seed)
   is_spatial <- !is.null(sp_cell_i)
+  is_discrete <- is.null(sp_path_i)
 
   CIF <- if (is_spatial) {
     setNames(
       lapply(1:2, function(i) {
-        cif_ <- sim$CIF_spatial$cif[[sp_cell_i]][[i]]
-        # cif_$diff is T if it's need to be combined with the shared diff cif
-        cif_diff <- if (cif_$diff) {
-          sim$CIF_spatial$diff_cif_by_path[[i]][[sp_path_i]]
+        # get CIF for param i and current cell
+        if (is_discrete) {
+          # discrete spatial
+          cif_ <- sim$CIF_spatial$cif[[sp_cell_i]][[i]]
+          cif_diff <- sim$CIF_spatial$diff_cif[[i]]
+          cbind(cif_$nd, cif_diff, cif_$reg) 
         } else {
-          NULL
+          # continuous spatial
+          cif_ <- sim$CIF_spatial$cif[[sp_cell_i]][[i]]
+          # cif_$diff is T if it's need to be combined with the shared diff cif
+          cif_diff <- if (cif_$diff) {
+            sim$CIF_spatial$diff_cif_by_path[[i]][[sp_path_i]]
+          } else {
+            NULL
+          }
+          cbind(cif_$nd, cif_diff, cif_$reg)
         }
-        cbind(cif_$nd, cif_diff, cif_$reg)
       }),
       c("kon", "koff")
     )
@@ -50,8 +60,14 @@
   }
   GIV <- sim$GIV
   ATAC_data <- if (is_spatial) {
-    idx_on_path <- sim$CIF_spatial$layer_idx_by_path[[sp_path_i]]
-    sim$atac_data[idx_on_path, ]
+    if (is_discrete) {
+      # discrete spatial
+      sim$atac_data[rep(sp_cell_i, nrow(sim$atac_data)), ]
+    } else {
+      # continuous spatial
+      idx_on_path <- sim$CIF_spatial$layer_idx_by_path[[sp_path_i]]
+      sim$atac_data[idx_on_path, ]
+    }
   } else {
     sim$atac_data
   }
@@ -364,6 +380,7 @@
   phyla <- OP(tree)
   do_velo <- OP(do.velocity)
   intr_noise <- OP(intrinsic.noise)
+  is_discrete <- OP(discrete.cif)
   del_lr_pair <- N$sp_del_lr_pair
   has_ctype_factor <- !is.null(sim$sp_ctype_param)
   
@@ -371,7 +388,9 @@
   CIF_s_base <- lapply(1:N$cell, function (icell) {
     path_i <- sim$cell_path[icell]
     cif_ <- CIF$cif[[icell]]$s
-    cif_diff <- if (cif_$diff) {
+    cif_diff <- if (is_discrete) {
+      CIF$diff_cif$s
+    } else if (cif_$diff) {
       CIF$diff_cif_by_path$s[[path_i]]
     } else {
       NULL
@@ -388,7 +407,7 @@
   c(edges, root, tips, internal) %<-% .tree_info(phyla)
 
   N_lig_cif <- N$sp_regulators * N$max_nbs
-  n_steps <- max(sim$path_len)
+  n_steps <- if(is_discrete) N$cell else max(sim$path_len)
   # continue for another 10 steps after the final layer
   n_steps <- n_steps + 10
 
@@ -445,7 +464,12 @@
 
     # add new cell to the grid
     if (t == t_real) {
-      grid$allocate(t, sim$cell_path[t])
+      new_cell_type <- if (is_discrete) {
+        CIF$meta[t, "cell.type.idx"]
+      } else {
+        sim$cell_path[t]
+      }
+      grid$allocate(t, new_cell_type)
     }
     
     if (t_real %% 50 == 0) gc()
@@ -454,7 +478,7 @@
     for (icell in 1:t) {
       # the corresponding layer index for this cell
       path_i <- sim$cell_path[icell]
-      max_layer <- sim$path_len[path_i]
+      max_layer <- if (is_discrete) N$cell else sim$path_len[path_i]
       layer <- t - icell + 1
       if (layer > max_layer) {
         layer <- max_layer
@@ -473,13 +497,19 @@
           ctype_factor <- if (j == inactive_one) {
             0
           } else if (has_ctype_factor) {
-            nb_path <- sim$cell_path[nb]
-            tp1 <- CIF$meta_by_path[[path_i]][layer, "cell.type.idx"]
-            layer2 <- t - nb + 1
-            max_layer2 <- sim$path_len[nb_path]
-            if (layer2 > max_layer2) layer2 <- max_layer2
-            tp2 <- CIF$meta_by_path[[nb_path]][layer2, "cell.type.idx"]
-            sim$sp_ctype_param[tp1, tp2, j]
+            if (is_discrete) {
+              tp1 <- CIF$meta[icell, "cell.type.idx"] 
+              tp2 <- CIF$meta[nb, "cell.type.idx"] 
+              sim$sp_ctype_param[tp1, tp2, j]
+            } else {
+              nb_path <- sim$cell_path[nb]
+              tp1 <- CIF$meta_by_path[[path_i]][layer, "cell.type.idx"]
+              layer2 <- t - nb + 1
+              max_layer2 <- sim$path_len[nb_path]
+              if (layer2 > max_layer2) layer2 <- max_layer2
+              tp2 <- CIF$meta_by_path[[nb_path]][layer2, "cell.type.idx"]
+              sim$sp_ctype_param[tp1, tp2, j]
+            }
           } else {
             1
           }
@@ -544,10 +574,15 @@
       # }
 
       if (layer == max_layer || t == N$cell) {
-        sim$meta_spatial[icell, ] <- CIF$meta_by_path[[path_i]][layer, ]
         sim$counts_s[icell, ] <- counts
-        cell_idx <- CIF$layer_idx_by_path[[path_i]][layer]
-        sim$sp_atac[icell, ] <- sim$atac_data[cell_idx, ]
+        if (is_discrete) {
+          sim$meta_spatial[icell, ] <- CIF$meta[icell, ]
+          sim$sp_atac[icell, ] <- sim$atac_data[icell, ]
+        } else {
+          sim$meta_spatial[icell, ] <- CIF$meta_by_path[[path_i]][layer, ]
+          cell_idx <- CIF$layer_idx_by_path[[path_i]][layer]
+          sim$sp_atac[icell, ] <- sim$atac_data[cell_idx, ]
+        }
       }
       
       rm(s_cell, counts, counts_regu, params, geff, lig_cif)
