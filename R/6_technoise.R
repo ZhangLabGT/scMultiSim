@@ -32,7 +32,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3) {
   ngene <- nrow(obs)
   merged <- rbind(obs, results$atacseq_obs)
   if ("batch" %in% names(results$cell_meta)) {
-    results$cell_meta <- results$cell_meta[, !names(df) %in% "batch"]
+    results$cell_meta <- results$cell_meta[, !(names(results$cell_meta) %in% "batch")]
   }
   b <- DivideBatches(counts = merged, meta_cell = results$cell_meta, nbatch = nbatch, batch_effect_size = effect)
   results$counts_with_batches <- b$counts[1:ngene,]
