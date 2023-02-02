@@ -73,7 +73,7 @@
   ),
   giv.mean                                                               = list(
     .default(0),
-    .should.be.num.between(0, Inf),
+    .should.be.num.between(-Inf, Inf),
     "Mean of the Gene Identity Vectors."
   ),
   giv.prob                                                               = list(

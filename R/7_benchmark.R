@@ -120,13 +120,14 @@ plot_gene_module_cor_heatmap <- function(
   set.seed(seed)
   grn <- results$.grn$params
   num_genes <- results$num_genes
+  counts <- log2(results$counts + 1)
   regulator_ID_list <- sort(unique(grn[, 2]))
   target_gene_ID_list <- sort(unique(grn[, 1]))
   num_target_genes <- length(target_gene_ID_list)
   num_regulators <- length(regulator_ID_list)
   num_GRN_genes <- num_target_genes + num_regulators
   gene_module_color_vector = GetGeneModuleColors(grn, results$.grn$geff, num_genes)
-  count_correlation_matrix = GetCountCorrMatrix(results$counts)
+  count_correlation_matrix = GetCountCorrMatrix(counts)
   
   save_path <- if (is.character(save)) {
     save
@@ -258,12 +259,27 @@ plot_grn <- function(params) {
   cat("\n")
 }
 
+ 
+ gene_corr_grn <- function(results = .get_results_from_global()) {
+  counts <- log2(results$counts + 1)
+  grn_params <- results$.options$GRN
+  regulators <- unique(grn_params[, 2])
+  total <- 0
+  for (i in seq(nrow(grn_params))) {
+    rg <- grn_params[i, 2]
+    tg <- grn_params[i, 1]
+    total <- total + cor(counts[tg,], counts[rg,], method = "spearman")
+  }
+  total / nrow(grn_params) 
+ }
+
 
 gene_corr <- function(
   results = .get_results_from_global(),
   genes = NULL
 ) {
-  genes <- if (is.null(genes)) seq(nrow(results$counts)) else genes
+  counts <- log2(results$counts + 1)
+  genes <- if (is.null(genes)) seq(nrow(counts)) else genes
   ngenes <- length(genes)
    
   res <- matrix(nrow = ngenes, ncol = ngenes) 
@@ -271,7 +287,7 @@ gene_corr <- function(
     for (j in 1:i) {
       g1 <- genes[i] 
       g2 <- genes[j]
-      res[i, j] <- res[j, i] <- cor(results$counts[g1,], results$counts[g2,])
+      res[i, j] <- res[j, i] <- cor(counts[g1,], counts[g2,])
     }
   }
   rownames(res) <- colnames(res) <- genes
