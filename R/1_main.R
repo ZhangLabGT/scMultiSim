@@ -113,7 +113,12 @@ sim_true_counts <- function(options) {
   # 1.4 ATAC-seq & CIF (for spatial)
   if (sim$do_spatial) {
     # ==== spatial ====
-    CIF_atac_all <- .continuous_cif(seed[6], N, options, ncell_key = "max_layer")
+    CIF_atac_all <- if (is_discrete) {
+      # discrete CIF: N$cell == number of layers
+      .discrete_cif(seed[6], N, options)
+    } else {
+      .continuous_cif(seed[6], N, options, ncell_key = "max_layer")
+    }
     # get edge length
     atac_neutral <- CIF_atac_all$neutral[1:N$max_layer, ]
     if (!is_discrete) {
@@ -262,6 +267,7 @@ sim_true_counts <- function(options) {
       }
       ctype_param$ligand <- paste0("gene", ctype_param$ligand)
       ctype_param$receptor <- paste0("gene", ctype_param$receptor)
+      result$cif <- sim$CIF_spatial
     } else {
       ctype_param <- NULL
     }

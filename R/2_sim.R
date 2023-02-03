@@ -389,7 +389,10 @@
     path_i <- sim$cell_path[icell]
     cif_ <- CIF$cif[[icell]]$s
     cif_diff <- if (is_discrete) {
-      CIF$diff_cif$s
+      diff_s <- CIF$diff_cif$s
+      if (is.null(diff_s)) NULL else {
+        as.matrix(as.data.frame(lapply(diff_s[icell,], rep, N$cell)))
+      }
     } else if (cif_$diff) {
       CIF$diff_cif_by_path$s[[path_i]]
     } else {
