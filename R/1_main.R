@@ -229,6 +229,7 @@ sim_true_counts <- function(options) {
     .n = sim$N
   )
   
+  result$atac_counts <- .atac_intr_noise(result$atacseq_data)
 
   if (do_velocity) {
     result <- c(result, list(

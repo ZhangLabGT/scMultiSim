@@ -594,3 +594,11 @@
 
   cat("\n")
 }
+
+
+.atac_intr_noise <- function(atac) {
+  m <- mean(atac)
+  res <- atac + rnorm(length(atac), 0, m * 1.5)
+  res[res < 0] <- 0
+  res
+}

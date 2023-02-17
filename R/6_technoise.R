@@ -17,7 +17,15 @@ add_expr_noise <- function(results, ...) {
   rna_args$meta_cell <- results$cell_meta
   results$counts_obs <- do.call(True2ObservedCounts, rna_args)
   
-  results$atacseq_obs <- True2ObservedATAC(results$atacseq_data, randseed = args$randseed,
+  atac_data <- if (!is.null(results$atac_counts)) {
+    cat("Using atac_counts\n")  
+    results$atac_counts
+  } else {
+    stop()
+    cat("Using atacseq_data\n")  
+    results$atacseq_data 
+  }
+  results$atacseq_obs <- True2ObservedATAC(atac_data, randseed = args$randseed,
                                            observation_prob = atac_args$atac.obs.prob,
                                            sd_frac = atac_args$atac.sd.frac) 
 }
