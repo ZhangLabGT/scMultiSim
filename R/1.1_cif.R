@@ -242,7 +242,7 @@
 
 
 .discrete_cif.spatial <- function(
-    seed, N, options, ...
+    seed, N, options, sim, ...
 ) {
   set.seed(seed)
   param_names <- c("kon", "koff", "s")
@@ -250,12 +250,18 @@
   phyla <- OP(tree)
   cif_center <- OP(cif.center)
   cif_sigma <- OP(cif.sigma)
+  user_popsize <- OP(discrete.pop.size)
   min_popsize <- OP(discrete.min.pop.size)
   i_minpop <- OP(discrete.min.pop.index)
   
   npop <- length(phyla$tip.label)
-  if (npop == 1) {
+  if (!is.null(sim$ncells_pop)) {
+    ncells_pop <- sim$ncells_pop
+  } else if (npop == 1) {
     ncells_pop <- N$cell
+  } else if (is.integer(user_popsize)) {
+    stopifnot(length(user_popsize) == npop)
+    ncells_pop <- user_popsize
   } else {
     ncells_pop <- rep(min_popsize, npop)
     if (N$cell < min_popsize * npop) {
@@ -271,6 +277,10 @@
       temp <- sample(larger_pops, leftover, replace = F)
       ncells_pop[temp] <- ncells_pop[temp] + 1
     }
+  }
+  
+  if (is.null(sim$ncells_pop)) {
+    sim$ncells_pop <- ncells_pop
   }
   
   vcv_evf_mean <- vcv.phylo(phyla, cor = T)

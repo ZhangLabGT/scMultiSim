@@ -32,8 +32,17 @@ sim_true_counts <- function(options) {
   seed <- sample(1:1e5, size = 9)
 
   # get the GRN info and the numbers
+  sim$do_spatial <- is.list(spatial_params)
   sim$is_dyn_grn <- is.list(OP(dynamic.GRN))
-  GRN <- .normalize_GRN_params(OP(GRN))
+  
+  .grn_params <- OP(GRN)
+  .sp_params <- if (sim$do_spatial) spatial_params$params else NULL
+  c(.grn_params, .rn_sp) %<-% .rename_genes(sim, .grn_params, .sp_params)
+  if (sim$do_spatial) {
+    spatial_params$params <- .rn_sp
+  }
+ 
+  GRN <- .normalize_GRN_params(.grn_params)
   N <- .get_numbers(GRN, options)
   if (!is.null(GRN)) {
     GRN$geff <- .gene_effects_by_regulator(seed[1], GRN, N)
@@ -44,7 +53,6 @@ sim_true_counts <- function(options) {
   }
 
   # velocity and spatial
-  sim$do_spatial <- is.list(spatial_params)
   if (sim$do_spatial) {
     cat("CCI simulation is enabled.\n")
 
@@ -95,7 +103,7 @@ sim_true_counts <- function(options) {
   # 1.1 CIF
   if (!sim$do_spatial) {
     sim$CIF_all <- if (is_discrete) {
-      .discrete_cif(seed[2], N, options)
+      .discrete_cif(seed[2], N, options, sim)
     } else {
       .continuous_cif(seed[2], N, options)
     }
@@ -115,7 +123,7 @@ sim_true_counts <- function(options) {
     # ==== spatial ====
     CIF_atac_all <- if (is_discrete) {
       # discrete CIF: N$cell == number of layers
-      .discrete_cif(seed[6], N, options)
+      .discrete_cif(seed[6], N, options, sim)
     } else {
       .continuous_cif(seed[6], N, options, ncell_key = "max_layer")
     }
@@ -130,7 +138,7 @@ sim_true_counts <- function(options) {
     # CIF
     cat("Get CIF...")
     if (is_discrete) {
-      cif <- .discrete_cif.spatial(seed[2], N, options)
+      cif <- .discrete_cif.spatial(seed[2], N, options, sim)
     } else {
       cif <- .continuous_cif(
         seed[2], N, options,
@@ -151,7 +159,7 @@ sim_true_counts <- function(options) {
   } else {
     # ==== not spatial ====
     sim$CIF_atac <- if (is_discrete) {
-      .discrete_cif(seed[6], N, options)$cif$s
+      .discrete_cif(seed[6], N, options, sim)$cif$s
     } else {
       .continuous_cif(seed[6], N, options)$cif$s
     }
@@ -209,8 +217,16 @@ sim_true_counts <- function(options) {
     grn_params$target <- paste0("gene", grn_params$target)
   }
   
+  # name other genes
+  L <- length(sim$gene_name_map)
+  N_other <- sim$N$gene - L
+  sim$gene_name_map <- c(
+    sim$gene_name_map,
+    setNames(seq(N_other) + L, paste0("gene", seq(N_other) + L))
+  )
+  
   counts <- t(sim$counts_s)
-  rownames(counts) <- paste0("gene", 1:sim$N$gene)
+  rownames(counts) <- names(sim$gene_name_map)
   colnames(counts) <- paste0("cell", 1:sim$N$cell)
 
   result <- list(
@@ -298,6 +314,38 @@ sim_true_counts <- function(options) {
     resenv[[n]] <- result[[n]]
   }
   resenv
+}
+
+
+.rename_genes <- function(sim, grn_params, sp_params) {
+  name_map <- integer()
+  renamed_grn <- NULL
+  renamed_sp <- NULL
+  if (is.data.frame(grn_params)) {
+    grn_genes <- sort(unique(c(grn_params[, 1], grn_params[, 2])))
+    name_map <- setNames(seq_along(grn_genes), grn_genes)
+    renamed_grn <- data.frame(
+      target = name_map[grn_params[, 1]],
+      regulator = name_map[grn_params[, 2]],
+      effect = grn_params[, 3]
+    )
+  }
+  if (is.data.frame(sp_params)) {
+    sp_genes <- sort(unique(c(sp_params[, 1], sp_params[, 2])))
+    sp_genes_only <- setdiff(sp_genes, grn_genes)
+    name_map <- c(
+      name_map,
+      setNames(seq_along(sp_genes_only) + length(name_map), sp_genes_only)
+    )
+    renamed_sp <- data.frame(
+      receptor = name_map[sp_params[, 1]],
+      ligand = name_map[sp_params[, 2]],
+      effect = sp_params[, 3]
+    )
+  }
+  
+  sim$gene_name_map <- name_map
+  list(renamed_grn, renamed_sp)
 }
 
 
@@ -410,16 +458,22 @@ sim_true_counts <- function(options) {
 }
 
 
-.discrete_cif <- function(seed, N, options) {
+.discrete_cif <- function(seed, N, options, sim) {
   phyla <- OP(tree)
   cif_center <- OP(cif.center)
   cif_sigma <- OP(cif.sigma)
+  user_popsize <- OP(discrete.pop.size)
   min_popsize <- OP(discrete.min.pop.size)
   i_minpop <- OP(discrete.min.pop.index)
 
   npop <- length(phyla$tip.label)
-  if (npop == 1) {
+  if (!is.null(sim$ncells_pop)) {
+    ncells_pop <- sim$ncells_pop
+  } else if (npop == 1) {
     ncells_pop <- N$cell
+  } else if (is.integer(user_popsize)) {
+    stopifnot(length(user_popsize) == npop)
+    ncells_pop <- user_popsize
   } else {
     ncells_pop <- rep(min_popsize, npop)
     if (N$cell < min_popsize * npop) {
@@ -435,6 +489,10 @@ sim_true_counts <- function(options) {
       temp <- sample(larger_pops, leftover, replace = F)
       ncells_pop[temp] <- ncells_pop[temp] + 1
     }
+  }
+  
+  if (is.null(sim$ncells_pop)) {
+    sim$ncells_pop <- ncells_pop
   }
 
   vcv_evf_mean <- vcv.phylo(phyla, cor = T)
@@ -568,7 +626,7 @@ sim_true_counts <- function(options) {
   geff <- rbind(geff, matrix(0, nrow = N$non.grn.gene, ncol = N$regulator))
   colnames(geff) <- GRN$regulators
   rownames(geff) <- c(
-    sapply(seq_len(N$grn.gene), \(i) GRN$name_map[[i]]),
+    sapply(seq_len(N$grn.gene), \(i) names(GRN$name_map)[[i]]),
     seq_len(N$non.grn.gene) + N$grn.gene
   )
   geff

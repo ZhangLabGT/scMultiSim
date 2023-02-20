@@ -172,7 +172,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   .tree_info(tree) %->% c(edges, root, tips, internal)
   
   states <- if (discrete) {
-    tips %>% as.character() %>% sort()
+    (tree$tip.label %||% (tips %>% as.character())) %>% sort()
   } else {
     # number of steps on each edge
     n_steps <- if (is.na(step.size)) {

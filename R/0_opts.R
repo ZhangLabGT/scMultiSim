@@ -133,6 +133,14 @@
     .should.be.logical,
     "Whether the cell population is discrete."
   ),
+  discrete.pop.size                                                      = list(
+    .default(NA),
+    list(
+      \(x) (length(x) == 1 && is.na(x)) || all(is.integer(x)),
+      "the value should be an integer vector"
+    ),
+    "Specify the cell numbers in each population."
+  ),
   discrete.min.pop.size                                                  = list(
     .default(70),
     .should.be.int,
