@@ -44,12 +44,15 @@ plot_hist <- function(res, log = FALSE, title = NULL) {
 #'
 #' @examples
 plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = F, rand.seed = 0,
-                      labels2 = NULL, lim = NULL) {
+                      continuous = F, labels2 = NULL, lim = NULL) {
   set.seed(rand.seed)
   
   data_tsne = Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
+  if (!continuous) {
+    labels <- factor(labels)
+  }
   plot_tsne <- data.frame(
-    label = factor(labels),
+    label = labels,
     x = data_tsne$Y[, 1],
     y = data_tsne$Y[, 2],
     index = seq(nrow(data_tsne$Y))
