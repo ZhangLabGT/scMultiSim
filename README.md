@@ -1,6 +1,7 @@
 **Table of contents**
 
 * [Results](#results)
+* [Installation](#installation)
 * [Basic Workflow](#basic-workflow)
 * [Options](#options)
   + [Options: General](#options-general)
@@ -36,7 +37,21 @@ The following figure briefly shows results from the same cell differential tree:
 
 ![Results](https://github.com/ZhangLabGT/scMultiSim/raw/img/img/results.png)
 
+## Installation
+
+Please install from this repo:
+
+```R
+devtools::install_github("ZhangLabGT/scMultiSim")
+```
+
 ## Basic Workflow
+
+scMultiSim provides several example GRN and trajectory data:
+- GRN: `GRN_params_100` and `GRN_params_1139`
+- Tree: `Phyla5()`, `Phyla3()` and `Phyla1()`
+
+A typical workflow consists these three main steps:
 
 1. Simulate the true count:
    ```R
