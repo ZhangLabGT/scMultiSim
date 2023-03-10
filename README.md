@@ -25,6 +25,12 @@ Refer to the [vignette](https://zhanglabgt.github.io/scMultiSim/vignettes/sim_ne
 
 ![Overview](https://github.com/ZhangLabGT/scMultiSim/raw/img/img/scMultisim.png)
 
+#### Please Cite
+
+```
+Li, H., Zhang, Z., Squires, M., Chen, X., & Zhang, X. (2023). scMultiSim: simulation of multi-modality single cell data guided by cell-cell interactions and gene regulatory networks. BioRxiv, 2022.10.15.512320. https://doi.org/10.1101/2022.10.15.512320
+```
+
 ## Results
 
 The following figure briefly shows results from the same cell differential tree:
