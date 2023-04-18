@@ -52,6 +52,7 @@ the following names:
     They act as factors multiplied to the ligand effect.
     Supply the string \"random\" to let scMultiSim generate these factors randomly.
     Otherwise, use cci_cell_type_params() to generate the template data structure.
+    See the help of this method for more info.
 - max.neighbors: (integer from 1 to 4, optional)
     Constraint the maxinum number of neighbors with CCI for each cell.
     The neighbors with CCI will be randomly sampled. 

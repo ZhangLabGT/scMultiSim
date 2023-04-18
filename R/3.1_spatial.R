@@ -168,6 +168,20 @@
 }
 
 
+#' Generate cell-type level CCI parameters
+#'
+#' See the return value if you want to specify the cell-type level ground truth.
+#'
+#' @param tree Use the same value for `sim_true_counts()`.
+#' @param total.lr Total number of LR pairs in the database. Use the same value for `sim_true_counts()`.
+#' @param ctype.lr If `rand` is `TRUE`, how many LR pairs should be enabled between each cell type pair. Should be a range, e.g. 4:6.
+#' @param step.size Use the same value for `sim_true_counts()`.
+#' @param rand Whether fill the matrix randomly
+#' @param discrete Whether the cell population is discrete. Use the same value for `sim_true_counts()`.
+#'
+#' @return A 3D matrix of (n_cell_type, n_cell_type, n_lr). The value at (i, j, k) is 1 if there exist CCI of LR-pair k between cell type i and cell type j.
+#' @export
+#'
 cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand = T, discrete = F) {
   .tree_info(tree) %->% c(edges, root, tips, internal)
   
@@ -200,7 +214,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
     
     for (i in 1:n) {
       for (j in 1:i) {
-        if (i == j) next
+        if (i == j && n > 1) next
         # pick 4-6 LR pair
         n_pair <- sample(min_lr:max_lr, 1)
         pairs <- sample(1:total.lr, n_pair)
