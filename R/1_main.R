@@ -324,8 +324,8 @@ sim_true_counts <- function(options) {
           }
         }
       }
-      ctype_param$ligand <- paste0("gene", ctype_param$ligand)
-      ctype_param$receptor <- paste0("gene", ctype_param$receptor)
+      ctype_param$ligand <- names(sim$gene_name_map)[ctype_param$ligand]
+      ctype_param$receptor <- names(sim$gene_name_map)[ctype_param$receptor]
       result$cif <- sim$CIF_spatial
     } else {
       ctype_param <- NULL
@@ -363,6 +363,7 @@ sim_true_counts <- function(options) {
   name_map <- integer()
   renamed_grn <- NULL
   renamed_sp <- NULL
+  grn_genes <- NULL
   if (is.data.frame(grn_params)) {
     grn_genes <- sort(unique(c(grn_params[, 1], grn_params[, 2])))
     name_map <- setNames(seq_along(grn_genes), grn_genes)

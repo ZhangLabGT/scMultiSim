@@ -485,8 +485,8 @@ gene_corr_cci <- function(
           ct2 <- results$cell_meta$cell.type.idx[nb]
           if (.exclude.same.types && ct1 == ct2) next
           if (any(
-            ctp$ligand == sprintf("gene%d", rg) &
-            ctp$receptor == sprintf("gene%d", tg) &
+            ctp$ligand == rg &
+            ctp$receptor == tg &
             ctp$ct1 == ct1 & ctp$ct2 == ct2
           )) {
             rg_list <- c(rg_list, rg_cnt)
