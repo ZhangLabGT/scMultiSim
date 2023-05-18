@@ -87,8 +87,10 @@ po/*~
 /temp
 /sim
 /bench
+/.idea
 vignettes/tmp.Rmd
 vignettes/common.Rmd
 /*.csv
 /*.zip
-
+/.vscode
+/tmp

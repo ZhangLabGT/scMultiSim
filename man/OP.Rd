@@ -17,6 +17,3 @@ the parameter value
 \description{
 Get option from an object in the current environment
 }
-\examples{
-OP(num.cifs)
-}

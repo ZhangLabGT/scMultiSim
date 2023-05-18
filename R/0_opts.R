@@ -348,8 +348,6 @@
 #' @param .name get option from this object
 #'
 #' @return the parameter value
-#'
-#' @examples OP(num.cifs)
 OP <- function(..., .name = 'options') {
   options <- get(.name, envir = caller_env())
   k <- as.character(expr(...))

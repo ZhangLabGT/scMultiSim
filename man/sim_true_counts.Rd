@@ -55,3 +55,12 @@ which is an environment contains all internal states and data structures.
 \description{
 Simulate true scRNA and scATAC counts from the parameters
 }
+\examples{
+sim_true_counts(list2(
+  rand.seed = 0,
+  GRN = GRN_params_100,
+  num.cells = 1000,
+  num.cifs = 50,
+  tree = Phyla5(),
+))
+}

@@ -5,16 +5,16 @@
 # use_impulse
 
 
-.continuous_cif_param <- function(is_spatial, ...) {
+.continuousCIFParam <- function(is_spatial, ...) {
   if (is_spatial) {
-    .continuous_cif_param.spatial(...) 
+    .continuousCIFParamSpatial(...)
   } else {
-    .continuous_cif_param.normal(...) 
+    .continuousCIFParamNormal(...)
   }
 }
 
 
-.continuous_cif_param.spatial <- function(
+.continuousCIFParamSpatial <- function(
   ncells, N_nd.cif, N_diff.cif, n_reg_cif,
   cif_center, cif_sigma, step_size,
   neutral, phyla, tree_info,
@@ -24,29 +24,29 @@
   # cell_path: int vector, the path idx of each cell
   # path_len: int vector, the length of each path
   param_names <- c("kon", "koff", "s")
-  
+
   sp_params %->% c(
     max_layers, paths, cell_path, path_len
   )
-  
+
   # nd and reg cif
-  cif <- foreach (i_cell = 1:ncells) %dopar% {
+  cif <- foreach(i_cell = 1:ncells) %dopar% {
     i_path <- cell_path[i_cell]
     n_layers <- path_len[i_path]
-    
+
     if (i_cell %% 100 == 0) cat(sprintf("%i..", i_cell))
     # for each cell, generate n_layer x n_cif
     cif_cell <- lapply(1:3, function(i) {
       param_name <- param_names[i]
       n_nd_cif <- N_nd.cif[i]
       n_diff_cif <- N_diff.cif[i]
-      
+
       # nd cif
       nd_cif <- lapply(1:n_nd_cif, \(icif) rnorm(n_layers, cif_center, cif_sigma)) %>% do.call(cbind, .)
       colnames(nd_cif) <- paste(param_name, "nonDE", 1:n_nd_cif, sep = "_")
-      
+
       # diff cif
-      need_diff_cif <- n_diff_cif > 0    
+      need_diff_cif <- n_diff_cif > 0
       # for cell 1, output the diff_cif itself; for other cells, only output T or F
       diff_cif <- need_diff_cif
       if (need_diff_cif && i_cell == 1) {
@@ -66,7 +66,7 @@
               apply(neutral[, 1:3], 1, \(X) paste0(X, collapse = "_")),
               apply(impulse[, 1:3], 1, \(X) paste0(X, collapse = "_"))
             )
-            return(impulse[re_order, ])
+            return(impulse[re_order,])
           })
           # dev.off()
         } else {
@@ -80,10 +80,10 @@
         }
         colnames(diff_cif) <- paste(param_name, "DE", 1:n_diff_cif, sep = "_")
         # ================================================ COPY
-        
+
         diff_cif
       }
-      
+
       # reg cif
       reg_cif <- NULL
       if (i <= 2 && n_reg_cif > 0) {
@@ -93,14 +93,14 @@
         ) %>% do.call(cbind, .)
         colnames(reg_cif) <- paste(param_name, "reg", 1:n_reg_cif, sep = "_")
       }
-      
+
       # T if diff_cif is needed to be combined later
       list(nd = nd_cif, diff = diff_cif, reg = reg_cif)
     })
-    
+
     setNames(cif_cell, param_names)
   }
-  
+
   cat("Done\n")
   # gather diff_cif
   diff_cif_all <- list(NULL, NULL, NULL)
@@ -112,7 +112,7 @@
       cif[[1]][[i]]$diff <- T
     }
   }
-  
+
   # get the index on each path
   neutral <- neutral[1:max_layers,]
   layer_idx_by_path <- lapply(paths, function(path) {
@@ -120,26 +120,26 @@
     for (i in 1:(length(path) - 1)) {
       a <- path[i]
       b <- path[i + 1]
-      idx <- c(idx, which(neutral[,1] == a & neutral[,2] == b))
+      idx <- c(idx, which(neutral[, 1] == a & neutral[, 2] == b))
     }
     idx
   })
-  
+
   # now process diff cif
   diff_cif_by_path <- lapply(diff_cif_all, function(d_cif) {
-    lapply(seq_along(paths), function(i_path){
+    lapply(seq_along(paths), function(i_path) {
       if (is.null(d_cif)) return(NULL)
       d_cif[layer_idx_by_path[[i_path]],]
     })
   })
   names(diff_cif_by_path) <- param_names
-  
+
   # cell types & meta
   cell_types <- character(length = nrow(neutral))
   for (i in 1:nrow(tree_info$edges)) {
     c(id, from, to, len) %<-% tree_info$edges[i,]
     n_steps <- len %/% step_size + ceiling(len %% step_size)
-    pts <- which(neutral[,1] == from & neutral[,2] == to)
+    pts <- which(neutral[, 1] == from & neutral[, 2] == to)
     n_pts <- length(pts)
     cell_types[pts] <- if (n_steps == 1) {
       paste(from, to, sep = "_")
@@ -148,24 +148,24 @@
       paste(from, to, type_id, sep = "_")
     }
   }
-  
-  meta_by_path <- lapply(seq_along(paths), function(i_path){
+
+  meta_by_path <- lapply(seq_along(paths), function(i_path) {
     idx <- layer_idx_by_path[[i_path]]
     n <- neutral[idx,]
     data.frame(
-      pop = apply(n[,1:2], 1, \(X) paste0(X, collapse = "_")),
-      depth = n[,3],
+      pop = apply(n[, 1:2], 1, \(X) paste0(X, collapse = "_")),
+      depth = n[, 3],
       cell.type = cell_types[idx]
     )
   })
-  
+
   for (d_cif in diff_cif_by_path) {
     for (i in seq_along(paths)) {
       if (is.null(d_cif[[i]])) next
       stopifnot(nrow(d_cif[[i]]) == path_len[i])
     }
   }
-  
+
   list(
     cif = cif, diff_cif_by_path = diff_cif_by_path,
     meta_by_path = meta_by_path,
@@ -174,24 +174,24 @@
 }
 
 
-.continuous_cif_param.normal <- function(
+.continuousCIFParamNormal <- function(
   ncells, N_nd.cif, N_diff.cif, n_reg_cif,
   cif_center, cif_sigma, step_size,
   neutral, phyla, tree_info,
   use_impulse, ...
 ) {
   param_names <- c("kon", "koff", "s")
-  
+
   cif <- lapply(1:3, function(i) {
     param_name <- param_names[i]
     n_nd_cif <- N_nd.cif[i]
     n_diff_cif <- N_diff.cif[i]
-  
+
     # ========== de_cif ==========
     nd_cif <- lapply(1:n_nd_cif, \(icif) rnorm(ncells, cif_center, cif_sigma)) %>% do.call(cbind, .)
     colnames(nd_cif) <- paste(param_name, "nonDE", 1:n_nd_cif, sep = "_")
     cifs <- nd_cif
-    
+
     # ========== nd_cif ==========
     if (n_diff_cif > 0) {
       # generate de_cif if there exist de_cifs for the parameter we are looking at
@@ -207,7 +207,7 @@
             apply(neutral[, 1:3], 1, \(X) paste0(X, collapse = "_")),
             apply(impulse[, 1:3], 1, \(X) paste0(X, collapse = "_"))
           )
-          return(impulse[re_order, ])
+          return(impulse[re_order,])
         })
         # dev.off()
       } else {
@@ -217,12 +217,12 @@
           SampleSubtree(tree_info$root, 0, cif_center, tree_info$edges, ncells, step_size, neutral = neutral)[, 4]
         }) %>%
           do.call(cbind, .) %>%
-          .[1:ncells, ]
+          .[1:ncells,]
       }
       colnames(diff_cif) <- paste(param_name, "DE", 1:n_diff_cif, sep = "_")
       cifs <- cbind(nd_cif, diff_cif)
     }
-    
+
     # ========== generate reg_cif for k_on, k_off ===========
     if (i <= 2 && n_reg_cif > 0) {
       reg_cif <- lapply(
@@ -232,28 +232,28 @@
       colnames(reg_cif) <- paste(param_name, "reg", seq_len(n_reg_cif), sep = "_")
       cifs <- cbind(cifs, reg_cif)
     }
-    
+
     return(cifs)
   })
-  
+
   names(cif) <- param_names
   cif
 }
 
 
-.discrete_cif.spatial <- function(
-    seed, N, options, sim, ...
+.discreteCIFSpatial <- function(
+  seed, N, options, sim, ...
 ) {
   set.seed(seed)
   param_names <- c("kon", "koff", "s")
-  
+
   phyla <- OP(tree)
   cif_center <- OP(cif.center)
   cif_sigma <- OP(cif.sigma)
   user_popsize <- OP(discrete.pop.size)
   min_popsize <- OP(discrete.min.pop.size)
   i_minpop <- OP(discrete.min.pop.index)
-  
+
   npop <- length(phyla$tip.label)
   if (!is.null(sim$ncells_pop)) {
     ncells_pop <- sim$ncells_pop
@@ -269,7 +269,7 @@
         "The size of the smallest population (%g * %g) is too big for the total number of cells (%g)",
         min_popsize, npop, N$cell))
     }
-    
+
     larger_pops <- setdiff(1:npop, i_minpop)
     ncells_pop[larger_pops] <- floor((N$cell - min_popsize) / length(larger_pops))
     leftover <- N$cell - sum(ncells_pop)
@@ -278,30 +278,30 @@
       ncells_pop[temp] <- ncells_pop[temp] + 1
     }
   }
-  
+
   if (is.null(sim$ncells_pop)) {
     sim$ncells_pop <- ncells_pop
   }
-  
+
   vcv_evf_mean <- vcv.phylo(phyla, cor = T)
   param_name <- c("kon", "koff", "s")
-  
+
   # nd and reg cif
-  cif <- foreach (i_cell = 1:N$cell) %dopar% {
+  cif <- foreach(i_cell = 1:N$cell) %dopar% {
     # === each cell ===
     n_layers <- N$cell
-    
+
     # for each cell, generate n_layer x n_cif
     cif_cell <- lapply(1:3, function(i) {
       param_name <- param_names[i]
       n_nd_cif <- N$nd.cif[i]
       n_diff_cif <- N$diff.cif[i]
-      need_diff_cif <- n_diff_cif > 0    
-      
+      need_diff_cif <- n_diff_cif > 0
+
       # nd cif
       nd_cif <- lapply(1:n_nd_cif, \(icif) rnorm(n_layers, cif_center, cif_sigma)) %>% do.call(cbind, .)
       colnames(nd_cif) <- paste(param_name, "nonDE", 1:n_nd_cif, sep = "_")
-      
+
       # reg cif
       reg_cif <- NULL
       if (i <= 2 && N$reg_cif > 0) {
@@ -311,25 +311,25 @@
         ) %>% do.call(cbind, .)
         colnames(reg_cif) <- paste(param_name, "reg", 1:N$reg_cif, sep = "_")
       }
-      
+
       list(nd = nd_cif, diff = need_diff_cif, reg = reg_cif)
     })
-    
+
     setNames(cif_cell, param_names)
     # === end: each cell ===
   }
-  
-  
+
+
   # diff cif
   diff_cif <- lapply(1:3, function(i) {
     n_diff_cif <- N$diff.cif[i]
-    need_diff_cif <- n_diff_cif > 0    
+    need_diff_cif <- n_diff_cif > 0
     if (need_diff_cif) {
       pop_diff_cif_mean <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
       dcif <- lapply(1:npop, function(ipop) {
-        evf <- sapply(1:n_diff_cif, function(ievf) {
+        evf <- vapply(1:n_diff_cif, function(ievf) {
           rnorm(ncells_pop[ipop], pop_diff_cif_mean[ievf, ipop], cif_sigma)
-        })
+        }, double(1))
         return(evf)
       }) %>% do.call(rbind, .)
       colnames(dcif) <- rep("DE", n_diff_cif)
@@ -339,16 +339,73 @@
     }
   })
   diff_cif <- setNames(diff_cif, param_names)
-  
-  pop <- do.call(c, lapply(c(1:npop), function(i) rep(i, ncells_pop[i])))
-  
+
+  pop <- do.call(c, lapply(1:npop, function(i) rep(i, ncells_pop[i])))
+
   meta <- data.frame(
     pop = pop, cell.type = pop, cell.type.idx = pop
   )
-  
+
   list(
     cif = cif,
     meta = meta,
     diff_cif = diff_cif
   )
+}
+
+
+# return (node_from, node_to, t, state)
+SampleEdge <- function(edge, depth, anc_state, edges, ncells, step_size, t_sample = NA) {
+  if (is.na(t_sample[1])) {
+    #t_sample <- c(0,sort( runif(round(edge[4]*ncells/sum(edges[,4])),0,edge[4]) ))
+    branch_len <- edge[4]
+    ncell_branch <- ceiling(branch_len * ncells / sum(edges[, 4])) - 1
+    if (ncell_branch < 0) { stop("the total number of cells is too few.") }
+    t_sample <- c(0, seq(0, branch_len, branch_len / ncell_branch))
+    t_sample <- c(t_sample, branch_len)
+  } else {
+    t_sample <- sort(c(0, t_sample - depth))
+  }
+  t_interval <- diff(t_sample)
+  x_change <- sapply(t_interval, function(sig) { rnorm(1, 0, sqrt(sig)) })
+  x_sample <- cumsum(x_change)
+  col_time <- depth + t_sample[-1]
+  col_state <- anc_state + x_sample
+  # return
+  cbind(edge[2], edge[3], col_time, col_state)
+}
+
+SampleSubtree <- function(par, depth, anc_state, edges, ncells, step_size, neutral = NA) {
+  # get the children of the current node
+  children <- edges[edges[, 2] == par, 3]
+  result <- lapply(c(1:length(children)), function(j) {
+    edge <- edges[edges[, 2] == par & edges[, 3] == children[j],] # given the parent and child, find the edge
+    if (sum(edges[, 2] == children[j]) == 0) { # this means the current node is a leaf
+      if (is.na(neutral[1])) {
+        result <- SampleEdge(edge, depth, anc_state, edges, ncells, step_size)
+      } else {
+        t_sample <- neutral[neutral[, 1] == edge[2] & neutral[, 2] == edge[3], 3]
+        result <- SampleEdge(edge, depth, anc_state, edges, ncells, step_size, t_sample)
+      }
+      result <- result[c(1:(length(result[, 1] - 1))),]
+    } else {
+      if (is.na(neutral[1])) {
+        result <- SampleEdge(edge, depth, anc_state, edges, ncells, step_size)
+      } else {
+        t_sample <- neutral[neutral[, 1] == edge[2] & neutral[, 2] == edge[3], 3]
+        result <- SampleEdge(edge, depth, anc_state, edges, ncells, step_size, t_sample)
+      }
+      anc_state <- result[length(result[, 1]), 4]
+      # !!! why this line
+      result <- result[c(1:(length(result[, 1] - 1))),]
+      depth <- depth + edge[4]
+      result1 <- SampleSubtree(children[j], depth, anc_state, edges, ncells, step_size, neutral)
+      result <- rbind(result, result1)
+    }
+    return(result)
+  })
+  result <- do.call(rbind, result)
+  colnames(result) <- c("from", "to", "time", "state")
+  rownames(result) <- NULL
+  return(result)
 }

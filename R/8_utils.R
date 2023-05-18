@@ -1,8 +1,8 @@
-#' String concatenation
+# String concatenation
 `%+%` <- function(a, b) paste0(a, b)
 
 
-default.args <- function(args = NULL, ...) {
+.defaultArgs <- function(args = NULL, ...) {
   defaults <- list2(...)
   if (is.null(args)) {
     args <- eval(substitute(list(...), env = parent.frame()))
@@ -14,9 +14,26 @@ default.args <- function(args = NULL, ...) {
 }
 
 
+#' sample from smoothed density function
+#' @param nsample number of samples needed
+#' @param den_fun density function estimated from density() from R default
+SampleDen <- function(nsample, den_fun) {
+  probs <- den_fun$y / sum(den_fun$y)
+  bw <- den_fun$x[2] - den_fun$x[1]
+  bin_id <- sample(size = nsample, x = c(1:length(probs)), prob = probs, replace = T)
+  counts <- table(bin_id)
+  sampled_bins <- as.numeric(names(counts))
+  samples <- lapply(c(1:length(counts)), function(j) {
+    runif(n = counts[j], min = (den_fun$x[sampled_bins[j]] - 0.5 * bw), max = (den_fun$x[sampled_bins[j]] + 0.5 * bw))
+  })
+  samples <- do.call(c, samples)
+  return(samples)
+}
+
+
 #' Creating an example tree with 5 tips
 #' @param plotting True for plotting the tree on console, False for no plot
-#' @return a tree object
+#' @return a R phylo object
 #' @export
 Phyla5 <- function(plotting = F) {
   phyla <- rtree(2)
@@ -27,7 +44,7 @@ Phyla5 <- function(plotting = F) {
   phyla <- bind.tree(phyla, tip, 2)
   phyla <- compute.brlen(phyla, c(1, 1, 1, 1, 1, 0.2, 0.2, 3))
   edges <- cbind(phyla$edge, phyla$edge.length)
-  edges <- cbind(c(1:length(edges[, 1])), edges)
+  edges <- cbind(seq_along(edges[, 1]), edges)
   connections <- table(c(edges[, 2], edges[, 3]))
   root <- as.numeric(names(connections)[connections == 2])
   tips <- as.numeric(names(connections)[connections == 1])
@@ -42,7 +59,7 @@ Phyla5 <- function(plotting = F) {
 
 #' Creating an example tree with 3 tips
 #' @param plotting True for plotting the tree on console, False for no plot
-#' @return a tree object
+#' @return a R phylo object
 #' @export
 Phyla3 <- function(plotting = F) {
   # par(mfrow=c(2,2))
@@ -52,7 +69,7 @@ Phyla3 <- function(plotting = F) {
   phyla <- bind.tree(phyla, tip, 1)
   phyla <- compute.brlen(phyla, c(1, 1, 1, 2))
   edges <- cbind(phyla$edge, phyla$edge.length)
-  edges <- cbind(c(1:length(edges[, 1])), edges)
+  edges <- cbind(seq_along(edges[, 1]), edges)
   connections <- table(c(edges[, 2], edges[, 3]))
   root <- as.numeric(names(connections)[connections == 2])
   tips <- as.numeric(names(connections)[connections == 1])
@@ -66,6 +83,9 @@ Phyla3 <- function(plotting = F) {
   return(phyla)
 }
 
+#' Creating a linear example tree
+#' @param len length of the tree
+#' @return a R phylo object
 #' @export
 Phyla1 <- function(len = 1) {
   myTree <- ape::read.tree(text='(A);')
@@ -74,7 +94,7 @@ Phyla1 <- function(len = 1) {
 }
 
 
-#' get root, internal nodes and tips from a tree.
+# get root, internal nodes and tips from a tree.
 .tree_info <- function(tree) {
   edges <- cbind(1:nrow(tree$edge), tree$edge, tree$edge.length)
   colnames(edges) <- c("id", "from", "to", "len")
@@ -157,4 +177,51 @@ Phyla1 <- function(len = 1) {
   } else {
     
   }
+}
+
+
+#' Simulate a small example dataset with 200 cells and the 100-gene GRN
+#' @param velocity whether to simulate RNA velocity
+#' @return the simulation result
+#' @export
+sim_example_200_cells <- function(velocity = FALSE) {
+  options <- list(
+    rand.seed = 0,
+    GRN = GRN_params_100,
+    num.cells = 200,
+    num.cifs = 20,
+    cif.sigma = 0.5,
+    tree = Phyla3(),
+    diff.cif.fraction = 0.8,
+    do.velocity = velocity
+  )
+  sim_true_counts(options)
+}
+
+
+#' Simulate a small example dataset with 200 cells and the 100-gene GRN, with CCI enabled
+#' @return the simulation result
+#' @export
+sim_example_200_cells_spatial <- function() {
+  lig_params <- data.frame(
+    target    = c(101, 102),
+    regulator = c(103, 104),
+    effect    = c(5.2, 5.9)
+  )
+  options <- list2(
+    rand.seed = 0,
+    GRN = GRN_params_100,
+    num.genes = 110,
+    num.cells = 200,
+    num.cifs = 50,
+    tree = Phyla3(),
+    intrinsic.noise = 0.5,
+    cci = list(
+      params = lig_params,
+      max.neighbors = 4,
+      cell.type.interaction = "random",
+      step.size = 0.5
+    )
+  )
+  sim_true_counts(options)
 }

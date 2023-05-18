@@ -5,7 +5,7 @@
 \title{Plot the gene module correlation heatmap}
 \usage{
 plot_gene_module_cor_heatmap(
-  results = .get_results_from_global(),
+  results = .getResultsFromGlobal(),
   seed = 0,
   grn.genes.only = T,
   save = F
@@ -18,8 +18,15 @@ plot_gene_module_cor_heatmap(
 
 \item{grn.genes.only}{Plot the GRN gens only}
 
-\item{save}{}
+\item{save}{save the plot as pdf}
+}
+\value{
+none
 }
 \description{
 Plot the gene module correlation heatmap
+}
+\examples{
+results <- simExample200Cells()
+plot_gene_module_cor_heatmap(results)
 }

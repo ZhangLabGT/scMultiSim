@@ -5,7 +5,7 @@
 \title{Plot cell locations}
 \usage{
 plot_cell_loc(
-  results = .get_results_from_global(),
+  results = .getResultsFromGlobal(),
   size = 4,
   show.label = F,
   show.arrows = T,
@@ -25,8 +25,15 @@ plot_cell_loc(
 \item{lr.pair}{The ligand-receptor pair used to plot CCI arrows
 \code{results$cci_cell_type_param[lr.pair]}}
 
-\item{.cell.pop}{}
+\item{.cell.pop}{Specify the cell population metadata}
+}
+\value{
+none
 }
 \description{
 Plot cell locations
+}
+\examples{
+results <- simExample200CellsSpatial()
+plot_cell_loc(results)
 }

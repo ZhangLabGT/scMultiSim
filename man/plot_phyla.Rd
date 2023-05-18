@@ -9,9 +9,12 @@ plot_phyla(tree)
 \arguments{
 \item{tree}{The tree}
 }
+\value{
+none
+}
 \description{
 Plot a R phylogenic tree
 }
 \examples{
-plot_plyla(Phyla5())
+plotPhyla(Phyla5())
 }

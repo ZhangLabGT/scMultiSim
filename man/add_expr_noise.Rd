@@ -15,8 +15,15 @@ add_expr_noise(results, ...)
 \code{alpha_mean}, \code{alpha_sd}: rate of subsampling of transcripts during capture step
 \code{depth_mean}, \code{depth_sd}: The sequencing depth}
 }
+\value{
+none
+}
 \description{
 Add experimental noise to true counts
+}
+\examples{
+results <- simExample200Cells()
+add_expr_noise(results)
 }
 \seealso{
 The underlying methods

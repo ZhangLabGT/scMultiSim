@@ -4,18 +4,25 @@
 \alias{divide_batches}
 \title{Divide batches for observed counts}
 \usage{
-divide_batches(results, nbatch = 2, effect = 3)
+divide_batches(results, nbatch = 2, effect = 3, randseed = 0)
 }
 \arguments{
-\item{results}{The scMultisim result object, after running \code{add_expr_noise}}
+\item{results}{The scMultisim result object, after running \code{addExprNoise()}}
 
 \item{nbatch}{Number of batches}
 
 \item{effect}{Batch effect size, default is 3}
+
+\item{randseed}{Random seed}
+}
+\value{
+none
 }
 \description{
 Divide batches for observed counts
 }
-\seealso{
-The underlying method \link{DivideBatches}
+\examples{
+results <- simExample200Cells()
+add_expr_noise(results)
+divide_batches(results)
 }

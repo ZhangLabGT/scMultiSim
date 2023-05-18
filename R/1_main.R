@@ -1,5 +1,5 @@
 #' Simulate true scRNA and scATAC counts from the parameters
-#' 
+#'
 #' @md
 #' @param options See scMultiSim_help().
 #'
@@ -17,29 +17,37 @@
 #' - `.grn$regulators`: The list of TFs used by all gene-by-TF matrices.
 #' - `.grn$geff`: Gene-by-TF matrix representing the GRN used during the simulation.
 #' - `.n`: Other metadata, e.g. `.n$cells` is the number of cells.
-#' 
+#'
 #' If `do.velocity` is enabled, it has these additional fields:
-#'   
+#'
 #'   - `unspliced_counts`: Gene-by-cell unspliced RNA counts.
 #' - `velocity`: Gene-by-cell RNA velocity ground truth.
 #' - `cell_time`: The pseudotime at which the cell counts were generated.
-#' 
+#'
 #' If dynamic GRN is enabled, it has these additional fields:
-#'   
+#'
 #'   - `cell_specific_grn`: A list of length `n_cells`. Each element is a gene-by-TF matrix, indicating the cell's GRN.
-#' 
+#'
 #' If cell-cell interaction is enabled, it has these additional fields:
-#' 
+#'
 #' - `grid`: The grid object used during the simulation.
 #'   - `grid$get_neighbours(i)`: Get the neighbour cells of cell `i`.
 #' - `cci_locs`: A dataframe containing the X and Y coordinates of each cell.
 #' - `cci_cell_type_param`: A dataframe containing the CCI network ground truth: all ligand-receptor pairs between each pair of cell types.
 #' - `cci_cell_types`: For continuous cell population, the sub-divided cell types along the trajectory used when simulating CCI.
-#' 
+#'
 #' If it is a debug session (`debug = TRUE`), a `sim` field is available,
 #' which is an environment contains all internal states and data structures.
 #'
 #' @export
+#' @examples
+#' sim_true_counts(list2(
+#'   rand.seed = 0,
+#'   GRN = GRN_params_100,
+#'   num.cells = 1000,
+#'   num.cifs = 50,
+#'   tree = Phyla5(),
+#' ))
 sim_true_counts <- function(options) {
   # ==== options ===============================================================
 
@@ -55,13 +63,8 @@ sim_true_counts <- function(options) {
   # ==== initialization ========================================================
 
   cores <- OP(threads)
-  if (cores == 1) {
-    registerDoSEQ()
-  } else {
-    library(doParallel)
-    if (cores == 0) cores <- detectCores()
-    registerDoParallel(cores = cores)
-    cat(sprintf("Using %i threads for multithreading.\n", cores))
+  if (cores != 1) {
+    stop("Multithreading is not supported yet.")
   }
 
   # create session
@@ -76,21 +79,21 @@ sim_true_counts <- function(options) {
   # get the GRN info and the numbers
   sim$do_spatial <- is.list(spatial_params)
   sim$is_dyn_grn <- is.list(OP(dynamic.GRN))
-  
+
   .grn_params <- OP(GRN)
   .sp_params <- if (sim$do_spatial) spatial_params$params else NULL
-  c(.grn_params, .rn_sp) %<-% .rename_genes(sim, .grn_params, .sp_params)
+  c(.grn_params, .rn_sp) %<-% .renameGenes(sim, .grn_params, .sp_params)
   if (sim$do_spatial) {
     spatial_params$params <- .rn_sp
   }
- 
-  GRN <- .normalize_GRN_params(.grn_params)
-  N <- .get_numbers(GRN, options)
+
+  GRN <- .normalizeGRNParams(.grn_params)
+  N <- .getNumbers(GRN, options)
   if (!is.null(GRN)) {
-    GRN$geff <- .gene_effects_by_regulator(seed[1], GRN, N)
+    GRN$geff <- .geneEffectsByRegulator(seed[1], GRN, N)
   }
   if (sim$is_dyn_grn) {
-    dyngrn_opts <- .get_dyngrn_opts(options$dynamic.GRN)
+    dyngrn_opts <- .getDynGRNOpts(options$dynamic.GRN)
     GRN <- .CreateDynGRN(GRN, dyngrn_opts)
   }
 
@@ -98,7 +101,7 @@ sim_true_counts <- function(options) {
   if (sim$do_spatial) {
     cat("CCI simulation is enabled.\n")
 
-    .parse_spatial_params(spatial_params, N$gene, phyla, is_discrete) %->% c(
+    .parseSpatialParams(spatial_params, N$gene, phyla, is_discrete) %->% c(
       sim$sp_params,
       sim$sp_regulators,
       sim$sp_targets,
@@ -116,15 +119,16 @@ sim_true_counts <- function(options) {
 
     sim$grid <- CreateSpatialGrid(
       N$cell, N$max_nbs,
-      .grid.size = grid_size, .same.type.prob = same_type_prob, .method = sim$sp_layout)
-    
+      .grid.size = grid_size, .same.type.prob = same_type_prob, .method = sim$sp_layout
+    )
+
     if (is_discrete) {
       N$max_layer <- N$cell
     } else {
-      c(paths, total_ncell) %<-% .get_paths(N, options)
+      c(paths, total_ncell) %<-% .getPaths(N, options)
       sim$paths <- paths
       N$max_layer <- total_ncell
-      sim$cell_path <- sample(1:length(paths), OP(num.cells), replace = T)
+      sim$cell_path <- sample(seq_along(paths), OP(num.cells), replace = T)
     }
   }
 
@@ -145,44 +149,45 @@ sim_true_counts <- function(options) {
   # 1.1 CIF
   if (!sim$do_spatial) {
     sim$CIF_all <- if (is_discrete) {
-      .discrete_cif(seed[2], N, options, sim)
+      sim$curr_cif <- "rna"
+      .discreteCIF(seed[2], N, options, sim)
     } else {
-      .continuous_cif(seed[2], N, options)
+      .continuousCIF(seed[2], N, options)
     }
   }
 
   # 1.2 RIV
-  sim$RIV <- .region_identity_vectors(seed[3], GRN, N, options)
+  sim$RIV <- .regionIdentityVectors(seed[3], GRN, N, options)
 
   # 1.3 GIV
-  sim$GIV <- .gene_identify_vectors(seed[4], sim, options)
+  sim$GIV <- .geneIdentifyVectors(seed[4], sim, options)
 
   # region-to-gene matrix
-  sim$region_to_gene <- .region_to_gene_matrix(seed[5], N, options)
+  sim$region_to_gene <- .regionToGeneMatrix(seed[5], N, options)
 
   # 1.4 ATAC-seq & CIF (for spatial)
   if (sim$do_spatial) {
     # ==== spatial ====
     CIF_atac_all <- if (is_discrete) {
       # discrete CIF: N$cell == number of layers
-      .discrete_cif(seed[6], N, options, sim)
+      .discreteCIF(seed[6], N, options, sim)
     } else {
-      .continuous_cif(seed[6], N, options, ncell_key = "max_layer")
+      .continuousCIF(seed[6], N, options, ncell_key = "max_layer")
     }
     # get edge length
     atac_neutral <- CIF_atac_all$neutral[1:N$max_layer, ]
     if (!is_discrete) {
-      sim$path_len <- .get_path_len(atac_neutral, paths, N)
+      sim$path_len <- .getPathLen(atac_neutral, paths, N)
     }
     # atac
     sim$CIF_atac <- CIF_atac_all$cif$s
-    .atac_seq(seed[7], sim)
+    .atacSeq(seed[7], sim)
     # CIF
     cat("Get CIF...")
     if (is_discrete) {
-      cif <- .discrete_cif.spatial(seed[2], N, options, sim)
+      cif <- .discreteCIFSpatial(seed[2], N, options, sim)
     } else {
-      cif <- .continuous_cif(
+      cif <- .continuousCIF(
         seed[2], N, options,
         is_spatial = T,
         spatial_params = list(total_ncell, sim$paths, sim$cell_path, sim$path_len)
@@ -201,25 +206,26 @@ sim_true_counts <- function(options) {
   } else {
     # ==== not spatial ====
     sim$CIF_atac <- if (is_discrete) {
-      .discrete_cif(seed[6], N, options, sim)$cif$s
+      sim$curr_cif <- "atac"
+      .discreteCIF(seed[6], N, options, sim)$cif$s
     } else {
-      .continuous_cif(seed[6], N, options)$cif$s
+      .continuousCIF(seed[6], N, options)$cif$s
     }
-    .atac_seq(seed[7], sim)
+    .atacSeq(seed[7], sim)
   }
 
   # 1.5 Params
   if (sim$do_spatial) {
     cat("Get params...")
-    sim$params_spatial <- lapply(1:N$cell, \(i) .get_params(
+    sim$params_spatial <- lapply(1:N$cell, \(i) .getParams(
       seed[8] + i, sim,
       sp_cell_i = i, sp_path_i = sim$cell_path[i]
     ))
     cat("Done\n")
   } else {
-    sim$params <- .get_params(seed[8], sim)
+    sim$params <- .getParams(seed[8], sim)
   }
-  
+
   # check result
   if (is_debug) {
     .print_param_summary(sim)
@@ -227,19 +233,19 @@ sim_true_counts <- function(options) {
 
   # 1.6 RNA-seq
   if (sim$do_spatial) {
-    .rna_seq.spatial(seed[9], sim)
+    .rnaSeqSpatial(seed[9], sim)
   } else {
-    .rna_seq(seed[9], sim)
+    .rnaSeq(seed[9], sim)
   }
 
   .print_time(sim)
 
   # Results
-  .get_result(sim, do_velocity, is_debug)
+  .getResult(sim, do_velocity, is_debug)
 }
 
 
-.get_result <- function(sim, do_velocity, is_debug) {
+.getResult <- function(sim, do_velocity, is_debug) {
   cell_meta <- if (sim$do_spatial) {
     sim$meta_spatial
   } else {
@@ -249,7 +255,7 @@ sim_true_counts <- function(options) {
     )
   }
   rownames(cell_meta) <- paste0("cell", 1:sim$N$cell)
-  
+
   if (is.null(sim$GRN)) {
     grn_params <- NULL
   } else {
@@ -258,7 +264,7 @@ sim_true_counts <- function(options) {
     grn_params$regulator <- paste0("gene", grn_params$regulator)
     grn_params$target <- paste0("gene", grn_params$target)
   }
-  
+
   # name other genes
   L <- length(sim$gene_name_map)
   N_other <- sim$N$gene - L
@@ -266,7 +272,7 @@ sim_true_counts <- function(options) {
     sim$gene_name_map,
     setNames(seq(N_other) + L, paste0("gene", seq(N_other) + L))
   )
-  
+
   counts <- t(sim$counts_s)
   rownames(counts) <- names(sim$gene_name_map)
   colnames(counts) <- paste0("cell", 1:sim$N$cell)
@@ -286,8 +292,8 @@ sim_true_counts <- function(options) {
     .grn = sim$GRN,
     .n = sim$N
   )
-  
-  result$atac_counts <- .atac_intr_noise(result$atacseq_data)
+
+  result$atac_counts <- .atacIntrNoise(result$atacseq_data)
 
   if (do_velocity) {
     result <- c(result, list(
@@ -330,11 +336,11 @@ sim_true_counts <- function(options) {
     } else {
       ctype_param <- NULL
     }
-    
+
     cci_locs <- do.call(rbind, sim$grid$locs)
     colnames(cci_locs) <- c("x", "y")
     rownames(cci_locs) <- paste0("cell", 1:sim$N$cell)
-    
+
     result <- c(result, list(
       grid = sim$grid,
       cci_locs = cci_locs,
@@ -351,7 +357,7 @@ sim_true_counts <- function(options) {
 
   resenv <- new.env()
   attr(resenv, "name") <- "scMultiSim Result"
-  
+
   for (n in names(result)) {
     resenv[[n]] <- result[[n]]
   }
@@ -359,7 +365,7 @@ sim_true_counts <- function(options) {
 }
 
 
-.rename_genes <- function(sim, grn_params, sp_params) {
+.renameGenes <- function(sim, grn_params, sp_params) {
   name_map <- integer()
   renamed_grn <- NULL
   renamed_sp <- NULL
@@ -386,20 +392,21 @@ sim_true_counts <- function(options) {
       effect = sp_params[, 3]
     )
   }
-  
+
   sim$gene_name_map <- name_map
   list(renamed_grn, renamed_sp)
 }
 
 
 #' Rename the original gene IDs in the GRN table to integers.
+#' @param params GRN parameters.
 #' @return list
-.normalize_GRN_params <- function(params) {
+.normalizeGRNParams <- function(params) {
   if (!is.data.frame(params)) {
     return(NULL)
   }
-  
-  if (nrow(unique(params[,1:2])) != nrow(params)) {
+
+  if (nrow(unique(params[, 1:2])) != nrow(params)) {
     stop("Duplicated edges found in the GRN.")
   }
 
@@ -415,7 +422,7 @@ sim_true_counts <- function(options) {
       params[i, j] <- name_map[[as.character(params[i, j])]]
     }
   }
-  
+
   params[, 1] <- as.numeric(params[, 1])
   params[, 2] <- as.numeric(params[, 2])
 
@@ -435,21 +442,7 @@ sim_true_counts <- function(options) {
 }
 
 
-#' Title
-#'
-#' @param GRN
-#' @param options
-#'
-#' @return A list with the following keys
-#' gene
-#' grn.gene
-#' non.grn.gene
-#' regulator
-#' target
-#' cif
-#' diff.cif
-#' nd.cif
-.get_numbers <- function(GRN, options) {
+.getNumbers <- function(GRN, options) {
   N <- list()
   N$cell <- OP(num.cells)
 
@@ -473,17 +466,19 @@ sim_true_counts <- function(options) {
   # cif
   N$cif <- OP(num.cifs)
   n_diff_cif <- ceiling(N$cif * OP(diff.cif.fraction))
-  n_non_cif <- N$cif - n_diff_cif
   is_vary <- switch(OP(vary),
-    "all"         = c(T, T, T),
-    "kon"         = c(T, F, F),
-    "koff"        = c(F, T, F),
-    "s"           = c(F, F, T),
-    "except_kon"  = c(F, T, T),
+    "all" = c(T, T, T),
+    "kon" = c(T, F, F),
+    "koff" = c(F, T, F),
+    "s" = c(F, F, T),
+    "except_kon" = c(F, T, T),
     "except_koff" = c(T, F, T),
-    "except_s"    = c(T, T, F)
+    "except_s" = c(T, T, F)
   )
-  N$diff.cif <- sapply(is_vary, function(x) ifelse(x, n_diff_cif, 0))
+  N$diff.cif <- vapply(
+    is_vary, function(x) ifelse(x, n_diff_cif, 0),
+    double(1)
+  )
   N$nd.cif <- N$cif - N$diff.cif
 
   # regions
@@ -501,7 +496,7 @@ sim_true_counts <- function(options) {
 }
 
 
-.discrete_cif <- function(seed, N, options, sim) {
+.discreteCIF <- function(seed, N, options, sim) {
   phyla <- OP(tree)
   cif_center <- OP(cif.center)
   cif_sigma <- OP(cif.sigma)
@@ -522,7 +517,8 @@ sim_true_counts <- function(options) {
     if (N$cell < min_popsize * npop) {
       stop(sprintf(
         "The size of the smallest population (%g * %g) is too big for the total number of cells (%g)",
-        min_popsize, npop, N$cell))
+        min_popsize, npop, N$cell
+      ))
     }
 
     larger_pops <- setdiff(1:npop, i_minpop)
@@ -533,7 +529,7 @@ sim_true_counts <- function(options) {
       ncells_pop[temp] <- ncells_pop[temp] + 1
     }
   }
-  
+
   if (is.null(sim$ncells_pop)) {
     sim$ncells_pop <- ncells_pop
   }
@@ -544,11 +540,11 @@ sim_true_counts <- function(options) {
   evfs <- lapply(1:3, function(iparam) {
     n_nd_cif <- N$nd.cif[iparam]
     n_diff_cif <- N$diff.cif[iparam]
-    
+
     # ========== nd_cif ==========
     if (n_nd_cif > 0) {
-      pop_evf_nonDE <- lapply(c(1:npop), function(ipop) {
-        evf <- sapply(c(1:(n_nd_cif)), function(ievf) {
+      pop_evf_nonDE <- lapply(1:npop, function(ipop) {
+        evf <- sapply(1:(n_nd_cif), function(ievf) {
           rnorm(ncells_pop[ipop], cif_center, cif_sigma)
         })
         return(evf)
@@ -558,12 +554,24 @@ sim_true_counts <- function(options) {
     } else {
       pop_evf_nonDE <- NULL
     }
-    
+
+    # if (iparam == 3) {
+    #   if (sim$curr_cif == "rna") {
+    #     pop_evf_nonDE[, 1:10] <- ex_rna_cif
+    #     message("rna cif")
+    #   } else if (sim$curr_cif == "atac") {
+    #     pop_evf_nonDE[, 1:10] <- ex_atac_cif
+    #     message("atac_cif")
+    #   } else {
+    #     stop("? cif")
+    #   }
+    # }
+
     # ========== de_cif ==========
     if (n_diff_cif > 0) {
       pop_evf_mean_DE <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
-      pop_evf_DE <- lapply(c(1:npop), function(ipop) {
-        evf <- sapply(c(1:n_diff_cif), function(ievf) {
+      pop_evf_DE <- lapply(1:npop, function(ipop) {
+        evf <- sapply(1:n_diff_cif, function(ievf) {
           rnorm(ncells_pop[ipop], pop_evf_mean_DE[ievf, ipop], cif_sigma)
         })
         return(evf)
@@ -579,7 +587,7 @@ sim_true_counts <- function(options) {
       "%s_%s_cif%d", param_name[iparam], colnames(cif),
       1:(n_nd_cif + n_diff_cif)
     )
-    
+
     # ========== generate reg_cif for k_on, k_off ===========
     if (iparam <= 2 && N$reg_cif > 0) {
       reg_cif <- lapply(
@@ -593,7 +601,7 @@ sim_true_counts <- function(options) {
   })
 
   names(evfs) <- param_name
-  meta <- data.frame(pop = do.call(c, lapply(c(1:npop), function(i) {
+  meta <- data.frame(pop = do.call(c, lapply(1:npop, function(i) {
     rep(i, ncells_pop[i])
   })))
 
@@ -603,14 +611,16 @@ sim_true_counts <- function(options) {
 
 #' Generates cifs for cells sampled along the trajectory of cell development
 #'
-#' @param seed
-#' @param options the option list
+#' @param seed random seed
 #' @param N the number list
+#' @param options the option list
+#' @param ncell_key the key for the number of cells in N
 #' @param is_spatial return a list of cifs for spatial
-#' @param .plot
-#' @param .plot.name
-.continuous_cif <- function(seed, N, options, ncell_key = "cell", is_spatial = F, spatial_params = NULL,
-                            .plot = F, .plot.name = "cont_cif.pdf") {
+#' @param spatial_params the spatial parameters
+#' @param .plot save the CIF plot
+#' @param .plot.name plot name
+.continuousCIF <- function(seed, N, options, ncell_key = "cell", is_spatial = F, spatial_params = NULL,
+                           .plot = F, .plot.name = "cont_cif.pdf") {
   set.seed(seed)
 
   ncells <- N[[ncell_key]]
@@ -630,7 +640,7 @@ sim_true_counts <- function(options) {
 
   # ==== generate cif: cell x n_cif ============================================
 
-  cif <- .continuous_cif_param(
+  cif <- .continuousCIFParam(
     is_spatial,
     ncells, N$nd.cif, N$diff.cif, N$reg_cif,
     cif_center, cif_sigma, N$step_size,
@@ -654,8 +664,8 @@ sim_true_counts <- function(options) {
 }
 
 
-#' gene x regulator
-.gene_effects_by_regulator <- function(seed, GRN, N) {
+# gene x regulator
+.geneEffectsByRegulator <- function(seed, GRN, N) {
   set.seed(seed)
 
   geff <- matrix(0L, nrow = N$grn.gene, ncol = N$regulator)
@@ -669,22 +679,15 @@ sim_true_counts <- function(options) {
   geff <- rbind(geff, matrix(0, nrow = N$non.grn.gene, ncol = N$regulator))
   colnames(geff) <- GRN$regulators
   rownames(geff) <- c(
-    sapply(seq_len(N$grn.gene), \(i) names(GRN$name_map)[[i]]),
+    vapply(seq_len(N$grn.gene), \(i) names(GRN$name_map)[[i]], ""),
     seq_len(N$non.grn.gene) + N$grn.gene
   )
   geff
 }
 
 
-#' Title
-#'
-#' @param size
-#' @param prob
-#' @param mean
-#' @param sd
-#'
-#' @return size x cif matrix
-.identity_vectors <- function(size, n_cif, prob, mean, sd) {
+# size x cif matrix
+.identityVectors <- function(size, n_cif, prob, mean, sd) {
   lapply(1:size, function(i) {
     nonzero <- sample(c(0, 1),
       size = n_cif,
@@ -697,15 +700,8 @@ sim_true_counts <- function(options) {
 }
 
 
-#' Title
-#'
-#' @param seed
-#' @param GRN
-#' @param N
-#' @param options
-#'
-#' @return a list of kon, koff (gene x cif+regu), s (gene x cif)
-.gene_identify_vectors <- function(seed, sim, options) {
+# return a list of kon, koff (gene x cif+regu), s (gene x cif)
+.geneIdentifyVectors <- function(seed, sim, options) {
   set.seed(seed)
 
   GRN <- sim$GRN
@@ -714,7 +710,7 @@ sim_true_counts <- function(options) {
   # calculate initial gene effect values with original Symsim approach
   param_names <- c("kon", "koff", "s")
   giv <- lapply(1:3, function(i) {
-    .identity_vectors(N$gene, N$cif,
+    .identityVectors(N$gene, N$cif,
       prob = OP(giv.prob),
       mean = OP(giv.mean),
       sd = OP(giv.sd)
@@ -751,7 +747,9 @@ sim_true_counts <- function(options) {
     # (1 * reg) * (reg x cif)
     regu_counts <- rowSums(GRN$geff != 0)
     stopifnot(sum(regu_counts > 0) == GRN$n_tgt)
-    grn_eff <- na.omit(GRN$geff %*% giv$s[GRN$regulators, ] / regu_counts / 2)
+    grn_eff <- na.omit(GRN$geff %*% giv$s[GRN$regulators, ] /
+      regu_counts /
+      2)
     # ---
     rg_row <- which(rowSums(giv$s[GRN$targets, ]) > 0)
     grn_eff[rg_row, ] <- grn_eff[rg_row, ] * 0.5 + giv$s[GRN$targets[rg_row], ] * 0.5
@@ -782,18 +780,10 @@ sim_true_counts <- function(options) {
 }
 
 
-
-#' Title
-#'
-#' @param seed
-#' @param GRN
-#' @param N
-#' @param options
-#'
-#' @return region x cif matrix
-.region_identity_vectors <- function(seed, GRN, N, options) {
+# return region x cif matrix
+.regionIdentityVectors <- function(seed, GRN, N, options) {
   set.seed(seed)
-  .identity_vectors(N$region, N$cif,
+  .identityVectors(N$region, N$cif,
     prob = OP(riv.prob),
     mean = OP(riv.mean),
     sd = OP(riv.sd)
@@ -801,14 +791,8 @@ sim_true_counts <- function(options) {
 }
 
 
-#' Title
-#'
-#' @param seed
-#' @param N
-#' @param options
-#'
-#' @return region x gene matrix
-.region_to_gene_matrix <- function(seed, N, options) {
+# return region x gene matrix
+.regionToGeneMatrix <- function(seed, N, options) {
   set.seed(seed)
 
   res <- matrix(0, N$region, N$gene)

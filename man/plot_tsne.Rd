@@ -38,9 +38,13 @@ plot_tsne(
 
 \item{lim}{Specify the xlim and y lim c(x_min, x_max, y_min, y_max)}
 }
+\value{
+the figure if not \code{save}, otherwise save the figure as \code{plot.name}.pdf
+}
 \description{
 Plot t-SNE visualization of a data matrix
 }
 \examples{
-plot_tsne(log2(result$counts + 1), result$cell_meta$pop)
+results <- simExample200Cells()
+plot_tsne(log2(results$counts + 1), results$cell_meta$pop)
 }

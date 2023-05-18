@@ -121,7 +121,7 @@
 }
 
 
-.get_dyngrn_opts <- function(options) {
+.getDynGRNOpts <- function(options) {
   opts <- .dynamic_grn_default_params()
   for (name in names(opts)) {
     val <- options[[name]]

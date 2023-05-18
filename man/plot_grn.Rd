@@ -9,6 +9,9 @@ plot_grn(params)
 \arguments{
 \item{params}{The GRN params data frame}
 }
+\value{
+none
+}
 \description{
 Plot the GRN network
 }

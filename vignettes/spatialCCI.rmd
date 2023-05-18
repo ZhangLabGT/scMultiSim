@@ -1,0 +1,114 @@
+---
+title: "Simulating Spatial Cell-Cell Interactions"
+output:
+  BiocStyle::html_document:
+  toc: true
+  toc_depth: 2
+vignette: >
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteIndexEntry{Simulating Spatial Cell-Cell Interactions}
+  %\usepackage[UTF-8]{inputenc}
+---
+```{r "setup", include=FALSE}
+require("knitr")
+opts_chunk$set(fig.width=4, fig.height=3)
+```
+
+The following chunk will install all the required packages.
+```{r install-packages, include=F, message=F, warning=F, eval=T}
+(function() {
+  installed <- installed.packages()[,"Package"]
+  install <- function(list, fn) {
+    pkg <- setdiff(list, installed)
+    if (length(pkg)) fn(pkg, dependencies=TRUE)
+  }
+
+  r_packages <- c(
+          "devtools", "dplyr", "ggplot2", "Rtsne",
+          "reshape", "ape", "phytools", "repr", "KernelKnn",
+          "gridExtra", "parallel", 'foreach', 'phytools', "doParallel",
+          "zeallot", "gtools", "gplots", "stringi", "roxygen2", "usethis",
+          "purrr"
+  )
+  install(r_packages, install.packages)
+
+  if (!require("BiocManager", quietly = TRUE)) {
+    install.packages("BiocManager")
+    BiocManager::install(version = "3.15")
+  }
+  bioc_packages <- c('Biobase','IRanges','S4Vectors','SummarizedExperiment')
+  install(bioc_packages, BiocManager::install)
+})()
+```
+
+# Simulating Spatial Cell-Cell Interactions
+
+scMultiSim can simulate spatial cell-cell interactions.
+To do so, we need to provide the `cci` option as a list.
+The following code will print more instructions on how to use the `cci` option.
+
+```{r help-cci}
+library(scMultiSim)
+scmultisim_help("cci")
+```
+
+Now, we prepare a ligand-receptor interaction database.
+This is pretty similar to the GRN network: it is a data frame with three columns,
+specifying `target`, `regulator`, and `effect`, respectively.
+The target and regulator columns should contain the IDs of the target and regulator genes.
+In the following example, we have two ligand-receptor pairs interacting between two neighboring cells.
+
+```{r cci-network}
+lig_params <- data.frame(
+  target    = c(101, 102),
+  regulator = c(103, 104),
+  effect    = c(5.2, 5.9)
+)
+```
+
+We can now simulate the spatial cell-cell interactions.
+In scMultiSim, the CCI network is cell-type based, which means that between each cell type pair,
+we can have a different CCI network sampled from the database defined above.
+Here, we set the `step.size` to 0.5, so the differentiation tree is divided into segments of length 0.5,
+each segment is treated as a cell type in CCI.
+We set `cell.type.interaction` to `random`, so the CCI network between each cell type pair is randomly sampled from the database.
+
+```{r}
+options_ <- list2(
+  rand.seed = 0,
+  GRN = GRN_params_100,
+  num.genes = 200,
+  num.cells = 500,
+  num.cifs = 50,
+  tree = Phyla3(),
+  intrinsic.noise = 0.5,
+  cci = list(
+    params = lig_params,
+    max.neighbors = 4,
+    cell.type.interaction = "random",
+    step.size = 0.5
+  )
+)
+
+results <- sim_true_counts(options_)
+```
+
+The `results$cell_meta` will contain the cell type information used in CCI.
+We can plot the cell spatial locations using `plotCellLoc()`.
+The arrows indicate cell-cell interactions between two cells (for the first ligand-receptor pair).
+
+```{r plot-cell-loc, fig.width=4.5, fig.height=4}
+plot_cell_loc(results)
+```
+
+The cell locations are available in `results$cci_locs`.
+
+```{r print-cell-loc}
+head(results$cci_locs)
+```
+
+# Session Information
+
+```{r session-info}
+sessionInfo()
+```

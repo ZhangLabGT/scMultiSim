@@ -4,11 +4,18 @@
 \alias{plot_grid}
 \title{Plot the CCI grid}
 \usage{
-plot_grid(results = .get_results_from_global())
+plot_grid(results = .getResultsFromGlobal())
 }
 \arguments{
 \item{results}{The scMultisim result object}
 }
+\value{
+none
+}
 \description{
-In normal cases, please use \code{plot_cell_loc} instead.
+In normal cases, please use \code{plotCellLoc} instead.
+}
+\examples{
+results <- simExample200CellsSpatial()
+plot_grid(results)
 }

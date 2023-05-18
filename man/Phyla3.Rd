@@ -10,7 +10,7 @@ Phyla3(plotting = F)
 \item{plotting}{True for plotting the tree on console, False for no plot}
 }
 \value{
-a tree object
+a R phylo object
 }
 \description{
 Creating an example tree with 3 tips

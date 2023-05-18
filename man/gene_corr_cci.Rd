@@ -5,7 +5,7 @@
 \title{Plot the ligand-receptor correlation summary}
 \usage{
 gene_corr_cci(
-  results = .get_results_from_global(),
+  results = .getResultsFromGlobal(),
   all.genes = F,
   .pair = NULL,
   .exclude.same.types = T
@@ -13,6 +13,15 @@ gene_corr_cci(
 }
 \arguments{
 \item{results}{The scMultisim result object}
+
+\item{all.genes}{Whether to use all genes or only the ligand/receptor genes}
+
+\item{.pair}{Return the raw data for the given LR pair}
+
+\item{.exclude.same.types}{Whether to exclude neighbor cells with same cell type}
+}
+\value{
+none
 }
 \description{
 Plot the ligand-receptor correlation summary

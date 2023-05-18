@@ -1,51 +1,51 @@
-.parse_spatial_params <- function(params, num_genes, phyla, is_discrete) {
+.parseSpatialParams <- function(params, num_genes, phyla, is_discrete) {
   max_nb <- params$max.neighbors
   if (!is.numeric(max_nb) || !(max_nb %in% 1:4)) max_nb <- 4
   effects <- NULL
   regulators <- list()
-  
+
   if (!is.data.frame(lig_param <- params$params)) {
     stop("cci$params should be a data frame")
   }
-  
+
   if (!all(lig_param[, 1:2] > 0) && all(lig_param[, 1:2] <= num_genes)) {
     stop("spatial genes should be integres smaller than num.genes")
   }
-  
+
   spatial_list <- lig_param
   targets <- sort(unique(spatial_list[, 1]))
   regulators <- sort(unique(spatial_list[, 2]))
   stopifnot(length(intersect) > 0)
-  
+
   num_regulators <- length(regulators)
   effects <- matrix(0, num_genes, num_regulators * max_nb)
   # e.g. 2 regulators => c(0, 2, 4, 8)
   rg_idx_base <- 0:(max_nb - 1) * num_regulators
-  
+
   for (irow in 1:nrow(spatial_list)) {
     tg <- spatial_list[irow, 1]
     rg <- which(regulators %in% spatial_list[irow, 2])
     weight <- spatial_list[irow, 3]
     effects[tg, rg_idx_base + rg] <- weight
   }
-  
+
   step_size <- if (is.numeric(params$step.size)) params$step.size else Inf
-  
+
   # check cell.type.params
   num_lr <- params$cell.type.lr.pairs %||% 4:6
   ctp <- params$cell.type.interaction
   ctp0 <- cci_cell_type_params(phyla, num_regulators, num_lr, step_size,
                                rand = F, discrete = is_discrete)
-  
+
   cell_type_map <- NULL
   cell_type_factors <- if (is.list(ctp) && length(ctp) == 2) {
     if (any(dim(ctp0$params) != dim(ctp$params))) {
-      stop("invalid cell.type.interaction. Please use cci_cell_type_params()") 
+      stop("invalid cell.type.interaction. Please use cci_cell_type_params()")
     }
     cell_type_map <- ctp$type_map
     ctp$params
   } else if (is.character(ctp) && ctp == "on") {
-    .cell_type_param_to_matrix(ctp0) 
+    .cellTypeParamToMatrix(ctp0)
   } else if (is.character(ctp) && ctp == "random") {
     res <- cci_cell_type_params(phyla, num_regulators, num_lr, step_size,
                                 rand = T, discrete = is_discrete)
@@ -55,12 +55,12 @@
     cat("cell.type.interaction is off, cells will have the same CCI level between all cell types.\n")
     NULL
   }
-  
+
   same_type_prob = params$same.type.prob %||% 0.8
   grid_size = params$grid.size %||% NA
   del_lr_pair = params$del.lr.pair %||% TRUE
   layout = params$layout %||% "enhanced"
-  
+
   if (layout %in% c("basic", "enhanced", "enhanced2")) {
     grid_method <- layout
   } else if (layout == "enhanced+oracle" || layout == "basic+oracle") {
@@ -68,16 +68,16 @@
   } else {
     stop(sprintf("CCI grid layout '%s' is not supported.", layout))
   }
-  
+
   list(
     params = spatial_list,
     regulators = regulators,
-    targets= targets,
+    targets = targets,
     N_regulators = num_regulators,
     N_max_neighbours = max_nb,
     effects = effects,
     cell_type_factors = cell_type_factors,
-    cell_type_map = cell_type_map, 
+    cell_type_map = cell_type_map,
     step_size = step_size,
     del_lr_pair = del_lr_pair,
     same_type_prob = same_type_prob,
@@ -87,12 +87,13 @@
 }
 
 
-.get_paths <- function(N, options) {
+.getPaths <- function(N, options) {
   ncell <- N$cell
   # get all possible paths in the tree; save them in `paths`
   phyla <- OP(tree)
   c(edges, root, tips, internal) %<-% .tree_info(phyla)
   paths <- list()
+
   getPaths <- function(node, path) {
     path <- c(path, node)
     succ_edges <- phyla$edge[which(phyla$edge[, 1] == node),]
@@ -105,16 +106,17 @@
       }
     }
   }
+
   if (nrow(phyla$edge) == 1) {
     paths <- list(list(phyla$edge[1], phyla$edge[2]))
   } else {
     getPaths(root, numeric())
   }
-  
+
   path_abs_len <- sapply(seq_along(paths), function(i) {
     path <- paths[[i]]
     len <- 0
-    for (j in 1:(length(path)-1)) {
+    for (j in 1:(length(path) - 1)) {
       parent <- path[[j]]
       child <- path[[j + 1]]
       len <- len + edges[edges[, 2] == parent & edges[, 3] == child, 4]
@@ -125,7 +127,7 @@
   if (total_ncell < ncell) {
     total_ncell <- ncell
   }
-  
+
   list(
     paths = paths,
     total_ncell = total_ncell
@@ -133,15 +135,15 @@
 }
 
 
-.get_path_len <- function(atac_neutral, paths, N) {
+.getPathLen <- function(atac_neutral, paths, N) {
   edge_len <- apply(unique(atac_neutral[, 1:2]), 1, function(edge) {
     c(edge,
       sum(atac_neutral[, 1] == edge[1] & atac_neutral[, 2] == edge[2], na.rm = T))
   }) %>% t()
-  
+
   path_len <- sapply(paths, function(path) {
     len <- 0
-    for (j in 1:(length(path)-1)) {
+    for (j in 1:(length(path) - 1)) {
       parent <- path[j]
       child <- path[j + 1]
       idx <- atac_neutral[, 1] == parent & atac_neutral[, 2] == child
@@ -149,13 +151,13 @@
     }
     len
   })
-  
+
   path_len
 }
 
 
-.cell_type_param_to_matrix <- function(params) {
-  states <- sort(unique(params[,1]))
+.cellTypeParamToMatrix <- function(params) {
+  states <- sort(unique(params[, 1]))
   n <- length(states)
   mtx <- matrix(0, n, n)
   rownames(mtx) <- states
@@ -184,7 +186,7 @@
 #'
 cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand = T, discrete = F) {
   .tree_info(tree) %->% c(edges, root, tips, internal)
-  
+
   states <- if (discrete) {
     (tree$tip.label %||% (tips %>% as.character())) %>% sort()
   } else {
@@ -192,26 +194,26 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
     n_steps <- if (is.na(step.size)) {
       rep(1, nrow(edges))
     } else {
-      edges[,4] %/% step.size + ceiling(edges[,4] %% step.size)
+      edges[, 4] %/% step.size + ceiling(edges[, 4] %% step.size)
     }
     lapply(1:nrow(edges), \(i) {
       branch <- as.character(edges[i, 2:3])
       if (n_steps[i] == 1) {
         paste(branch[1], branch[2], sep = "_")
       } else {
-        paste(branch[1], branch[2], 1:n_steps[i], sep = "_") 
+        paste(branch[1], branch[2], 1:n_steps[i], sep = "_")
       }
     }) %>% unlist()
   }
-  
+
   n <- length(states)
   cell_type_map <- setNames(1:n, states)
   res <- array(0, dim = c(n, n, total.lr))
-  
+
   if (rand) {
     min_lr <- max(0, min(min(ctype.lr), total.lr - 2))
     max_lr <- min(max(ctype.lr), total.lr)
-    
+
     for (i in 1:n) {
       for (j in 1:i) {
         if (i == j && n > 1) next
@@ -224,7 +226,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
       }
     }
   }
-  
+
   list(
     params = res,
     type_map = cell_type_map
@@ -248,7 +250,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
     locs_all = list()
     locs_same_type = list()
     locs_diff_type = list()
-    for (i in 1:(icell-1)) {
+    for (i in 1:(icell - 1)) {
       loc <- locs[[i]]
       ctype <- cell_types[[i]]
       for (nb in nb_list) {
@@ -274,7 +276,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
       if (runif(1) < same_type_prob || length(locs_diff_type) == 0) {
         locs_same_type
       } else {
-        locs_diff_type  
+        locs_diff_type
       }
     }
     loc <- sample(pool, 1)[[1]]
@@ -350,7 +352,10 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
     if (.in_grid(x, y)) grid[x, y] else NA
   },
   .in_grid = function(x, y) {
-    x >= 1 && x <= grid_size && y >= 1 && y <= grid_size
+    x >= 1 &&
+      x <= grid_size &&
+      y >= 1 &&
+      y <= grid_size
   }
 )
 

@@ -1,15 +1,30 @@
 Package: scMultiSim
 Title: Simulation of Multi-Modality Single Cell Data Guided By Gene Regulatory Networks and Cell-Cell Interactions
 Version: 1.0.0
-Authors@R: as.person(c(
-    "Hechen Li <hechen.li@gatech.edum> [aut, cre]", 
-    "Xiuwei Zhang <zhangxiuwei03@gmail.com> [aut, cre]", 
-    "Michael Squires <squiresmf@gatech.edu> [aut, cre]"
-  ))
-Description: This package simulates single cell RNA sequencing and RNA velocity data, incorporating mechanisms of regulatory networks and chromatin accessibility, allowing users to tune various parameters relating to the variation of gene-expression levels, the influence of chromatin accessibility on RNA sequence data, and the splicing and degredation rate associated with each gene. It can be used to benchmark compulational methods for single cell RNA-Seq data, and to assist in experimental design of wet-lab experiments.
+Authors@R:
+    c(person(given = "Hechen",
+             family = "i",
+             role = c("aut", "cre"),
+             email = "hli691@gatech.edu",
+             comment = c(ORCID = "0000-0003-4907-429X")),
+      person(given = "Xiuwei",
+             family = "Zhang",
+             email = "zhangxiuwei03@gmail.com",
+             role = "aut"),
+      person(given = "Michael",
+             family = "Squires",
+             email = "squiresmf@gatech.edu",
+             role = "aut"))
+Description:
+    scMultiSim simulates paired single cell RNA-seq, single cell ATAC-seq and RNA velocity data,
+    while incorporating mechanisms of gene regulatory networks, chromatin accessibility and
+    cell-cell interactions. It allows users to tune various parameters controlling the
+    amount of each biological factor, variation of gene-expression levels,
+    the influence of chromatin accessibility on RNA sequence data, and so on.
+    It can be used to benchmark various computational methods for single cell multi-omics data,
+    and to assist in experimental design of wet-lab experiments.
 License: Artistic-2.0
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.2.3
 Depends:
     R (>= 3.5.0),
@@ -35,15 +50,20 @@ Depends:
     gplots,
     gtools,
     gridExtra,
-    parallel,
     zeallot,
-    crayon
+    crayon,
+    assertthat,
+    igraph
 Suggests:
-   knitr,
-   rmarkdown
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+biocViews: SingleCell, Transcriptomics
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 Author: Hechen Li [aut, cre],
-  Xiuwei Zhang [aut, cre],
-  Michael Squires [aut, cre]
+  Xiuwei Zhang [aut],
+  Michael Squires [aut]
 Maintainer: Hechen Li <hechen.li@gatech.edu>
+BugReports: https://github.com/ZhangLabGT/scMultiSim/issues
+Config/testthat/edition: 3

@@ -4,13 +4,20 @@
 \alias{gene_corr_regulator}
 \title{Print the correlations between targets of each regulator}
 \usage{
-gene_corr_regulator(results = .get_results_from_global(), regulator)
+gene_corr_regulator(results = .getResultsFromGlobal(), regulator)
 }
 \arguments{
 \item{results}{The scMultisim result object}
 
 \item{regulator}{The regulator ID in the GRN params}
 }
+\value{
+none
+}
 \description{
 Print the correlations between targets of each regulator
+}
+\examples{
+results <- simExample200Cells()
+gene_corr_regulator(results)
 }
