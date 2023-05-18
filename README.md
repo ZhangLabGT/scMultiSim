@@ -21,7 +21,11 @@
 
 scMultiSim is an in silico simulator that generates multi-modality data of single-cells, including gene expression, chromatin accessibility, RNA velocity, and spatial location of cells. It takes a cell differential tree and a gene regulatory network (GRN) as input, and simulates spliced and unspliced counts while accounting for the relationships between modalities. The output single cell gene expression data is determined by three factors: cell-cell interactions, within-cell GRNs and chromatin accessibility. Users can tune the effect of each factor on the output data and set various parameters for the underlying model. Furthermore, the GRN can be set in a time-varying mode where the network's structure changes temporally to reflect the dynamic nature of biological networks. We also provide options to simulate technical variations such as batch effects. scMultiSim can be used to benchmark challenging computational tasks on single-cell multi-omics data, including the inference of GRNs, estimation of RNA velocity, integration of single-cell datasets from multiple batches and modalities, and analysis of cell-cell interaction using the cell spatial location data.
 
-Refer to the [vignette](https://zhanglabgt.github.io/scMultiSim/vignettes/sim_new.nb.html) for examples of using scMultiSim to simulate datasets and for a description of tool functionalities.
+Please refer to the following vignettes for examples and tutorials.
+- [scMultisim Basics](https://zhanglabgt.github.io/scMultiSim/doc/basics.html)
+- [Simulating Spatial Cell-Cell Interactions](https://zhanglabgt.github.io/scMultiSim/doc/spatialCCI.html)
+
+Alternatively, you can also browse the documentation and vignettes after installing the package.
 
 ![Overview](https://github.com/ZhangLabGT/scMultiSim/raw/img/img/scMultisim.png)
 
@@ -430,7 +434,6 @@ Simulations should finish in a reasonable time in most cases. On a machine with 
 With spatial cell-cell interaction enabled, the simulation took around 30 minutes for 500 cells
 and 150 minutes for 1200 cells on the above machine.
 When simulating cell-cell interaction, the running speed is mainly affected by the number of cells.
-Therfore, it is not recommended to generate a large number of (e.g., > 5k) cells.
 
 ## Contact
 
