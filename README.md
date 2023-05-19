@@ -422,18 +422,15 @@ If cell-cell interaction is enabled, it has these additional fields:
 If it is a debug session (`debug = TRUE`), a `sim` field is available,
 which is an environment contains all internal states and data structures.
 
+### Reference
+
+Hechen Li, Ziqi Zhang, Michael Squires, Xi Chen, and Xiuwei Zhang. 2023. “scMultiSim: Simulation of Multi-Modality Single Cell Data Guided by Cell-Cell Interactions and Gene Regulatory Networks.” bioRxiv.
+
 ## FAQ
 
 ### Running Speed
 
-Simulations should finish in a reasonable time in most cases. On a machine with an i7-12700K CPU and 64GB RAM, using 1000 cells, 100 genes and 50 CIFs, the simulation took:
-
-- Under 1 minute when RNA velocity is disabled (`do.velocity = F`)
-- ~3 minutes when RNA velocity is enabled (`do.velocity = T`)
-
-With spatial cell-cell interaction enabled, the simulation took around 30 minutes for 500 cells
-and 150 minutes for 1200 cells on the above machine.
-When simulating cell-cell interaction, the running speed is mainly affected by the number of cells.
+Simulations should finish in a reasonable time in most cases. On a machine with an i7-12700K CPU and 64GB RAM, using 1000 cells, 100 genes and 50 CIFs, the simulation took under 1 mimute to generate both scRNA-seq and scATAC-seq data. If also generating unspliced and spliced counts, or enabling cell-cell interactions, the running time is longer (~3 minutes when RNA velocity is enabled, and 30 minutes for 500 cells with spatial cell-cell interaction enabled).
 
 ## Contact
 
