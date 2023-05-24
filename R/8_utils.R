@@ -185,6 +185,7 @@ Phyla1 <- function(len = 1) {
 #' @return the simulation result
 #' @export
 sim_example_200_cells <- function(velocity = FALSE) {
+  data(GRN_params_100)
   options <- list(
     rand.seed = 0,
     GRN = GRN_params_100,
@@ -203,6 +204,7 @@ sim_example_200_cells <- function(velocity = FALSE) {
 #' @return the simulation result
 #' @export
 sim_example_200_cells_spatial <- function() {
+  data(GRN_params_100)
   lig_params <- data.frame(
     target    = c(101, 102),
     regulator = c(103, 104),

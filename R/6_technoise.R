@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' results <- simExample200Cells()
+#' results <- sim_example_200_cells()
 #' add_expr_noise(results)
 add_expr_noise <- function(results, ...) {
   cat("Adding experimental noise...\n")
@@ -62,7 +62,7 @@ add_expr_noise <- function(results, ...) {
 #' @export
 #'
 #' @examples
-#' results <- simExample200Cells()
+#' results <- sim_example_200_cells()
 #' add_expr_noise(results)
 #' divide_batches(results)
 divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
@@ -266,8 +266,13 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #' @param randseed (should produce same result if nregions, nevf and randseed are all the same)
 #' @export
 #' @examples
-#' results <- simExample200Cells()
-#' True2ObservedCounts(results$counts, results$meta_cell, protocol = "nonUMI", randseed = 1)
+#' results <- sim_example_200_cells()
+#' data(gene_len_pool)
+#' gene_len <- sample(gene_len_pool, results$num_genes, replace = FALSE)
+#' True2ObservedCounts(
+#'   results$counts, results$cell_meta, protocol = "nonUMI", randseed = 1,
+#'   alpha_mean = 0.1, alpha_sd = 0.05, gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3
+#' )
 True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alpha_mean = 0.1, alpha_sd = 0.002,
                                 alpha_gene_mean = 1, alpha_gene_sd = 0,
                                 gene_len, depth_mean, depth_sd, lenslope = 0.02, nbins = 20,
@@ -315,7 +320,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
 #' @param randseed (should produce same result if nregions, nevf and randseed are all the same)
 #' @export
 #' @examples
-#' results <- simExample200Cells()
+#' results <- sim_example_200_cells()
 #' True2ObservedATAC(results$atac_counts, randseed = 1)
 True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd_frac = 0.1) {
   set.seed(randseed)

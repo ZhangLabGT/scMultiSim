@@ -16,6 +16,6 @@ none
 In normal cases, please use \code{plotCellLoc} instead.
 }
 \examples{
-results <- simExample200CellsSpatial()
+results <- sim_example_200_cells_spatial()
 plot_grid(results)
 }

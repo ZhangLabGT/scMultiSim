@@ -55,7 +55,7 @@ plot_phyla <- function(tree) {
 #' @export
 #'
 #' @examples
-#' results <- simExample200Cells()
+#' results <- sim_example_200_cells()
 #' plot_tsne(log2(results$counts + 1), results$cell_meta$pop)
 plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = F, rand.seed = 0,
                       continuous = F, labels2 = NULL, lim = NULL) {
@@ -114,7 +114,7 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
 #' @export
 #'
 #' @examples
-#' results <- simExample200CellsSpatial()
+#' results <- sim_example_200_cells_spatial()
 #' plot_grid(results)
 plot_grid <- function(results = .getResultsFromGlobal()) {
   grid <- results$sim$grid
@@ -166,7 +166,7 @@ plot_grid <- function(results = .getResultsFromGlobal()) {
 #' @export
 #'
 #' @examples
-#' results <- simExample200Cells()
+#' results <- sim_example_200_cells()
 #' plot_gene_module_cor_heatmap(results)
 plot_gene_module_cor_heatmap <- function(
   results = .getResultsFromGlobal(),
@@ -223,7 +223,7 @@ plot_gene_module_cor_heatmap <- function(
 #' @export
 #'
 #' @examples
-#' results <- simExample200CellsSpatial()
+#' results <- sim_example_200_cells_spatial()
 #' plot_cell_loc(results)
 plot_cell_loc <- function(
   results = .getResultsFromGlobal(),
@@ -330,8 +330,8 @@ plot_grn <- function(params) {
 #' @export
 #'
 #' @examples
-#' results <- simExample200Cells()
-#' gene_corr_regulator(results)
+#' results <- sim_example_200_cells()
+#' gene_corr_regulator(results, 2)
 gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
   grn_params <- results$.options$GRN
   regu <- grn_params[grn_params[, 2] == regulator, 1] %>% as.character()
@@ -661,7 +661,7 @@ gene_corr_cci <- function(
 #' @return The plot
 #' @export
 #' @examples
-#' results <- simExample200Cells()
+#' results <- sim_example_200_cells()
 #' plot_rna_velocity(results)
 plot_rna_velocity <- function(
   results = .getResultsFromGlobal(),

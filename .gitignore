@@ -94,3 +94,5 @@ vignettes/common.Rmd
 /*.zip
 /.vscode
 /tmp
+/doc/
+/Meta/

@@ -22,7 +22,7 @@ none
 Add experimental noise to true counts
 }
 \examples{
-results <- simExample200Cells()
+results <- sim_example_200_cells()
 add_expr_noise(results)
 }
 \seealso{

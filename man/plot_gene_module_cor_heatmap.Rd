@@ -27,6 +27,6 @@ none
 Plot the gene module correlation heatmap
 }
 \examples{
-results <- simExample200Cells()
+results <- sim_example_200_cells()
 plot_gene_module_cor_heatmap(results)
 }

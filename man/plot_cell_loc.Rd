@@ -34,6 +34,6 @@ none
 Plot cell locations
 }
 \examples{
-results <- simExample200CellsSpatial()
+results <- sim_example_200_cells_spatial()
 plot_cell_loc(results)
 }

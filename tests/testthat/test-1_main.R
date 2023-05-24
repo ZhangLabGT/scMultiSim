@@ -1,4 +1,6 @@
 test_that("simulates true counts using Kinetic model", {
+  data(GRN_params_100)
+
   options_ <- list(
     rand.seed = 0,
     GRN = GRN_params_100,
@@ -47,6 +49,8 @@ test_that("simulates true counts using Kinetic model", {
 
 
 test_that("simulates true counts using Beta-Poisson model", {
+  data(GRN_params_100)
+
   options_ <- list(
     rand.seed = 0,
     GRN = GRN_params_100,
