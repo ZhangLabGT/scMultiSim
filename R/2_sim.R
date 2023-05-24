@@ -149,7 +149,7 @@
   var_rank <- dnorm(gene_var[chosen_hge], 0, max_var / 5)
   d <- dnorm(0, 0, max_var / 5)
 
-  multi_factors <- vapply(seq_along(chosen_hge), function(igene) {
+  multi_factors <- sapply(seq_along(chosen_hge), function(igene) {
     if (runif(1, 0, 1) < 1) {
       1 + mean_hge *
         (var_rank[igene] / d) *
@@ -157,7 +157,7 @@
     } else {
       mean_hge
     }
-  }, double(1))
+  })
 
   scales <- rep(1, N$gene)
   scales[chosen_hge] <- multi_factors
@@ -167,7 +167,7 @@
 
 # return region x cell matrix
 .atacSeq <- function(seed, sim) {
-  data(dens_nonzero)
+  data(dens_nonzero, envir = environment())
   set.seed(seed)
 
   options <- sim$options

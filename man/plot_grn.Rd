@@ -16,5 +16,6 @@ none
 Plot the GRN network
 }
 \examples{
+data(GRN_params_100, envir = environment())
 plot_grn(GRN_params_100)
 }

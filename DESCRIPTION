@@ -27,36 +27,29 @@ License: Artistic-2.0
 Encoding: UTF-8
 RoxygenNote: 7.2.3
 Depends:
-    R (>= 3.5.0),
+    R (>= 3.5.0)
+Imports:
     foreach,
     rlang,
     dplyr,
     ggplot2, 
     Rtsne,
-    grid,
-    reshape,
-    RColorBrewer,
-    Biobase,
     ape,
     MASS,
-    stringi,
-    roxygen2,
+    matrixStats,
     phytools,
-    repr,
-    IRanges,
-    S4Vectors,
     SummarizedExperiment,
     KernelKnn,
     gplots,
-    gtools,
-    gridExtra,
     zeallot,
     crayon,
     assertthat,
-    igraph
+    igraph,
+    methods
 Suggests:
     knitr,
     rmarkdown,
+    roxygen2,
     testthat (>= 3.0.0)
 biocViews: SingleCell, Transcriptomics
 VignetteBuilder: knitr

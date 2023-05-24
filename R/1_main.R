@@ -41,12 +41,13 @@
 #'
 #' @export
 #' @examples
-#' sim_true_counts(list2(
+#' data(GRN_params_100, envir = environment())
+#' sim_true_counts(list(
 #'   rand.seed = 0,
 #'   GRN = GRN_params_100,
 #'   num.cells = 1000,
 #'   num.cifs = 50,
-#'   tree = Phyla5(),
+#'   tree = Phyla5()
 #' ))
 sim_true_counts <- function(options) {
   # ==== options ===============================================================
@@ -485,7 +486,7 @@ sim_true_counts <- function(options) {
   N$region <- length(OP(region.distrib)) * N$gene
 
   # data: param density
-  data(param_realdata.zeisel.imputed)
+  data(param_realdata.zeisel.imputed, envir = environment())
   match_params[, 1:3] <- log(base = 10, match_params[, 1:3])
   N$params_den <- lapply(1:3, function(i) {
     density(match_params[, i], n = 2000)

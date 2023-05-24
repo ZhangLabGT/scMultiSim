@@ -16,5 +16,5 @@ none
 Plot a R phylogenic tree
 }
 \examples{
-plotPhyla(Phyla5())
+plot_phyla(Phyla5())
 }

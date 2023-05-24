@@ -30,7 +30,7 @@
   )
 
   # nd and reg cif
-  cif <- foreach(i_cell = 1:ncells) %dopar% {
+  cif <- foreach(i_cell = 1:ncells) %do% {
     i_path <- cell_path[i_cell]
     n_layers <- path_len[i_path]
 
@@ -287,7 +287,7 @@
   param_name <- c("kon", "koff", "s")
 
   # nd and reg cif
-  cif <- foreach(i_cell = 1:N$cell) %dopar% {
+  cif <- foreach(i_cell = 1:N$cell) %do% {
     # === each cell ===
     n_layers <- N$cell
 
@@ -327,9 +327,9 @@
     if (need_diff_cif) {
       pop_diff_cif_mean <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
       dcif <- lapply(1:npop, function(ipop) {
-        evf <- vapply(1:n_diff_cif, function(ievf) {
+        evf <- sapply(1:n_diff_cif, function(ievf) {
           rnorm(ncells_pop[ipop], pop_diff_cif_mean[ievf, ipop], cif_sigma)
-        }, double(1))
+        })
         return(evf)
       }) %>% do.call(rbind, .)
       colnames(dcif) <- rep("DE", n_diff_cif)

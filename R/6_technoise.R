@@ -20,7 +20,7 @@
 #' add_expr_noise(results)
 add_expr_noise <- function(results, ...) {
   cat("Adding experimental noise...\n")
-  data(gene_len_pool)
+  data(gene_len_pool, envir = environment())
   gene_len <- sample(gene_len_pool, results$num_genes, replace = FALSE)
   args <- list(...)
   if (length(args) > 0) {
@@ -136,9 +136,11 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 .amplifyOneCell <- function(true_counts_1cell, protocol, rate_2cap_ref, rate_2cap, gene_len, amp_bias,
                             rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ) {
   ngenes <- length(gene_len)
-  if (protocol == "nonUMI") { data(len2nfrag) } else
-    if (protocol == "UMI") { } else
-    { stop("protocol input should be nonUMI or UMI") }
+  if (protocol == "nonUMI") {
+    data(len2nfrag, envir = environment())
+  } else if (protocol == "UMI") { } else {
+    stop("protocol input should be nonUMI or UMI")
+  }
   inds <- vector("list", 2)
   # expand the original vector and apply capture efficiency
   # maintain a transcript index vector: which transcript the molecule belongs to

@@ -11,7 +11,7 @@
 #' @export
 #'
 #' @examples
-#' plotPhyla(Phyla5())
+#' plot_phyla(Phyla5())
 plot_phyla <- function(tree) {
   plotTree(tree, offset = -0.5)
   tiplabels(cex = 2)
@@ -117,7 +117,7 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
 #' results <- sim_example_200_cells_spatial()
 #' plot_grid(results)
 plot_grid <- function(results = .getResultsFromGlobal()) {
-  grid <- results$sim$grid
+  grid <- results$grid
   locs <- sapply(grid$locs, \(a) a)
   data <- data.frame(
     label = "cell",
@@ -304,6 +304,7 @@ plot_cell_loc <- function(
 #' @export
 #'
 #' @examples
+#' data(GRN_params_100, envir = environment())
 #' plot_grn(GRN_params_100)
 plot_grn <- function(params) {
   data <- data.frame(
@@ -661,7 +662,7 @@ gene_corr_cci <- function(
 #' @return The plot
 #' @export
 #' @examples
-#' results <- sim_example_200_cells()
+#' results <- sim_example_200_cells(velocity = TRUE)
 #' plot_rna_velocity(results)
 plot_rna_velocity <- function(
   results = .getResultsFromGlobal(),

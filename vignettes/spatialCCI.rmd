@@ -24,20 +24,17 @@ The following chunk will install all the required packages.
   }
 
   r_packages <- c(
-          "devtools", "dplyr", "ggplot2", "Rtsne",
-          "reshape", "ape", "phytools", "repr", "KernelKnn",
-          "gridExtra", "parallel", 'foreach', 'phytools', "doParallel",
-          "zeallot", "gtools", "gplots", "stringi", "roxygen2", "usethis",
-          "purrr"
+    "devtools", "dplyr", "ggplot2", "Rtsne", "rlang",
+    "reshape", "ape", "phytools", "repr", "KernelKnn",
+    "gridExtra", "parallel", 'foreach', 'phytools', "doParallel",
+    "zeallot", "gtools", "gplots", "roxygen2", "usethis",
   )
   install(r_packages, install.packages)
 
-  if (!require("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-    BiocManager::install(version = "3.15")
+  if (requireNamespace("BiocManager", quietly = TRUE)) {
+    bioc_packages <- c('Biobase', 'SummarizedExperiment')
+    install(bioc_packages, BiocManager::install)
   }
-  bioc_packages <- c('Biobase','IRanges','S4Vectors','SummarizedExperiment')
-  install(bioc_packages, BiocManager::install)
 })()
 ```
 
@@ -49,6 +46,7 @@ The following code will print more instructions on how to use the `cci` option.
 
 ```{r help-cci}
 library(scMultiSim)
+
 scmultisim_help("cci")
 ```
 
@@ -74,11 +72,11 @@ each segment is treated as a cell type in CCI.
 We set `cell.type.interaction` to `random`, so the CCI network between each cell type pair is randomly sampled from the database.
 
 ```{r}
-options_ <- list2(
+options_ <- list(
   rand.seed = 0,
   GRN = GRN_params_100,
   num.genes = 200,
-  num.cells = 500,
+  num.cells = 300,
   num.cifs = 50,
   tree = Phyla3(),
   intrinsic.noise = 0.5,

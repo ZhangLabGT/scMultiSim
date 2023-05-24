@@ -36,6 +36,6 @@ The plot
 Plot RNA velocity as arrows on tSNE plot
 }
 \examples{
-results <- sim_example_200_cells()
+results <- sim_example_200_cells(velocity = TRUE)
 plot_rna_velocity(results)
 }

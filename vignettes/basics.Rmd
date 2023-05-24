@@ -22,29 +22,38 @@ The following chunk will install all the required packages.
     pkg <- setdiff(list, installed)
     if (length(pkg)) fn(pkg, dependencies=TRUE)
   }
-  
+
   r_packages <- c(
-    "devtools", "dplyr", "ggplot2", "Rtsne",
+    "devtools", "dplyr", "ggplot2", "Rtsne", "rlang",
     "reshape", "ape", "phytools", "repr", "KernelKnn",
     "gridExtra", "parallel", 'foreach', 'phytools', "doParallel",
-    "zeallot", "gtools", "gplots", "stringi", "roxygen2", "usethis",
-    "purrr"
+    "zeallot", "gtools", "gplots", "roxygen2", "usethis",
   )
   install(r_packages, install.packages)
-  
-  if (!require("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-    BiocManager::install(version = "3.15")
+
+  if (requireNamespace("BiocManager", quietly = TRUE)) {
+    bioc_packages <- c('Biobase', 'SummarizedExperiment')
+    install(bioc_packages, BiocManager::install)
   }
-  bioc_packages <- c('Biobase','IRanges','S4Vectors','SummarizedExperiment')
-  install(bioc_packages, BiocManager::install)
 })()
+
+
+list_modify <- function (curr_list, ...) {
+  args <- list(...)
+  for (i in names(args)) {
+    curr_list[[i]] <- args[[i]]
+  }
+  curr_list
+}
+
 ```
 
 ```{r load-package, quietly=TRUE, message=FALSE, warning=FALSE}
-library("devtools")
-devtools::load_all(".")
+# library("devtools")
+# devtools::load_all(".")
 library("scMultiSim")
+library(dplyr)
+library(purrr)
 ```
 
 # Simulation Basics
@@ -187,7 +196,7 @@ In this case, each tip of the tree will be one cell type,
 therefore there will be 5 clusters in the following result.
 
 ```{r simulate-discrete, fig.width = 4, fig.height = 3.5, out.width = "60%"}
-options <- list2(
+options <- list(
   rand.seed = 0,
   GRN = GRN_params,
   num.cells = 1000,
@@ -217,23 +226,23 @@ other factors, such as the GRN.
 Now let's visualize the trajectory with different `diff.cif.fraction` values:
 
 ```{r adjust-diff-cif-fraction, fig.width = 4, fig.height = 3.5, out.width = "60%"}
-options <- list2 (
+options <- list(
   rand.seed = 0,
   GRN = GRN_params,
   num.cells = 1000,
   num.cifs = 50,
   tree = Phyla5(),
-  diff.cif.fraction = 0.8,
+  diff.cif.fraction = 0.8
 )
 
 results <- sim_true_counts(
-        options %>% purrr::list_modify(diff.cif.fraction = 0.2))
+        options %>% list_modify(diff.cif.fraction = 0.2))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (diff.cif.fraction = 0.2)')
 
 results <- sim_true_counts(
-        options %>% purrr::list_modify(diff.cif.fraction = 0.8))
+        options %>% list_modify(diff.cif.fraction = 0.8))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (diff.cif.fraction = 0.8)')
@@ -248,7 +257,7 @@ Therefore, the larger `cif.sigma` is, the larger the inherent cell heterogeneity
 Now, let's visualize the effect of `cif.sigma`:
 
 ```{r adjust-cif-sigma, fig.width = 4, fig.height = 3.5, out.width = "60%"}
-options <- list2 (
+options <- list(
   rand.seed = 0,
   GRN = GRN_params,
   num.cells = 1000,
@@ -259,13 +268,13 @@ options <- list2 (
 )
 
 results <- sim_true_counts(
-        options %>% purrr::list_modify(cif.sigma = 0.1))
+        options %>% list_modify(cif.sigma = 0.1))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (cif.sigma = 0.1)')
 
 results <- sim_true_counts(
-        options %>% purrr::list_modify(cif.sigma = 1.0))
+        options %>% list_modify(cif.sigma = 1.0))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (cif.sigma = 1.0)')
@@ -283,7 +292,7 @@ the true counts will be 0.5 * (theoretical mean) + 0.5 * (sampled from the Beta-
 
 
 ```{r adjust-intrinsic-noise, fig.width = 4, fig.height = 3.5, out.width = "60%"}
-options <- list2 (
+options <- list(
   rand.seed = 0,
   GRN = GRN_params,
   num.cells = 1000,
@@ -294,13 +303,13 @@ options <- list2 (
 )
 
 results <- sim_true_counts(
-        options %>% purrr::list_modify(intrinsic.noise = 0.5))
+        options %>% list_modify(intrinsic.noise = 0.5))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (intrinsic.noise = 0.5)')
 
 results <- sim_true_counts(
-        options %>% purrr::list_modify(intrinsic.noise = 1))
+        options %>% list_modify(intrinsic.noise = 1))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (intrinsic.noise = 1)')
@@ -315,7 +324,7 @@ scmultisim_help("dynamic.GRN")
 
 Here we use `Phyla1()` as the differentiation tree to remove the effect of the trajectory. Additionally, we can use `discrete.cif = T` to simulate discrete cell population.
 ```{r define-options-dynamic-grn}
-options_ <- list2(
+options_ <- list(
   rand.seed = 0,
   GRN = GRN_params,
   num.cells = 1000,
