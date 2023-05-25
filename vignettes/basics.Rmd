@@ -15,7 +15,7 @@ opts_chunk$set(fig.width=4, fig.height=3)
 ```
 
 The following chunk will install all the required packages.
-```{r install-packages, include=F, message=F, warning=F, eval=T}
+```{r install-packages, include=F, message=F, warning=F, eval=F}
 (function() {
   installed <- installed.packages()[,"Package"]
   install <- function(list, fn) {
@@ -27,7 +27,7 @@ The following chunk will install all the required packages.
     "devtools", "dplyr", "ggplot2", "Rtsne", "rlang",
     "reshape", "ape", "phytools", "repr", "KernelKnn",
     "gridExtra", "parallel", 'foreach', 'phytools', "doParallel",
-    "zeallot", "gtools", "gplots", "roxygen2", "usethis",
+    "zeallot", "gtools", "gplots", "roxygen2", "usethis"
   )
   install(r_packages, install.packages)
 
@@ -36,8 +36,10 @@ The following chunk will install all the required packages.
     install(bioc_packages, BiocManager::install)
   }
 })()
+```
 
-
+We define a utility function to modify a list.
+```{r}
 list_modify <- function (curr_list, ...) {
   args <- list(...)
   for (i in names(args)) {
@@ -53,7 +55,6 @@ list_modify <- function (curr_list, ...) {
 # devtools::load_all(".")
 library("scMultiSim")
 library(dplyr)
-library(purrr)
 ```
 
 # Simulation Basics
