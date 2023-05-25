@@ -10,11 +10,6 @@
 
 .dynGRN$methods(
   restructure = function() {
-    if (is.null(randstate)) {
-      set.seed(randseed)
-    } else {
-      set.seed(randstate)
-    }
     # set all deleted edges' weights to 0
     if (!is.null(del_edges)) {
       geff[del_edges[,1:2]] <<- 0
@@ -38,7 +33,6 @@
     gen_edges <<- cbind(gedges, rnorm(N_changed_edges, mean = weight_mean, sd = weight_sd))
     stopifnot(all(geff[del_edges[,1:2]] != 0))
     stopifnot(all(geff[gen_edges[,1:2]] == 0))
-    randstate <<- as.integer((sum(geff) / 1e-8) %% 1e9+7)
   }
 )
 
@@ -90,7 +84,6 @@
   
   dyngrn <- .dynGRN$new(
     randseed = opts$seed,
-    randstate = NULL,
     # opts
     involved_genes = opts$involved.genes,
     max_steps = opts$num.steps,

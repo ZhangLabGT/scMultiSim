@@ -250,7 +250,7 @@ Bench$integration <- function(tsne.seed = 0) {
 
 
 Bench$cci_60 <- function(seed = 0) {
-  set.seed(seed)
+  # set.seed(seed)
   
   n_grn_edge <- 40
   df1 <- data.frame(
@@ -375,7 +375,7 @@ Bench$cci_propagate <- function(.seed = 0, intr.noise = 1) {
 
 
 rna_velo_knn <- function(results, velocity, perplexity = 70, randseed = 0, raw = FALSE) {
-  set.seed(randseed)
+  # set.seed(randseed)
   counts_s <- results$counts
   pop <- results$cell_meta$pop
   depth <- results$cell_meta$depth

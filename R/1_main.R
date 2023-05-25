@@ -74,7 +74,7 @@ sim_true_counts <- function(options) {
   sim$start_time <- Sys.time()
 
   # seeds
-  set.seed(OP("rand.seed"))
+  # set.seed(OP("rand.seed"))
   seed <- sample(1:1e5, size = 9)
 
   # get the GRN info and the numbers
@@ -623,7 +623,7 @@ sim_true_counts <- function(options) {
 #' @return a list containing the cif and meta data
 .continuousCIF <- function(seed, N, options, ncell_key = "cell", is_spatial = FALSE, spatial_params = NULL,
                            .plot = FALSE, .plot.name = "cont_cif.pdf") {
-  set.seed(seed)
+  # set.seed(seed)
 
   ncells <- N[[ncell_key]]
   phyla <- OP("tree")
@@ -668,7 +668,7 @@ sim_true_counts <- function(options) {
 
 # gene x regulator
 .geneEffectsByRegulator <- function(seed, GRN, N) {
-  set.seed(seed)
+  # set.seed(seed)
 
   geff <- matrix(0L, nrow = N$grn.gene, ncol = N$regulator)
   for (r in 1:nrow(GRN$params)) {
@@ -704,7 +704,7 @@ sim_true_counts <- function(options) {
 
 # return a list of kon, koff (gene x cif+regu), s (gene x cif)
 .geneIdentifyVectors <- function(seed, sim, options) {
-  set.seed(seed)
+  # set.seed(seed)
 
   GRN <- sim$GRN
   N <- sim$N
@@ -784,7 +784,7 @@ sim_true_counts <- function(options) {
 
 # return region x cif matrix
 .regionIdentityVectors <- function(seed, GRN, N, options) {
-  set.seed(seed)
+  # set.seed(seed)
   .identityVectors(N$region, N$cif,
     prob = OP("riv.prob"),
     mean = OP("riv.mean"),
@@ -795,7 +795,7 @@ sim_true_counts <- function(options) {
 
 # return region x gene matrix
 .regionToGeneMatrix <- function(seed, N, options) {
-  set.seed(seed)
+  # set.seed(seed)
 
   res <- matrix(0, N$region, N$gene)
   # gene is regulated by 0, 1, or 2 regions

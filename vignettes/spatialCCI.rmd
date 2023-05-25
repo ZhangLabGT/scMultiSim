@@ -72,12 +72,14 @@ each segment is treated as a cell type in CCI.
 We set `cell.type.interaction` to `random`, so the CCI network between each cell type pair is randomly sampled from the database.
 
 ```{r}
+set.seed(42)
+
 options_ <- list(
-  rand.seed = 0,
   GRN = GRN_params_100,
   num.genes = 200,
   num.cells = 300,
   num.cifs = 50,
+  cif.sigma = 0.2,
   tree = Phyla3(),
   intrinsic.noise = 0.5,
   cci = list(

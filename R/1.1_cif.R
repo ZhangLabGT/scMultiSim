@@ -244,7 +244,7 @@
 .discreteCIFSpatial <- function(
   seed, N, options, sim, ...
 ) {
-  set.seed(seed)
+  # set.seed(seed)
   param_names <- c("kon", "koff", "s")
 
   phyla <- OP("tree")

@@ -59,7 +59,7 @@ plot_phyla <- function(tree) {
 #' plot_tsne(log2(results$counts + 1), results$cell_meta$pop)
 plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = FALSE, rand.seed = 0,
                       continuous = FALSE, labels2 = NULL, lim = NULL) {
-  set.seed(rand.seed)
+  # set.seed(rand.seed)
 
   data_tsne = Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
   if (!continuous) {
@@ -133,7 +133,7 @@ plot_grid <- function(results = .getResultsFromGlobal()) {
 }
 
 .getGeneModuleColors <- function(GRN_params, gene_effects_by_regulator, num_genes, randseed=0) {
-  set.seed(randseed)
+  # set.seed(randseed)
   regulator_ID_list <- sort(unique(GRN_params[, 2]))
   target_gene_ID_list <- sort(unique(GRN_params[, 1]))
   num_target_genes <- length(target_gene_ID_list)
@@ -173,7 +173,7 @@ plot_gene_module_cor_heatmap <- function(
   seed = 0,
   grn.genes.only = TRUE, save = FALSE
 ) {
-  set.seed(seed)
+  # set.seed(seed)
   grn <- results$.grn$params
   num_genes <- results$num_genes
   counts <- log2(results$counts + 1)
@@ -672,7 +672,7 @@ plot_rna_velocity <- function(
   velocity = results$velocity,
   perplexity = 70, arrow.length = 1, save = FALSE, randseed = 0, ...
 ) {
-  set.seed(randseed)
+  # set.seed(randseed)
   counts_s <- results$counts
   cell_pop <- results$cell_meta$pop
   if (is.null(velocity)) {
@@ -739,7 +739,7 @@ plot_rna_velocity <- function(
   velocity,
   perplexity = 70, randseed = 0
 ) {
-  set.seed(randseed)
+  # set.seed(randseed)
   counts_s <- results$counts
   pop <- results$cell_meta$pop
   depth <- results$cell_meta$depth

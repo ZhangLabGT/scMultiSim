@@ -94,7 +94,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #' @param randseed random seed
 #' @return a list with two elements: counts and meta_cell
 .divideBatchesImpl <- function(counts, meta_cell, nbatch, batch_effect_size = 1, randseed = 0) {
-  set.seed(randseed)
+  # set.seed(randseed)
   ## add batch effects to observed counts
   # use different mean and same sd to create the multiplicative factor for different part (gene/region) in different batch
   ncells <- dim(counts)[2]; nparts <- dim(counts)[1]
@@ -282,7 +282,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
                                 gene_len, depth_mean, depth_sd, lenslope = 0.02, nbins = 20,
                                 amp_bias_limit = c(-0.2, 0.2),
                                 rate_2PCR = 0.8, nPCR1 = 16, nPCR2 = 10, LinearAmp = FALSE, LinearAmp_coef = 2000) {
-  set.seed(randseed)
+  # set.seed(randseed)
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- .calAmpBias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_lb <- 0.0005; depth_lb <- 200 # lower bound for capture efficiency and sequencing depth
@@ -328,7 +328,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
 #' results <- sim_example_200_cells()
 #' True2ObservedATAC(results$atac_counts, randseed = 1)
 True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd_frac = 0.1) {
-  set.seed(randseed)
+  # set.seed(randseed)
   atacseq_data <- round(atacseq_data)
   atacseq_noisy <- atacseq_data
   for (icell in 1:ncol(atacseq_data)) {

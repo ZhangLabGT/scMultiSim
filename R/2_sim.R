@@ -29,7 +29,7 @@
 #'
 #' @return the kinetic parameters
 .getParams <- function(seed, sim, sp_cell_i = NULL, sp_path_i = NULL) {
-  set.seed(seed)
+  # set.seed(seed)
   is_spatial <- !is.null(sp_cell_i)
   is_discrete <- is.null(sp_path_i)
 
@@ -122,7 +122,7 @@
 
 
 .prepareHGE <- function(seed, sim, s_base) {
-  set.seed(seed)
+  # set.seed(seed)
   N <- sim$N
   options <- sim$options
   prop_hge <- OP("hge.prop")
@@ -168,7 +168,7 @@
 # return region x cell matrix
 .atacSeq <- function(seed, sim) {
   data(dens_nonzero, envir = environment())
-  set.seed(seed)
+  # set.seed(seed)
 
   options <- sim$options
 
@@ -193,7 +193,7 @@
 
 
 .rnaSeq <- function(seed, sim) {
-  set.seed(seed)
+  # set.seed(seed)
 
   CIF_all <- sim$CIF_all
   GIV_s <- sim$GIV$s
@@ -360,7 +360,7 @@
 }
 
 .rnaSeqSpatial <- function(seed, sim) {
-  set.seed(seed)
+  # set.seed(seed)
 
   grid <- sim$grid
   CIF <- sim$CIF_spatial

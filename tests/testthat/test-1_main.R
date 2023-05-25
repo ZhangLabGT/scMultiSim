@@ -1,8 +1,8 @@
 test_that("simulates data using Kinetic model", {
   data(GRN_params_100, envir = environment())
 
+  set.seed(0)
   options_ <- list(
-    rand.seed = 0,
     GRN = GRN_params_100,
     num.cells = 100,
     num.cifs = 20,
@@ -17,7 +17,7 @@ test_that("simulates data using Kinetic model", {
   expect_equal(dim(res$counts), c(110, 100))
   expect_equal(
     res$counts[selectedIndicies],
-    c(205, 26, 11, 0, 2166, 0, 4, 12, 5, 8, 2, 12, 19, 0, 215, 19, 0)
+    c(34, 5, 28, 21, 49, 0, 0, 10, 4, 90, 18, 18, 0, 12, 0, 37, 171)
   )
 
   add_expr_noise(res)
@@ -25,26 +25,26 @@ test_that("simulates data using Kinetic model", {
 
   expect_equal(
     res$counts_obs[selectedIndicies],
-    c(3062, 924, 308, 0, 32756, 0, 0, 284, 0, 251, 0, 557, 554, 0, 3702, 454, 0)
+    c(585, 307, 141, 187, 309, 0, 0, 326, 0, 2692, 0, 401, 0, 22, 0, 187, 2291)
   )
   expect_equal(
     res$counts_with_batches[selectedIndicies],
-    c(819, 5412, 461, 0, 251479, 0, 0, 174, 0, 234, 0, 78, 953, 0, 20046, 545, 0)
+    c(2331, 5031, 180, 1263, 131, 0, 0, 93, 0, 21462, 0, 467, 0, 357, 0,
+      1020, 1495)
   )
 
   expect_equal(
     res$atac_counts[selectedIndicies],
-    c(1.1468792, 6.4758649, 0.0000000, 0.2558878, 0.9397685, 2.9793797,
-      0.0000000, 1.8782937, 2.1486754, 0.0000000, 1.4174428, 0.0000000,
-      0.0000000, 3.1725567, 3.9448536, 0.0000000, 0.0000000)
+    c(0.0000000, 0.0000000, 0.6887022, 0.7694152, 0.0000000, 2.5172858,
+      0.3549220, 5.6001554, 3.5924741, 0.2475742, 0.0000000, 1.0374884,
+      3.4453020, 4.0073263, 0.0000000, 0.0000000, 0.0000000)
   )
 
   expect_equal(
     res$velocity[selectedIndicies],
-    c(-11.81783778, 0.07735364, -1.76212608, 0.00000000, -29.35071370,
-      0.00000000, -0.77707389, -4.01203054, -0.24126909, 3.04964790,
-      -0.21508495, 0.18758518, -0.23687444, 0.54647546, -27.75571875,
-      -2.71532070, 0.56252536)
+    c(4.3146894, 0.4199234, -2.1558627, 2.0012763, -23.2763955, 0.0000000,
+      0.0000000, -2.0025398, 1.2857669, 2.8214759, 2.5935024, 1.3315967,
+      0.0000000, -2.5724074, 0.2749523, 1.9946433, -2.0456734)
   )
 
   expect_no_error(plot_gene_module_cor_heatmap(res, save = FALSE))
@@ -56,8 +56,8 @@ test_that("simulates data using Kinetic model", {
 test_that("simulates data using Beta-Poisson model", {
   data(GRN_params_100, envir = environment())
 
+  set.seed(0)
   options_ <- list(
-    rand.seed = 0,
     GRN = GRN_params_100,
     num.cells = 100,
     num.cifs = 20,
@@ -72,7 +72,7 @@ test_that("simulates data using Beta-Poisson model", {
   expect_equal(dim(res$counts), c(110, 100))
   expect_equal(
     res$counts[selectedIndicies],
-    c(186, 14, 3, 0, 2902, 13, 1, 7, 7, 1, 14, 2, 184, 14, 3)
+    c(120, 5, 18, 33, 88, 5, 4, 0, 8, 96, 0, 18, 0, 15, 146)
   )
 })
 
@@ -87,7 +87,6 @@ test_that("simulates spatial data", {
   )
 
   options_ <- list2(
-    rand.seed = 0,
     GRN = GRN_params_100,
     num.genes = 200,
     num.cells = 100,
@@ -102,14 +101,15 @@ test_that("simulates spatial data", {
     )
   )
 
+  set.seed(0)
   res <- sim_true_counts(options_)
 
   selectedIndicies <- c(1:5, 1000:1005, 10000:10005)
   expect_equal(
     res$counts[selectedIndicies],
-    c(25.790233, 47.527764, 9.866388, 44.711657, 62.150470, 11.227677,
-      31.047505, 57.248068, 13.291595, 5.654041, 191.465564, 5.005219,
-      32.083863, 128.655000, 24.789141, 6.473207, 216.099540)
+    c(40.675564, 30.876988, 29.984167, 49.430348, 25.113605, 4.093944,
+      45.194247, 29.063519, 47.389263, 42.516067, 43.014273, 7.110385,
+      55.992341, 13.604489, 14.811897, 10.213004, 24.046141)
   )
 
   expect_no_error(plot_cell_loc(res))
@@ -127,7 +127,6 @@ test_that("simulates spatial data with discrete population and HGE", {
   )
 
   options_ <- list2(
-    rand.seed = 0,
     GRN = GRN_params_100,
     num.genes = 200,
     num.cells = 100,
@@ -145,13 +144,14 @@ test_that("simulates spatial data with discrete population and HGE", {
     )
   )
 
+  set.seed(0)
   res <- sim_true_counts(options_)
 
   selectedIndicies <- c(1:5, 1000:1005, 10000:10005)
   expect_equal(
     res$counts[selectedIndicies],
-    c(29.069738, 41.257345, 13.706425, 8.186141, 778.021386, 8.873137,
-      35.754288, 48.742101, 15.895634, 28.305633, 931.815023, 6.920473,
-      17.955553, 15.232973, 7.694562, 4.783533, 849.895973)
+    c(109.0693303, 60.4151790, 91.9120934, 0.5816326, 177.6741585, 197.0663584,
+      102.3145704, 65.9978484, 89.1613630, 3.1734446, 156.9202179, 29.8315553,
+      92.3944947, 66.1421921, 105.4677530, 0.5729707, 110.5115346)
   )
 })

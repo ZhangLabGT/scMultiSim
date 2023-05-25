@@ -128,12 +128,13 @@ noisy. We use `cif.sigma` = 0.5 in this example.
 We also have `do.velocity` option to use the Kinetic model to simulate RNA velocity data.
 
 ```{r define-options}
+set.seed(42)
+
 options <- list(
-  rand.seed = 0,
   GRN = GRN_params,
-  num.cells = 1000,
+  num.cells = 500,
   num.cifs = 50,
-  cif.sigma = 0.5,
+  cif.sigma = 1,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
   do.velocity = TRUE
@@ -197,10 +198,11 @@ In this case, each tip of the tree will be one cell type,
 therefore there will be 5 clusters in the following result.
 
 ```{r simulate-discrete, fig.width = 4, fig.height = 3.5, out.width = "60%"}
+set.seed(42)
+
 options <- list(
-  rand.seed = 0,
   GRN = GRN_params,
-  num.cells = 1000,
+  num.cells = 500,
   num.cifs = 50,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
@@ -227,23 +229,24 @@ other factors, such as the GRN.
 Now let's visualize the trajectory with different `diff.cif.fraction` values:
 
 ```{r adjust-diff-cif-fraction, fig.width = 4, fig.height = 3.5, out.width = "60%"}
+set.seed(42)
+
 options <- list(
-  rand.seed = 0,
   GRN = GRN_params,
-  num.cells = 1000,
+  num.cells = 500,
   num.cifs = 50,
   tree = Phyla5(),
   diff.cif.fraction = 0.8
 )
 
 results <- sim_true_counts(
-        options %>% list_modify(diff.cif.fraction = 0.2))
+        options %>% list_modify(diff.cif.fraction = 0.4))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (diff.cif.fraction = 0.2)')
 
 results <- sim_true_counts(
-        options %>% list_modify(diff.cif.fraction = 0.8))
+        options %>% list_modify(diff.cif.fraction = 0.9))
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts (diff.cif.fraction = 0.8)')
@@ -258,10 +261,11 @@ Therefore, the larger `cif.sigma` is, the larger the inherent cell heterogeneity
 Now, let's visualize the effect of `cif.sigma`:
 
 ```{r adjust-cif-sigma, fig.width = 4, fig.height = 3.5, out.width = "60%"}
+set.seed(42)
+
 options <- list(
-  rand.seed = 0,
   GRN = GRN_params,
-  num.cells = 1000,
+  num.cells = 500,
   num.cifs = 50,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
@@ -293,10 +297,11 @@ the true counts will be 0.5 * (theoretical mean) + 0.5 * (sampled from the Beta-
 
 
 ```{r adjust-intrinsic-noise, fig.width = 4, fig.height = 3.5, out.width = "60%"}
+set.seed(42)
+
 options <- list(
-  rand.seed = 0,
   GRN = GRN_params,
-  num.cells = 1000,
+  num.cells = 500,
   num.cifs = 50,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
@@ -325,10 +330,11 @@ scmultisim_help("dynamic.GRN")
 
 Here we use `Phyla1()` as the differentiation tree to remove the effect of the trajectory. Additionally, we can use `discrete.cif = TRUE` to simulate discrete cell population.
 ```{r define-options-dynamic-grn}
+set.seed(42)
+
 options_ <- list(
-  rand.seed = 0,
   GRN = GRN_params,
-  num.cells = 1000,
+  num.cells = 500,
   num.cifs = 50,
   tree = Phyla1(),
   diff.cif.fraction = 0.8,
