@@ -10,6 +10,9 @@ a vector.
 \usage{
 data(dens_nonzero)
 }
+\value{
+a vector.
+}
 \description{
 this is the density function of log(x+1), where x is the non-zero values for ATAC-SEQ data
 }

@@ -9,6 +9,9 @@
 \arguments{
 \item{counts}{rna seq counts}
 }
+\value{
+the correlation matrix
+}
 \description{
 This function finds the correlation between every pair of genes
 }

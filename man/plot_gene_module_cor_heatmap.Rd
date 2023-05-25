@@ -7,8 +7,8 @@
 plot_gene_module_cor_heatmap(
   results = .getResultsFromGlobal(),
   seed = 0,
-  grn.genes.only = T,
-  save = F
+  grn.genes.only = TRUE,
+  save = FALSE
 )
 }
 \arguments{

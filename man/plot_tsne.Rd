@@ -10,9 +10,9 @@ plot_tsne(
   perplexity = 60,
   legend = "",
   plot.name = "",
-  save = F,
+  save = FALSE,
   rand.seed = 0,
-  continuous = F,
+  continuous = FALSE,
   labels2 = NULL,
   lim = NULL
 )

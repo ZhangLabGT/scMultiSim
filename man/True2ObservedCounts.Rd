@@ -22,7 +22,7 @@ True2ObservedCounts(
   rate_2PCR = 0.8,
   nPCR1 = 16,
   nPCR2 = 10,
-  LinearAmp = F,
+  LinearAmp = FALSE,
   LinearAmp_coef = 2000
 )
 }
@@ -64,6 +64,9 @@ True2ObservedCounts(
 \item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
 
 \item{LinearAmp_coef}{the coeficient of linear amplification, that is, how many times each molecule is amplified by}
+}
+\value{
+if UMI, a list with two elements, the first is the observed count matrix, the second is the metadata; if nonUMI, a matrix
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts

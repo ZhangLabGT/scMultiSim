@@ -9,9 +9,9 @@
   N,
   options,
   ncell_key = "cell",
-  is_spatial = F,
+  is_spatial = FALSE,
   spatial_params = NULL,
-  .plot = F,
+  .plot = FALSE,
   .plot.name = "cont_cif.pdf"
 )
 }
@@ -31,6 +31,9 @@
 \item{.plot}{save the CIF plot}
 
 \item{.plot.name}{plot name}
+}
+\value{
+a list containing the cif and meta data
 }
 \description{
 Generates cifs for cells sampled along the trajectory of cell development

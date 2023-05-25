@@ -47,7 +47,7 @@
 
       # diff cif
       need_diff_cif <- n_diff_cif > 0
-      # for cell 1, output the diff_cif itself; for other cells, only output T or F
+      # for cell 1, output the diff_cif itself; for other cells, only output TRUE or FALSE
       diff_cif <- need_diff_cif
       if (need_diff_cif && i_cell == 1) {
         # diff cif is shared among all cell & layers; generate them lazily
@@ -94,7 +94,7 @@
         colnames(reg_cif) <- paste(param_name, "reg", 1:n_reg_cif, sep = "_")
       }
 
-      # T if diff_cif is needed to be combined later
+      # TRUE if diff_cif is needed to be combined later
       list(nd = nd_cif, diff = diff_cif, reg = reg_cif)
     })
 
@@ -107,9 +107,9 @@
   for (i in 1:3) {
     d_cif <- cif[[1]][[i]]$diff
     if (!is.logical(d_cif)) {
-      # if this param has diff cif, move it to diff_cif_all and replace it as F
+      # if this param has diff cif, move it to diff_cif_all and replace it as FALSE
       diff_cif_all[[i]] <- d_cif
-      cif[[1]][[i]]$diff <- T
+      cif[[1]][[i]]$diff <- TRUE
     }
   }
 
@@ -274,7 +274,7 @@
     ncells_pop[larger_pops] <- floor((N$cell - min_popsize) / length(larger_pops))
     leftover <- N$cell - sum(ncells_pop)
     if (leftover > 0) {
-      temp <- sample(larger_pops, leftover, replace = F)
+      temp <- sample(larger_pops, leftover, replace = FALSE)
       ncells_pop[temp] <- ncells_pop[temp] + 1
     }
   }
@@ -283,7 +283,7 @@
     sim$ncells_pop <- ncells_pop
   }
 
-  vcv_evf_mean <- vcv.phylo(phyla, corr = T)
+  vcv_evf_mean <- vcv.phylo(phyla, corr = TRUE)
   param_name <- c("kon", "koff", "s")
 
   # nd and reg cif

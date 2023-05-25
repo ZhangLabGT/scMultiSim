@@ -1,4 +1,4 @@
-.scMultiSim_debug_result <- T
+.scMultiSim_debug_result <- TRUE
 
 .res_opt <- function(...) {
   opts <- list2(...)
@@ -48,7 +48,7 @@ write_files <- function(res, dataset_name, dir = "sim", prefix = NULL, suffix = 
   
   ds_path <- file.path(dir, dataset_name)
   if (!file.exists(ds_path)) {
-    dir.create(ds_path, recursive = T)
+    dir.create(ds_path, recursive = TRUE)
   }
   
   for (n in names(data)) {
@@ -60,7 +60,7 @@ write_files <- function(res, dataset_name, dir = "sim", prefix = NULL, suffix = 
     if (is.character(suffix)) {
       fn <- paste0(fn, "_", suffix)
     }
-    write.csv(d, file = file.path(ds_path, paste0(fn, ".csv")), quote = F)
+    write.csv(d, file = file.path(ds_path, paste0(fn, ".csv")), quote = FALSE)
   }
   
   saveRDS(res, file.path(ds_path, "res.rds"))
@@ -84,7 +84,7 @@ write_files <- function(res, dataset_name, dir = "sim", prefix = NULL, suffix = 
 Bench <- list()
 
 
-Bench$rna_atac_nongrn <- function(velo = T, diff.frac = 0.8, intr.noise = 1, tsne.seed = 0) {
+Bench$rna_atac_nongrn <- function(velo = TRUE, diff.frac = 0.8, intr.noise = 1, tsne.seed = 0) {
   options_ <- .res_opt(
     rand.seed = 1,
     GRN = NA,
@@ -110,7 +110,7 @@ Bench$rna_atac_nongrn <- function(velo = T, diff.frac = 0.8, intr.noise = 1, tsn
   ) %>% invisible()
 }
 
-Bench$rna_atac <- function(velo = T, diff.frac = 0.8, intr.noise = 1, tsne.seed = 0) {
+Bench$rna_atac <- function(velo = TRUE, diff.frac = 0.8, intr.noise = 1, tsne.seed = 0) {
   options_ <- .res_opt(
     rand.seed = 1,
     GRN = GRN_params,
@@ -142,17 +142,17 @@ Bench$rna_atac <- function(velo = T, diff.frac = 0.8, intr.noise = 1, tsne.seed 
 
 
 Bench$rna_atac_discrete_3 <- function(tsne.seed = 0) {
-  tree10 <- ape::read.tree(text = '(A:1.0,B:1.0,C:1.0,D:1.0:,E:1.0,F:1.0,G:1.0,H:1.0,I:1.0,J:1.0);')
+  tree10 <- ape::read.tree(text = '(A:1.0,B:1.0,C:1.0,D:1.0:,E:1.0,FALSE:1.0,G:1.0,H:1.0,I:1.0,J:1.0);')
   
   options_ <- .res_opt(
     rand.seed = 1,
     GRN = GRN_params,
     num.cells = 1500,
     num.cifs = 500,
-    discrete.cif = T,
+    discrete.cif = TRUE,
     tree = tree10,
     diff.cif.fraction = 0.8,
-    do.velocity = F
+    do.velocity = FALSE
   )
   
   results <- sim_true_counts(options_)
@@ -195,7 +195,7 @@ Bench$rna_velocity <- function(tsne.seed = 0) {
       num.cifs = 500,
       tree = Phyla3(),
       diff.cif.fraction = 0.8,
-      do.velocity = F
+      do.velocity = FALSE
     )
     
     results <- sim_true_counts(options_)
@@ -228,10 +228,10 @@ Bench$integration <- function(tsne.seed = 0) {
       num.genes = ngenes,
       num.cells = ncells,
       num.cifs = 500,
-      discrete.cif = T,
+      discrete.cif = TRUE,
       tree = Phyla5(),
       diff.cif.fraction = 0.8,
-      do.velocity = F
+      do.velocity = FALSE
     )
     
     results <- sim_true_counts(options_)
@@ -254,16 +254,16 @@ Bench$cci_60 <- function(seed = 0) {
   
   n_grn_edge <- 40
   df1 <- data.frame(
-    regu = c(1:10, sample(1:10, n_grn_edge, replace = T)),
-    tgt = sample(11:30, n_grn_edge + 10, replace = T))
+    regu = c(1:10, sample(1:10, n_grn_edge, replace = TRUE)),
+    tgt = sample(11:30, n_grn_edge + 10, replace = TRUE))
   # assume there's no more than 10 duplicated edges
   df1 <- unique(df1)[1:n_grn_edge,]
   
   # some receptors control GRN regulator
   n_grn_sp_edge <- 12
   df2 <- data.frame(
-    regu = sample(31:45, n_grn_sp_edge + 10, replace = T),
-    tgt = sample(1:30, n_grn_sp_edge + 10, replace = T))
+    regu = sample(31:45, n_grn_sp_edge + 10, replace = TRUE),
+    tgt = sample(1:30, n_grn_sp_edge + 10, replace = TRUE))
   # assume there's no more than 10 duplicated edges
   df2 <- unique(df2)[1:n_grn_sp_edge,]
 
@@ -320,7 +320,7 @@ Bench$cci <- function(.seed = 0) {
     num.cifs = 100,
     diff.cif.fraction = 0.8,
     tree = Phyla3(),
-    do.velocity = F,
+    do.velocity = FALSE,
     intrinsic.noise = 0.5,
     cci = list(
       params = lig_params,
@@ -358,7 +358,7 @@ Bench$cci_propagate <- function(.seed = 0, intr.noise = 1) {
     num.cifs = 500,
     diff.cif.fraction = 0.8,
     tree = Phyla1(),
-    do.velocity = F,
+    do.velocity = FALSE,
     intrinsic.noise = intr.noise,
     cci = list(
       params = lig_params,
@@ -374,7 +374,7 @@ Bench$cci_propagate <- function(.seed = 0, intr.noise = 1) {
 }
 
 
-rna_velo_knn <- function(results, velocity, perplexity = 70, randseed = 0, raw = F) {
+rna_velo_knn <- function(results, velocity, perplexity = 70, randseed = 0, raw = FALSE) {
   set.seed(randseed)
   counts_s <- results$counts
   pop <- results$cell_meta$pop

@@ -12,3 +12,6 @@ the simulation result
 \description{
 Simulate a small example dataset with 200 cells and the 100-gene GRN, with CCI enabled
 }
+\examples{
+sim_example_200_cells_spatial()
+}

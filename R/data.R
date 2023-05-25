@@ -3,6 +3,7 @@
 #' @docType data
 #' @usage data(param_realdata.zeisel.imputed)
 #' @format a data frame.
+#' @return a data frame.
 #' @keywords datasets
 #' @examples 
 #' data(param_realdata.zeisel.imputed)
@@ -14,6 +15,7 @@
 #' @docType data
 #' @usage data(gene_len_pool)
 #' @format a vector.
+#' @return a vector of gene lengths.
 #' @keywords datasets
 #' @examples 
 #' data(gene_len_pool)
@@ -25,6 +27,7 @@
 #' @docType data
 #' @usage data(len2nfrag)
 #' @format a vector.
+#' @return a vector.
 #' @keywords datasets
 #' @examples 
 #' data(len2nfrag)
@@ -36,6 +39,7 @@
 #' @docType data
 #' @usage data(dens_nonzero)
 #' @format a vector.
+#' @return a vector.
 #' @keywords datasets
 #' @examples
 #' data(dens_nonzero)
@@ -46,7 +50,8 @@
 #' @name GRN_params_100
 #' @docType data
 #' @usage data(GRN_params_100)
-#' @format a vector.
+#' @format a data frame.
+#' @return a data frame with three columns: target gene ID, TF gene ID, and the effect of TF on target gene.
 #' @keywords datasets
 #' @examples
 #' data(GRN_params_100)
@@ -57,7 +62,8 @@
 #' @name GRN_params_1139
 #' @docType data
 #' @usage data(GRN_params_1139)
-#' @format a vector.
+#' @format a data frame.
+#' @return a data frame with three columns: target gene ID, TF gene ID, and the effect of TF on target gene.
 #' @keywords datasets
 #' @examples
 #' data(GRN_params_1139)

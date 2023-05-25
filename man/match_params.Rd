@@ -10,6 +10,9 @@ a data frame.
 \usage{
 data(param_realdata.zeisel.imputed)
 }
+\value{
+a data frame.
+}
 \description{
 distribution of kinetic parameters learned from the Zeisel UMI cortex datasets
 }

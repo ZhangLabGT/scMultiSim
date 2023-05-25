@@ -20,8 +20,8 @@
       geff[del_edges[,1:2]] <<- 0
     }
     grn_region <- geff[involved_genes,]
-    edges <- which(grn_region != 0, arr.ind = T)
-    nonedges <- which(grn_region == 0, arr.ind = T)
+    edges <- which(grn_region != 0, arr.ind = TRUE)
+    nonedges <- which(grn_region == 0, arr.ind = TRUE)
     if (!has_tf_edges) {
       nonedges <- nonedges[-(nonedges[,1] %in% regulators),]
     }

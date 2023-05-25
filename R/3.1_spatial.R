@@ -35,7 +35,7 @@
   num_lr <- params$cell.type.lr.pairs %||% 4:6
   ctp <- params$cell.type.interaction
   ctp0 <- cci_cell_type_params(phyla, num_regulators, num_lr, step_size,
-                               rand = F, discrete = is_discrete)
+                               rand = FALSE, discrete = is_discrete)
 
   cell_type_map <- NULL
   cell_type_factors <- if (is.list(ctp) && length(ctp) == 2) {
@@ -48,7 +48,7 @@
     .cellTypeParamToMatrix(ctp0)
   } else if (is.character(ctp) && ctp == "random") {
     res <- cci_cell_type_params(phyla, num_regulators, num_lr, step_size,
-                                rand = T, discrete = is_discrete)
+                                rand = TRUE, discrete = is_discrete)
     cell_type_map <- res$type_map
     res$params
   } else {
@@ -138,7 +138,7 @@
 .getPathLen <- function(atac_neutral, paths, N) {
   edge_len <- apply(unique(atac_neutral[, 1:2]), 1, function(edge) {
     c(edge,
-      sum(atac_neutral[, 1] == edge[1] & atac_neutral[, 2] == edge[2], na.rm = T))
+      sum(atac_neutral[, 1] == edge[1] & atac_neutral[, 2] == edge[2], na.rm = TRUE))
   }) %>% t()
 
   path_len <- sapply(paths, function(path) {
@@ -184,7 +184,7 @@
 #' @return A 3D matrix of (n_cell_type, n_cell_type, n_lr). The value at (i, j, k) is 1 if there exist CCI of LR-pair k between cell type i and cell type j.
 #' @export
 #'
-cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand = T, discrete = F) {
+cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand = TRUE, discrete = FALSE) {
   .tree_info(tree) %->% c(edges, root, tips, internal)
 
   states <- if (discrete) {
@@ -333,7 +333,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
     cell_types[[icell]] <<- cell.type
     grid[loc[1], loc[2]] <<- icell
   },
-  get_neighbours = function(icell, omit.NA = T) {
+  get_neighbours = function(icell, omit.NA = TRUE) {
     loc <- locs[[icell]]
     nbs <- nb_map[[icell]]
     x <- loc[1]; y <- loc[2]

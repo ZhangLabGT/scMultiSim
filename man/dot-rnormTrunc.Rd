@@ -17,6 +17,9 @@
 
 \item{b}{the maximum value allowed}
 }
+\value{
+a vector of length n
+}
 \description{
 sample from truncated normal distribution
 }

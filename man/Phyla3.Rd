@@ -4,7 +4,7 @@
 \alias{Phyla3}
 \title{Creating an example tree with 3 tips}
 \usage{
-Phyla3(plotting = F)
+Phyla3(plotting = FALSE)
 }
 \arguments{
 \item{plotting}{True for plotting the tree on console, False for no plot}
@@ -14,4 +14,7 @@ a R phylo object
 }
 \description{
 Creating an example tree with 3 tips
+}
+\examples{
+Phyla3()
 }

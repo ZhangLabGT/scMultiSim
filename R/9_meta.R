@@ -3,7 +3,7 @@
 #' Show detailed documentations of scMultiSim's parameters
 #'
 #' @param topic Can be `options`, `dynamic.GRN`, or `cci`
-#'
+#' @return none
 #' @export
 #'
 #' @examples scmultisim_help()
@@ -21,7 +21,7 @@ scmultisim_help <- function(topic = NULL) {
   }
   
   if (topic == "dynamic.GRN") {
-    .dynamic_grn_default_params(help = T)
+    .dynamic_grn_default_params(help = TRUE)
     return()
   }
   

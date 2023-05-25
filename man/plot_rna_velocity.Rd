@@ -9,7 +9,7 @@ plot_rna_velocity(
   velocity = results$velocity,
   perplexity = 70,
   arrow.length = 1,
-  save = F,
+  save = FALSE,
   randseed = 0,
   ...
 )

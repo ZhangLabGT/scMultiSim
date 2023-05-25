@@ -15,7 +15,7 @@ opts_chunk$set(fig.width=4, fig.height=3)
 ```
 
 The following chunk will install all the required packages.
-```{r install-packages, include=F, message=F, warning=F, eval=F}
+```{r install-packages, include=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
 (function() {
   installed <- installed.packages()[,"Package"]
   install <- function(list, fn) {

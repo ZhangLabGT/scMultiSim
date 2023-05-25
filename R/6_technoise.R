@@ -92,13 +92,14 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #' @param nbatch number of batches
 #' @param batch_effect_size amount of batch effects. Larger values result in bigger differences between batches. Default is 1.
 #' @param randseed random seed
+#' @return a list with two elements: counts and meta_cell
 .divideBatchesImpl <- function(counts, meta_cell, nbatch, batch_effect_size = 1, randseed = 0) {
   set.seed(randseed)
   ## add batch effects to observed counts
   # use different mean and same sd to create the multiplicative factor for different part (gene/region) in different batch
   ncells <- dim(counts)[2]; nparts <- dim(counts)[1]
   batchIDs <- sample(1:nbatch, ncells, replace = TRUE)
-  meta_cell2 <- data.frame(batch = batchIDs, stringsAsFactors = F)
+  meta_cell2 <- data.frame(batch = batchIDs, stringsAsFactors = FALSE)
   meta_cell <- cbind(meta_cell, meta_cell2)
 
   mean_matrix <- matrix(0, nparts, nbatch)
@@ -266,6 +267,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
 #' @param randseed (should produce same result if nregions, nevf and randseed are all the same)
+#' @return if UMI, a list with two elements, the first is the observed count matrix, the second is the metadata; if nonUMI, a matrix
 #' @export
 #' @examples
 #' results <- sim_example_200_cells()
@@ -279,7 +281,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
                                 alpha_gene_mean = 1, alpha_gene_sd = 0,
                                 gene_len, depth_mean, depth_sd, lenslope = 0.02, nbins = 20,
                                 amp_bias_limit = c(-0.2, 0.2),
-                                rate_2PCR = 0.8, nPCR1 = 16, nPCR2 = 10, LinearAmp = F, LinearAmp_coef = 2000) {
+                                rate_2PCR = 0.8, nPCR1 = 16, nPCR2 = 10, LinearAmp = FALSE, LinearAmp_coef = 2000) {
   set.seed(randseed)
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- .calAmpBias(lenslope, nbins, gene_len, amp_bias_limit)
@@ -297,7 +299,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
                     LinearAmp_coef = LinearAmp_coef, N_molecules_SEQ = depth_vec[icell])
   })
 
-  meta_cell2 <- data.frame(alpha = rate_2cap_vec, depth = depth_vec, stringsAsFactors = F)
+  meta_cell2 <- data.frame(alpha = rate_2cap_vec, depth = depth_vec, stringsAsFactors = FALSE)
   meta_cell <- cbind(meta_cell, meta_cell2)
 
   if (protocol == "UMI") {
@@ -320,6 +322,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
 #' @param observation_prob for each integer count of a particular region for a particular cell, the probability the count will be observed
 #' @param sd_frac the fraction of ATAC-seq data value used as the standard deviation of added normally distrubted noise
 #' @param randseed (should produce same result if nregions, nevf and randseed are all the same)
+#' @return a matrix of observed ATAC-seq data
 #' @export
 #' @examples
 #' results <- sim_example_200_cells()
@@ -345,6 +348,7 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
 #' @param nbins number of bins for gene length
 #' @param gene_len transcript length of each gene
 #' @param amp_bias_limit range of amplification bias for each gene, a vector of length ngenes
+#' @return a vector
 .calAmpBias <- function(lenslope, nbins, gene_len, amp_bias_limit) {
   ngenes <- length(gene_len)
   len_bias_bin <- (-(1:nbins)) * lenslope
@@ -377,6 +381,7 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
 
 #' expand transcript counts to a vector of binaries of the same length of as the number of transcripts
 #' @param true_counts_1cell number of transcript in one cell
+#' @return a list of two vectors, the first vector is a vector of 1s, the second vector is the index of transcripts
 .expandToBinary <- function(true_counts_1cell) {
   names(true_counts_1cell) <- NULL
   expanded_vec <- rep(1, sum(true_counts_1cell))
@@ -392,6 +397,7 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
 #' @param b the maximum value allowed
 #' @param mean mean of the normal distribution
 #' @param sd standard deviation of the normal distribution
+#' @return a vector of length n
 .rnormTrunc <- function(n, mean, sd, a, b) {
   vec1 <- rnorm(n, mean = mean, sd = sd)
   beyond_idx <- which(vec1 < a | vec1 > b)

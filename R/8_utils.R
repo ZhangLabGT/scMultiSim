@@ -17,10 +17,11 @@
 #' sample from smoothed density function
 #' @param nsample number of samples needed
 #' @param den_fun density function estimated from density() from R default
+#' @return a vector of samples
 SampleDen <- function(nsample, den_fun) {
   probs <- den_fun$y / sum(den_fun$y)
   bw <- den_fun$x[2] - den_fun$x[1]
-  bin_id <- sample(size = nsample, x = c(1:length(probs)), prob = probs, replace = T)
+  bin_id <- sample(size = nsample, x = c(1:length(probs)), prob = probs, replace = TRUE)
   counts <- table(bin_id)
   sampled_bins <- as.numeric(names(counts))
   samples <- lapply(c(1:length(counts)), function(j) {
@@ -35,7 +36,9 @@ SampleDen <- function(nsample, den_fun) {
 #' @param plotting True for plotting the tree on console, False for no plot
 #' @return a R phylo object
 #' @export
-Phyla5 <- function(plotting = F) {
+#' @examples
+#' Phyla5()
+Phyla5 <- function(plotting = FALSE) {
   phyla <- rtree(2)
   phyla <- compute.brlen(phyla, 1)
   tip <- compute.brlen(phyla, 1)
@@ -49,8 +52,8 @@ Phyla5 <- function(plotting = F) {
   root <- as.numeric(names(connections)[connections == 2])
   tips <- as.numeric(names(connections)[connections == 1])
   phyla$tip.label <- as.character(tips)
-  if (plotting == T) {
-    plot(phyla, show.tip.label = F, lwd = 2)
+  if (plotting == TRUE) {
+    plot(phyla, show.tip.label = FALSE, lwd = 2)
     tiplabels(cex = 2)
     nodelabels(cex = 2)
   }
@@ -61,7 +64,9 @@ Phyla5 <- function(plotting = F) {
 #' @param plotting True for plotting the tree on console, False for no plot
 #' @return a R phylo object
 #' @export
-Phyla3 <- function(plotting = F) {
+#' @examples
+#' Phyla3()
+Phyla3 <- function(plotting = FALSE) {
   # par(mfrow=c(2,2))
   phyla <- rtree(2)
   phyla <- compute.brlen(phyla, 1)
@@ -75,8 +80,8 @@ Phyla3 <- function(plotting = F) {
   tips <- as.numeric(names(connections)[connections == 1])
   phyla$tip.label <- as.character(tips)
 
-  if (plotting == T) {
-    plot(phyla, show.tip.label = F, lwd = 2)
+  if (plotting == TRUE) {
+    plot(phyla, show.tip.label = FALSE, lwd = 2)
     tiplabels(cex = 2)
     nodelabels(cex = 2)
   }
@@ -87,6 +92,8 @@ Phyla3 <- function(plotting = F) {
 #' @param len length of the tree
 #' @return a R phylo object
 #' @export
+#' @examples
+#' Phyla1(len = 1)
 Phyla1 <- function(len = 1) {
   myTree <- ape::read.tree(text='(A);')
   myTree <- compute.brlen(myTree, len)
@@ -127,22 +134,22 @@ Phyla1 <- function(len = 1) {
   if (sim$do_spatial) {
     cat("(NA)\n")
   } else {
-    .print_matrix_dim(sim$CIF_all$cif$kon, "kon", newline = F)
-    .print_matrix_dim(sim$CIF_all$cif$koff, "koff", newline = F)
+    .print_matrix_dim(sim$CIF_all$cif$kon, "kon", newline = FALSE)
+    .print_matrix_dim(sim$CIF_all$cif$koff, "koff", newline = FALSE)
     .print_matrix_dim(sim$CIF_all$cif$s, "s")
   }
   
   cat("  GIV ")
-  .print_matrix_dim(sim$GIV$kon, "kon", newline = F)
-  .print_matrix_dim(sim$GIV$koff, "koff", newline = F)
+  .print_matrix_dim(sim$GIV$kon, "kon", newline = FALSE)
+  .print_matrix_dim(sim$GIV$koff, "koff", newline = FALSE)
   .print_matrix_dim(sim$GIV$s, "s")
   
   cat("  Params ")
   if (sim$do_spatial) {
-    .print_matrix_dim(sim$params_spatial[[1]]$kon, "kon", newline = F)
+    .print_matrix_dim(sim$params_spatial[[1]]$kon, "kon", newline = FALSE)
     .print_matrix_dim(sim$params_spatial[[1]]$koff, "koff")
   } else {
-    .print_matrix_dim(sim$params$kon, "kon", newline = F)
+    .print_matrix_dim(sim$params$kon, "kon", newline = FALSE)
     .print_matrix_dim(sim$params$koff, "koff")
   }
   
@@ -153,7 +160,7 @@ Phyla1 <- function(len = 1) {
   cat("================================\n")
 }
 
-.print_matrix_dim <- function(mtx, name = NULL, newline = T) {
+.print_matrix_dim <- function(mtx, name = NULL, newline = TRUE) {
   if (is.null(name)) {
     cat(sprintf("%dx%d", nrow(mtx), ncol(mtx)))
   } else {
@@ -184,6 +191,8 @@ Phyla1 <- function(len = 1) {
 #' @param velocity whether to simulate RNA velocity
 #' @return the simulation result
 #' @export
+#' @examples
+#' sim_example_200_cells()
 sim_example_200_cells <- function(velocity = FALSE) {
   data(GRN_params_100, envir = environment())
   options <- list(
@@ -203,6 +212,8 @@ sim_example_200_cells <- function(velocity = FALSE) {
 #' Simulate a small example dataset with 200 cells and the 100-gene GRN, with CCI enabled
 #' @return the simulation result
 #' @export
+#' @examples
+#' sim_example_200_cells_spatial()
 sim_example_200_cells_spatial <- function() {
   data(GRN_params_100, envir = environment())
   lig_params <- data.frame(

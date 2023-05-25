@@ -1,5 +1,5 @@
-.default <- \(...) list(F, as.character(enexprs(...)), ...)
-.required <- list(T)
+.default <- \(...) list(FALSE, as.character(enexprs(...)), ...)
+.required <- list(TRUE)
 
 .should.be.logical <- list(
   is.logical,
@@ -129,7 +129,7 @@
     "A tree defining relationship between populations."
   ),
   discrete.cif                                                           = list(
-    .default(F),
+    .default(FALSE),
     .should.be.logical,
     "Whether the cell population is discrete."
   ),
@@ -172,7 +172,7 @@
     "Stddev of the CIF values."
   ),
   use.impulse                                                            = list(
-    .default(F),
+    .default(FALSE),
     .should.be.logical,
     "Use the impulse model when generating the continuous CIF."
   ),
@@ -236,7 +236,7 @@
   # ========================== Kinetic Model ===================================
   "SIMULATION - KINETIC MODEL",
   do.velocity                                                            = list(
-    .default(F),
+    .default(FALSE),
     .should.be.logical,
     "Simulate using the whole kinetic model and generate RNA velocity data."
   ),
@@ -358,7 +358,7 @@ OP <- function(..., .name = 'options') {
 }
 
 
-.dynamic_grn_default_params <- function(help = F) {
+.dynamic_grn_default_params <- function(help = FALSE) {
   if (help) {
     cat("Dynamic GRN deletes and creates some edges in the GRN in each epoch.
 One epoch contains multiple steps, and the change is done gradually in steps.
@@ -388,7 +388,7 @@ See the returned list for the default values.
     cell.per.step = 1,
     involved.genes = NA,
     num.changing.edges = 2,
-    create.tf.edges = F,
+    create.tf.edges = FALSE,
     weight.mean = NA,
     weight.sd = 1
   )  

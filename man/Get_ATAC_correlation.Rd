@@ -13,6 +13,13 @@ Get_ATAC_correlation(counts, atacseq_data, num_genes)
 
 \item{num_genes}{number of genes}
 }
+\value{
+the correlation value
+}
 \description{
 This function gets the average correlation rna seq counts and chromatin region effect on genes
+}
+\examples{
+results <- sim_example_200_cells()
+Get_ATAC_correlation(results$counts, results$atacseq_data, results$num_genes)
 }

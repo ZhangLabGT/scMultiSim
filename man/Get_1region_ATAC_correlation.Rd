@@ -13,6 +13,13 @@ Get_1region_ATAC_correlation(counts, atacseq_data, region2gene)
 
 \item{region2gene}{a 0 1 coupling matrix between regions and genes of shape (nregions) x (num_genes), where a value of 1 indicates the gene is affected by a particular region}
 }
+\value{
+the correlation value
+}
 \description{
 This function gets the average correlation rna seq counts and region effect on genes for genes which are only associated with 1 chromatin region
+}
+\examples{
+results <- sim_example_200_cells()
+Get_1region_ATAC_correlation(results$counts, results$atacseq_data, results$region_to_gene)
 }

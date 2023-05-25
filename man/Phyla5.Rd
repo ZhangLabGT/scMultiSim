@@ -4,7 +4,7 @@
 \alias{Phyla5}
 \title{Creating an example tree with 5 tips}
 \usage{
-Phyla5(plotting = F)
+Phyla5(plotting = FALSE)
 }
 \arguments{
 \item{plotting}{True for plotting the tree on console, False for no plot}
@@ -14,4 +14,7 @@ a R phylo object
 }
 \description{
 Creating an example tree with 5 tips
+}
+\examples{
+Phyla5()
 }

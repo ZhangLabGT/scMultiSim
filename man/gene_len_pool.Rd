@@ -10,6 +10,9 @@ a vector.
 \usage{
 data(gene_len_pool)
 }
+\value{
+a vector of gene lengths.
+}
 \description{
 a pool of gene lengths to sample from
 }

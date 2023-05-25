@@ -11,6 +11,9 @@ SampleDen(nsample, den_fun)
 
 \item{den_fun}{density function estimated from density() from R default}
 }
+\value{
+a vector of samples
+}
 \description{
 sample from smoothed density function
 }

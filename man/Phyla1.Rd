@@ -15,3 +15,6 @@ a R phylo object
 \description{
 Creating a linear example tree
 }
+\examples{
+Phyla1(len = 1)
+}

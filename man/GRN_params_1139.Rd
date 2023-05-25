@@ -5,10 +5,13 @@
 \alias{GRN_params_1139}
 \title{GRN_params_1139 is a matrix of GRN params consisting of 1139 genes where: #    - column 1 is the target gene ID, #    - column 2 is the gene ID which acts as a transcription factor for the target (regulated) gene #    - column 3 is the effect of the column 2 gene ID on the column 1 gene ID}
 \format{
-a vector.
+a data frame.
 }
 \usage{
 data(GRN_params_1139)
+}
+\value{
+a data frame with three columns: target gene ID, TF gene ID, and the effect of TF on target gene.
 }
 \description{
 GRN_params_1139 is a matrix of GRN params consisting of 1139 genes where: #    - column 1 is the target gene ID, #    - column 2 is the gene ID which acts as a transcription factor for the target (regulated) gene #    - column 3 is the effect of the column 2 gene ID on the column 1 gene ID

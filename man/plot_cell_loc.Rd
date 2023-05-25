@@ -7,8 +7,8 @@
 plot_cell_loc(
   results = .getResultsFromGlobal(),
   size = 4,
-  show.label = F,
-  show.arrows = T,
+  show.label = FALSE,
+  show.arrows = TRUE,
   lr.pair = 1,
   .cell.pop = NULL
 )

@@ -9,8 +9,8 @@ cci_cell_type_params(
   total.lr,
   ctype.lr,
   step.size = 1,
-  rand = T,
-  discrete = F
+  rand = TRUE,
+  discrete = FALSE
 )
 }
 \arguments{

@@ -57,8 +57,8 @@ plot_phyla <- function(tree) {
 #' @examples
 #' results <- sim_example_200_cells()
 #' plot_tsne(log2(results$counts + 1), results$cell_meta$pop)
-plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = F, rand.seed = 0,
-                      continuous = F, labels2 = NULL, lim = NULL) {
+plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = FALSE, rand.seed = 0,
+                      continuous = FALSE, labels2 = NULL, lim = NULL) {
   set.seed(rand.seed)
 
   data_tsne = Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
@@ -171,7 +171,7 @@ plot_grid <- function(results = .getResultsFromGlobal()) {
 plot_gene_module_cor_heatmap <- function(
   results = .getResultsFromGlobal(),
   seed = 0,
-  grn.genes.only = T, save = F
+  grn.genes.only = TRUE, save = FALSE
 ) {
   set.seed(seed)
   grn <- results$.grn$params
@@ -193,17 +193,17 @@ plot_gene_module_cor_heatmap <- function(
   }
 
   if (grn.genes.only) {
-    if (save != F) {
+    if (save != FALSE) {
       pdf(save_path, 5, 5)
     }
-    heatmap.2(count_correlation_matrix[1:num_GRN_genes, 1:num_GRN_genes], scale = "none", Rowv = T, Colv = T, dendrogram = "both", distfun = dist, hclustfun = hclust, key = T, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector[1:num_GRN_genes], ColSideColors = gene_module_color_vector[1:num_GRN_genes], col = bluered(75), main = '          GRN Gene Corr by Main Regulator')
+    heatmap.2(count_correlation_matrix[1:num_GRN_genes, 1:num_GRN_genes], scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector[1:num_GRN_genes], ColSideColors = gene_module_color_vector[1:num_GRN_genes], col = bluered(75), main = '          GRN Gene Corr by Main Regulator')
   } else {
-    if (save != F) {
+    if (save != FALSE) {
       pdf(save_path, 5, 5)
     }
-    heatmap.2(count_correlation_matrix, scale = "none", Rowv = T, Colv = T, dendrogram = "both", distfun = dist, hclustfun = hclust, key = T, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector, ColSideColors = gene_module_color_vector, col = bluered(75), main = '       Gene Corr by Main Regulator')
+    heatmap.2(count_correlation_matrix, scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector, ColSideColors = gene_module_color_vector, col = bluered(75), main = '       Gene Corr by Main Regulator')
   }
-  if (save != F) {
+  if (save != FALSE) {
     dev.off()
   }
   return()
@@ -227,7 +227,7 @@ plot_gene_module_cor_heatmap <- function(
 #' plot_cell_loc(results)
 plot_cell_loc <- function(
   results = .getResultsFromGlobal(),
-  size = 4, show.label = F, show.arrows = T, lr.pair = 1, .cell.pop = NULL
+  size = 4, show.label = FALSE, show.arrows = TRUE, lr.pair = 1, .cell.pop = NULL
 ) {
   if (is.null(.cell.pop))
     .cell.pop <- results$cell_meta$pop
@@ -244,7 +244,7 @@ plot_cell_loc <- function(
     geom_point(aes(x = x, y = y, color = cell_type), data = data, size = size) +
     labs(color = 'Population')
 
-  # inter_data <- lapply(1:ncol(locs), \(i) cbind(results$grid$get_neighbours(i, omit.NA = F), i)) %>% 
+  # inter_data <- lapply(1:ncol(locs), \(i) cbind(results$grid$get_neighbours(i, omit.NA = FALSE), i)) %>%
   #   do.call(rbind, .) %>% na.omit() %>%
   #   apply(1, \(row) c(locs[,row[1]], locs[,row[2]])) %>%
   #   as.matrix() %>% t() %>% as.data.frame()
@@ -337,7 +337,7 @@ gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
   grn_params <- results$.options$GRN
   regu <- grn_params[grn_params[, 2] == regulator, 1] %>% as.character()
   corr <- .geneCorr(results)[regulator,] %>%
-    sort(decreasing = T) %>%
+    sort(decreasing = TRUE) %>%
     round(digits = 2) %>%
     .[2:length(.)]
 
@@ -402,11 +402,14 @@ gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
 #'
 #' @return none
 #' @export
+#' @examples
+#' results <- sim_example_200_cells_spatial()
+#' gene_corr_cci(results)
 gene_corr_cci <- function(
   results = .getResultsFromGlobal(),
-  all.genes = F,
+  all.genes = FALSE,
   .pair = NULL,
-  .exclude.same.types = T
+  .exclude.same.types = TRUE
 ) {
   options <- results$.options
   ncells <- options$num.cells
@@ -631,7 +634,7 @@ gene_corr_cci <- function(
       vx_normalized, vy_normalized,
       vx_knn, vy_knn,
       vx_knn_normalized, vy_knn_normalized,
-      .named = T
+      .named = TRUE
     )
   }
 
@@ -642,7 +645,7 @@ gene_corr_cci <- function(
     res2 <- get_velo(future_2)
 
     for (n in names(res2)) {
-      if (grepl("current", n, fixed = T)) next
+      if (grepl("current", n, fixed = TRUE)) next
       res[[paste0(n, "2")]] <- res2[[n]]
     }
   }
@@ -667,7 +670,7 @@ gene_corr_cci <- function(
 plot_rna_velocity <- function(
   results = .getResultsFromGlobal(),
   velocity = results$velocity,
-  perplexity = 70, arrow.length = 1, save = F, randseed = 0, ...
+  perplexity = 70, arrow.length = 1, save = FALSE, randseed = 0, ...
 ) {
   set.seed(randseed)
   counts_s <- results$counts
@@ -818,6 +821,7 @@ plot_rna_velocity <- function(
 
 #' This function finds the correlation between every pair of genes
 #' @param counts rna seq counts
+#' @return the correlation matrix
 .getCountCorrMatrix <- function(counts) {
   count_correlation_matrix <- cor(t(counts), method = "spearman")
   if (any(is.na(count_correlation_matrix))) {
@@ -831,7 +835,11 @@ plot_rna_velocity <- function(
 #' @param counts rna seq counts
 #' @param atacseq_data atac seq data
 #' @param region2gene a 0 1 coupling matrix between regions and genes of shape (nregions) x (num_genes), where a value of 1 indicates the gene is affected by a particular region
+#' @return the correlation value
 #' @export
+#' @examples
+#' results <- sim_example_200_cells()
+#' Get_1region_ATAC_correlation(results$counts, results$atacseq_data, results$region_to_gene)
 Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
   target_genes <- which(colSums(region2gene > 0) == 1)
   ATAC_1region_correlation <- numeric()
@@ -840,7 +848,7 @@ Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
     correlation <- suppressWarnings(cor(atacseq_data[region,], counts[gene_index,], method = "spearman"))
     ATAC_1region_correlation <- c(ATAC_1region_correlation, correlation)
   }
-  ATAC_1region_correlation <- mean(ATAC_1region_correlation, na.rm = T)
+  ATAC_1region_correlation <- mean(ATAC_1region_correlation, na.rm = TRUE)
   return(ATAC_1region_correlation)
 }
 
@@ -848,12 +856,16 @@ Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
 #' @param counts rna seq counts
 #' @param atacseq_data atac seq data
 #' @param num_genes number of genes
+#' @return the correlation value
 #' @export
+#' @examples
+#' results <- sim_example_200_cells()
+#' Get_ATAC_correlation(results$counts, results$atacseq_data, results$num_genes)
 Get_ATAC_correlation <- function(counts, atacseq_data, num_genes) {
   ATAC_correlation <- numeric()
   for (gene_index in 1:num_genes) {
     ATAC_correlation <- c(ATAC_correlation, suppressWarnings(cor(atacseq_data[gene_index,], counts[gene_index,], method = "spearman")))
   }
-  ATAC_correlation <- mean(ATAC_correlation, na.rm = T)
+  ATAC_correlation <- mean(ATAC_correlation, na.rm = TRUE)
   return(ATAC_correlation)
 }

@@ -45,7 +45,7 @@
         } else {
           # continuous spatial
           cif_ <- sim$CIF_spatial$cif[[sp_cell_i]][[i]]
-          # cif_$diff is T if it's need to be combined with the shared diff cif
+          # cif_$diff is TRUE if it's need to be combined with the shared diff cif
           cif_diff <- if (cif_$diff) {
             sim$CIF_spatial$diff_cif_by_path[[i]][[sp_path_i]]
           } else {
@@ -136,8 +136,8 @@
     return()
   }
 
-  in_range <- rep(T, N$gene)
-  in_range[1:(hge_range - 1)] <- F
+  in_range <- rep(TRUE, N$gene)
+  in_range[1:(hge_range - 1)] <- FALSE
 
   gene_var <- colVars(s_base)
   n_hge <- ceiling(N$gene * prop_hge)
@@ -145,7 +145,7 @@
   if (length(pool) < n_hge) {
     stop("Too few highly expressed gene candidates. Consider increasing hge.max.var.")
   }
-  chosen_hge <- sample(pool, n_hge, replace = F)
+  chosen_hge <- sample(pool, n_hge, replace = FALSE)
   var_rank <- dnorm(gene_var[chosen_hge], 0, max_var / 5)
   d <- dnorm(0, 0, max_var / 5)
 

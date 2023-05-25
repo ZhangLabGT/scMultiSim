@@ -9,6 +9,9 @@ scmultisim_help(topic = NULL)
 \arguments{
 \item{topic}{Can be \code{options}, \code{dynamic.GRN}, or \code{cci}}
 }
+\value{
+none
+}
 \description{
 Show detailed documentations of scMultiSim's parameters
 }

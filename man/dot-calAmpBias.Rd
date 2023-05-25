@@ -15,6 +15,9 @@
 
 \item{amp_bias_limit}{range of amplification bias for each gene, a vector of length ngenes}
 }
+\value{
+a vector
+}
 \description{
 Simulate technical biases
 }

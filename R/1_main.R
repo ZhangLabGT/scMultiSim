@@ -129,7 +129,7 @@ sim_true_counts <- function(options) {
       c(paths, total_ncell) %<-% .getPaths(N, options)
       sim$paths <- paths
       N$max_layer <- total_ncell
-      sim$cell_path <- sample(seq_along(paths), OP("num.cells"), replace = T)
+      sim$cell_path <- sample(seq_along(paths), OP("num.cells"), replace = TRUE)
     }
   }
 
@@ -190,7 +190,7 @@ sim_true_counts <- function(options) {
     } else {
       cif <- .continuousCIF(
         seed[2], N, options,
-        is_spatial = T,
+        is_spatial = TRUE,
         spatial_params = list(total_ncell, sim$paths, sim$cell_path, sim$path_len)
       )
       # add cell.type.idx
@@ -468,13 +468,13 @@ sim_true_counts <- function(options) {
   N$cif <- OP("num.cifs")
   n_diff_cif <- ceiling(N$cif * OP("diff.cif.fraction"))
   is_vary <- switch(OP("vary"),
-    "all" = c(T, T, T),
-    "kon" = c(T, F, F),
-    "koff" = c(F, T, F),
-    "s" = c(F, F, T),
-    "except_kon" = c(F, T, T),
-    "except_koff" = c(T, F, T),
-    "except_s" = c(T, T, F)
+    "all" = c(TRUE, TRUE, TRUE),
+    "kon" = c(TRUE, FALSE, FALSE),
+    "koff" = c(FALSE, TRUE, FALSE),
+    "s" = c(FALSE, FALSE, TRUE),
+    "except_kon" = c(FALSE, TRUE, TRUE),
+    "except_koff" = c(TRUE, FALSE, TRUE),
+    "except_s" = c(TRUE, TRUE, FALSE)
   )
   N$diff.cif <- vapply(
     is_vary, function(x) ifelse(x, n_diff_cif, 0),
@@ -526,7 +526,7 @@ sim_true_counts <- function(options) {
     ncells_pop[larger_pops] <- floor((N$cell - min_popsize) / length(larger_pops))
     leftover <- N$cell - sum(ncells_pop)
     if (leftover > 0) {
-      temp <- sample(larger_pops, leftover, replace = F)
+      temp <- sample(larger_pops, leftover, replace = FALSE)
       ncells_pop[temp] <- ncells_pop[temp] + 1
     }
   }
@@ -535,7 +535,7 @@ sim_true_counts <- function(options) {
     sim$ncells_pop <- ncells_pop
   }
 
-  vcv_evf_mean <- vcv.phylo(phyla, corr = T)
+  vcv_evf_mean <- vcv.phylo(phyla, corr = TRUE)
   param_name <- c("kon", "koff", "s")
 
   evfs <- lapply(1:3, function(iparam) {
@@ -620,8 +620,9 @@ sim_true_counts <- function(options) {
 #' @param spatial_params the spatial parameters
 #' @param .plot save the CIF plot
 #' @param .plot.name plot name
-.continuousCIF <- function(seed, N, options, ncell_key = "cell", is_spatial = F, spatial_params = NULL,
-                           .plot = F, .plot.name = "cont_cif.pdf") {
+#' @return a list containing the cif and meta data
+.continuousCIF <- function(seed, N, options, ncell_key = "cell", is_spatial = FALSE, spatial_params = NULL,
+                           .plot = FALSE, .plot.name = "cont_cif.pdf") {
   set.seed(seed)
 
   ncells <- N[[ncell_key]]
@@ -693,7 +694,7 @@ sim_true_counts <- function(options) {
     nonzero <- sample(c(0, 1),
       size = n_cif,
       prob = c(1 - prob, prob),
-      replace = T
+      replace = TRUE
     )
     nonzero[nonzero != 0] <- rnorm(sum(nonzero), mean, sd)
     nonzero
@@ -739,7 +740,7 @@ sim_true_counts <- function(options) {
     regu_diff_cif <- matrix(0, n_reg, N$diff.cif[3])
     # regulator rows: gene effect of 2 added to two random differential cifs
     # for each master regulator gene
-    indices <- replicate(n_reg, sample(1:(N$diff.cif[3]), 2, replace = F)) %>% as.vector()
+    indices <- replicate(n_reg, sample(1:(N$diff.cif[3]), 2, replace = FALSE)) %>% as.vector()
     regu_diff_cif[cbind(rep(1:n_reg, each = 2), indices)] <- 2
     giv$s[regu_list, ] <- cbind(matrix(0, n_reg, N$nd.cif[3]), regu_diff_cif)
     # target rows: for every target gene, it should use the same gene_effect vector
@@ -798,13 +799,13 @@ sim_true_counts <- function(options) {
 
   res <- matrix(0, N$region, N$gene)
   # gene is regulated by 0, 1, or 2 regions
-  regu_by <- sample(c(0, 1, 2), size = N$gene, replace = T, prob = OP("region.distrib"))
+  regu_by <- sample(c(0, 1, 2), size = N$gene, replace = TRUE, prob = OP("region.distrib"))
   regu_by_1 <- which(regu_by == 1)
   regu_by_2 <- which(regu_by == 2)
   # for genes regulated by 1 region, select a random region
-  res[cbind(sample(1:N$region, length(regu_by_1), replace = T), regu_by_1)] <- 1
+  res[cbind(sample(1:N$region, length(regu_by_1), replace = TRUE), regu_by_1)] <- 1
   # for genes regulated by 2 regions, select 2 consecutive random regions
-  region_idx <- sample(1:(N$region - 1), length(regu_by_2), replace = T) %>% c(., . + 1)
+  region_idx <- sample(1:(N$region - 1), length(regu_by_2), replace = TRUE) %>% c(., . + 1)
   res[cbind(region_idx, rep(regu_by_2, 2))] <- 1
 
   # return

@@ -20,6 +20,9 @@ True2ObservedATAC(
 
 \item{sd_frac}{the fraction of ATAC-seq data value used as the standard deviation of added normally distrubted noise}
 }
+\value{
+a matrix of observed ATAC-seq data
+}
 \description{
 Simulate observed ATAC-seq matrix given technical noise and the true counts
 }

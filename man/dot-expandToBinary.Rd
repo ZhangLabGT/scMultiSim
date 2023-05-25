@@ -9,6 +9,9 @@
 \arguments{
 \item{true_counts_1cell}{number of transcript in one cell}
 }
+\value{
+a list of two vectors, the first vector is a vector of 1s, the second vector is the index of transcripts
+}
 \description{
 expand transcript counts to a vector of binaries of the same length of as the number of transcripts
 }

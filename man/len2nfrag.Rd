@@ -10,6 +10,9 @@ a vector.
 \usage{
 data(len2nfrag)
 }
+\value{
+a vector.
+}
 \description{
 from transcript length to number of fragments (for the nonUMI protocol)
 }

@@ -15,7 +15,7 @@ opts_chunk$set(fig.width=4, fig.height=3)
 ```
 
 The following chunk will install all the required packages.
-```{r install-packages, include=F, message=F, warning=F, eval=F}
+```{r install-packages, include=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
 (function() {
   installed <- installed.packages()[,"Package"]
   install <- function(list, fn) {
@@ -62,7 +62,7 @@ library(dplyr)
 Simulate true counts by calling `sim_true_counts(options)` where `options` is a
 list. Use `scmultisim_help()` to get help.
 
-```{r scmultisim-help, echo = T, results = "hide"}
+```{r scmultisim-help, echo = TRUE, results = "hide"}
 scmultisim_help("options")
 ```
 
@@ -88,8 +88,8 @@ scMultiSim also provides three differentiation trees.
 `Phyla1()` returns only a single branch, which can be useful when we don't want any specific trajectory.
 ```{r plot-tree, fig.width = 8, fig.height = 4}
 par(mfrow=c(1,2))
-Phyla5(plotting = T)
-Phyla3(plotting = T)
+Phyla5(plotting = TRUE)
+Phyla3(plotting = TRUE)
 
 # It's not possible to plot Phyla1() because it only contains 1 branch connecting two nodes.
 Phyla1()
@@ -136,7 +136,7 @@ options <- list(
   cif.sigma = 0.5,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
-  do.velocity = T
+  do.velocity = TRUE
 )
 ```
 
@@ -192,7 +192,7 @@ scMultiSim provides various parameters to control each type of biological effect
 
 ## Discrete Cell Population
 
-We can also simulate discrete cell population by setting `discrete.cif = T`.
+We can also simulate discrete cell population by setting `discrete.cif = TRUE`.
 In this case, each tip of the tree will be one cell type,
 therefore there will be 5 clusters in the following result.
 
@@ -204,7 +204,7 @@ options <- list(
   num.cifs = 50,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
-  discrete.cif = T
+  discrete.cif = TRUE
 )
 
 results <- sim_true_counts(options)
@@ -283,7 +283,7 @@ plot_tsne(log2(results$counts + 1),
 
 ## Adjusting the Intrinsic Noise
 
-If we set `do.velocity = F`, scMultiSim will simulate the RNA counts using the Beta-Poisson model,
+If we set `do.velocity = FALSE`, scMultiSim will simulate the RNA counts using the Beta-Poisson model,
 which is faster but doesn't output RNA velocity.
 When using the Beta-Possion model, scMultiSim provides a `intrinsic.noise` parameter to control the
 intrinsic noise during the transcription process.
@@ -323,7 +323,7 @@ First, call the following function to check the usage of dynamic GRN.
 scmultisim_help("dynamic.GRN")
 ```
 
-Here we use `Phyla1()` as the differentiation tree to remove the effect of the trajectory. Additionally, we can use `discrete.cif = T` to simulate discrete cell population.
+Here we use `Phyla1()` as the differentiation tree to remove the effect of the trajectory. Additionally, we can use `discrete.cif = TRUE` to simulate discrete cell population.
 ```{r define-options-dynamic-grn}
 options_ <- list(
   rand.seed = 0,
@@ -332,7 +332,7 @@ options_ <- list(
   num.cifs = 50,
   tree = Phyla1(),
   diff.cif.fraction = 0.8,
-  do.velocity = F,
+  do.velocity = FALSE,
   dynamic.GRN = list(
     cell.per.step = 3,
     num.changing.edges = 5,

@@ -45,7 +45,11 @@ Imports:
     crayon,
     assertthat,
     igraph,
-    methods
+    methods,
+    grDevices,
+    graphics,
+    stats,
+    utils
 Suggests:
     knitr,
     rmarkdown,
@@ -54,9 +58,6 @@ Suggests:
 biocViews: SingleCell, Transcriptomics
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-Author: Hechen Li [aut, cre],
-  Xiuwei Zhang [aut],
-  Michael Squires [aut]
-Maintainer: Hechen Li <hechen.li@gatech.edu>
+Maintainer: Hechen Li <hli691@gatech.edu>
 BugReports: https://github.com/ZhangLabGT/scMultiSim/issues
 Config/testthat/edition: 3
