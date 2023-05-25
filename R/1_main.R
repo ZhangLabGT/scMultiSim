@@ -535,7 +535,7 @@ sim_true_counts <- function(options) {
     sim$ncells_pop <- ncells_pop
   }
 
-  vcv_evf_mean <- vcv.phylo(phyla, cor = T)
+  vcv_evf_mean <- vcv.phylo(phyla, corr = T)
   param_name <- c("kon", "koff", "s")
 
   evfs <- lapply(1:3, function(iparam) {

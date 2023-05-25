@@ -283,7 +283,7 @@
     sim$ncells_pop <- ncells_pop
   }
 
-  vcv_evf_mean <- vcv.phylo(phyla, cor = T)
+  vcv_evf_mean <- vcv.phylo(phyla, corr = T)
   param_name <- c("kon", "koff", "s")
 
   # nd and reg cif
