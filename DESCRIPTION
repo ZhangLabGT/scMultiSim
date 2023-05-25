@@ -1,6 +1,6 @@
 Package: scMultiSim
 Title: Simulation of Multi-Modality Single Cell Data Guided By Gene Regulatory Networks and Cell-Cell Interactions
-Version: 1.0.0
+Version: 1.0.1
 Authors@R:
     c(person(given = "Hechen",
              family = "i",
