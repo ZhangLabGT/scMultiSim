@@ -90,7 +90,7 @@
 .getPaths <- function(N, options) {
   ncell <- N$cell
   # get all possible paths in the tree; save them in `paths`
-  phyla <- OP(tree)
+  phyla <- OP("tree")
   c(edges, root, tips, internal) %<-% .tree_info(phyla)
   paths <- list()
 

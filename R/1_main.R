@@ -53,17 +53,17 @@ sim_true_counts <- function(options) {
   # ==== options ===============================================================
 
   options <- .check_opt(options)
-  phyla <- OP(tree)
-  do_velocity <- OP(do.velocity)
+  phyla <- OP("tree")
+  do_velocity <- OP("do.velocity")
   spatial_params <- options$cci
-  is_discrete <- OP(discrete.cif)
+  is_discrete <- OP("discrete.cif")
 
   # debug?
   is_debug <- isTRUE(options$debug)
 
   # ==== initialization ========================================================
 
-  cores <- OP(threads)
+  cores <- OP("threads")
   if (cores != 1) {
     stop("Multithreading is not supported yet.")
   }
@@ -74,14 +74,14 @@ sim_true_counts <- function(options) {
   sim$start_time <- Sys.time()
 
   # seeds
-  set.seed(OP(rand.seed))
+  set.seed(OP("rand.seed"))
   seed <- sample(1:1e5, size = 9)
 
   # get the GRN info and the numbers
   sim$do_spatial <- is.list(spatial_params)
-  sim$is_dyn_grn <- is.list(OP(dynamic.GRN))
+  sim$is_dyn_grn <- is.list(OP("dynamic.GRN"))
 
-  .grn_params <- OP(GRN)
+  .grn_params <- OP("GRN")
   .sp_params <- if (sim$do_spatial) spatial_params$params else NULL
   c(.grn_params, .rn_sp) %<-% .renameGenes(sim, .grn_params, .sp_params)
   if (sim$do_spatial) {
@@ -129,7 +129,7 @@ sim_true_counts <- function(options) {
       c(paths, total_ncell) %<-% .getPaths(N, options)
       sim$paths <- paths
       N$max_layer <- total_ncell
-      sim$cell_path <- sample(seq_along(paths), OP(num.cells), replace = T)
+      sim$cell_path <- sample(seq_along(paths), OP("num.cells"), replace = T)
     }
   }
 
@@ -445,19 +445,19 @@ sim_true_counts <- function(options) {
 
 .getNumbers <- function(GRN, options) {
   N <- list()
-  N$cell <- OP(num.cells)
+  N$cell <- OP("num.cells")
 
   # gene
   if (is.null(GRN)) {
     N$grn.gene <- 0
-    N$gene <- OP(num.genes)
+    N$gene <- OP("num.genes")
     N$no.grn.gene <- N$gene
   } else {
     N$grn.gene <- length(GRN$name_map)
     N$gene <- if (is.numeric(options$num.genes) && options$num.genes >= N$grn.gene) {
       options$num.genes
     } else {
-      ceiling((N$grn.gene + N$grn.gene * OP(unregulated.gene.ratio)) / 10) * 10
+      ceiling((N$grn.gene + N$grn.gene * OP("unregulated.gene.ratio")) / 10) * 10
     }
     N$non.grn.gene <- N$gene - N$grn.gene
     N$regulator <- GRN$n_reg
@@ -465,9 +465,9 @@ sim_true_counts <- function(options) {
   }
 
   # cif
-  N$cif <- OP(num.cifs)
-  n_diff_cif <- ceiling(N$cif * OP(diff.cif.fraction))
-  is_vary <- switch(OP(vary),
+  N$cif <- OP("num.cifs")
+  n_diff_cif <- ceiling(N$cif * OP("diff.cif.fraction"))
+  is_vary <- switch(OP("vary"),
     "all" = c(T, T, T),
     "kon" = c(T, F, F),
     "koff" = c(F, T, F),
@@ -483,7 +483,7 @@ sim_true_counts <- function(options) {
   N$nd.cif <- N$cif - N$diff.cif
 
   # regions
-  N$region <- length(OP(region.distrib)) * N$gene
+  N$region <- length(OP("region.distrib")) * N$gene
 
   # data: param density
   data(param_realdata.zeisel.imputed, envir = environment())
@@ -498,12 +498,12 @@ sim_true_counts <- function(options) {
 
 
 .discreteCIF <- function(seed, N, options, sim) {
-  phyla <- OP(tree)
-  cif_center <- OP(cif.center)
-  cif_sigma <- OP(cif.sigma)
-  user_popsize <- OP(discrete.pop.size)
-  min_popsize <- OP(discrete.min.pop.size)
-  i_minpop <- OP(discrete.min.pop.index)
+  phyla <- OP("tree")
+  cif_center <- OP("cif.center")
+  cif_sigma <- OP("cif.sigma")
+  user_popsize <- OP("discrete.pop.size")
+  min_popsize <- OP("discrete.min.pop.size")
+  i_minpop <- OP("discrete.min.pop.index")
 
   npop <- length(phyla$tip.label)
   if (!is.null(sim$ncells_pop)) {
@@ -625,13 +625,13 @@ sim_true_counts <- function(options) {
   set.seed(seed)
 
   ncells <- N[[ncell_key]]
-  phyla <- OP(tree)
-  cif_center <- OP(cif.center)
-  cif_sigma <- OP(cif.sigma)
-  use_impulse <- OP(use.impulse)
+  phyla <- OP("tree")
+  cif_center <- OP("cif.center")
+  cif_sigma <- OP("cif.sigma")
+  use_impulse <- OP("use.impulse")
   tree_info <- .tree_info(phyla)
   neutral <- SampleSubtree(
-    tree_info$root, 0, OP(cif.center),
+    tree_info$root, 0, OP("cif.center"),
     tree_info$edges,
     if (is_spatial) N$max_layer else ncells,
     N$step_size,
@@ -712,9 +712,9 @@ sim_true_counts <- function(options) {
   param_names <- c("kon", "koff", "s")
   giv <- lapply(1:3, function(i) {
     .identityVectors(N$gene, N$cif,
-      prob = OP(giv.prob),
-      mean = OP(giv.mean),
-      sd = OP(giv.sd)
+      prob = OP("giv.prob"),
+      mean = OP("giv.mean"),
+      sd = OP("giv.sd")
     )
   })
   names(giv) <- param_names
@@ -785,9 +785,9 @@ sim_true_counts <- function(options) {
 .regionIdentityVectors <- function(seed, GRN, N, options) {
   set.seed(seed)
   .identityVectors(N$region, N$cif,
-    prob = OP(riv.prob),
-    mean = OP(riv.mean),
-    sd = OP(riv.sd)
+    prob = OP("riv.prob"),
+    mean = OP("riv.mean"),
+    sd = OP("riv.sd")
   )
 }
 
@@ -798,7 +798,7 @@ sim_true_counts <- function(options) {
 
   res <- matrix(0, N$region, N$gene)
   # gene is regulated by 0, 1, or 2 regions
-  regu_by <- sample(c(0, 1, 2), size = N$gene, replace = T, prob = OP(region.distrib))
+  regu_by <- sample(c(0, 1, 2), size = N$gene, replace = T, prob = OP("region.distrib"))
   regu_by_1 <- which(regu_by == 1)
   regu_by_2 <- which(regu_by == 2)
   # for genes regulated by 1 region, select a random region

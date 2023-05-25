@@ -101,7 +101,7 @@
   filler <- filler * (min(ATAC_kon[ATAC_kon > 0]) / 2 / max(filler))
   ATAC_kon[, cols][atac_holes] <- filler
   # match density
-  atac_eff <- OP(atac.effect)
+  atac_eff <- OP("atac.effect")
   atac_val <- ATAC_kon[, cols]
   ranks <- atac_eff * rank(ATAC_kon[, cols]) + (1 - atac_eff) * rank(params$kon[, cols])
   sorted <- sort(SampleDen(nsample = max(ranks), den_fun = N$params_den[[1]]))
@@ -111,7 +111,7 @@
   bimod_percentage <- 0.5
   bimod_genes <- sample(1:N$gene, ceiling(N$gene * bimod_percentage))
   bimod_vec <- numeric(N$gene)
-  bimod_vec[bimod_genes] <- OP(bimod)
+  bimod_vec[bimod_genes] <- OP("bimod")
   # decrease kon & koff in some genes to increase the bimod effect
   params$kon <- apply(t(params$kon), 2, \(x) 10^(x - bimod_vec))
   params$koff <- apply(t(params$koff), 2, \(x) 10^(x - bimod_vec))
@@ -125,11 +125,11 @@
   set.seed(seed)
   N <- sim$N
   options <- sim$options
-  prop_hge <- OP(hge.prop)
-  mean_hge <- OP(hge.mean)
-  sd_hge <- OP(hge.sd)
-  max_var <- OP(hge.max.var)
-  hge_range <- OP(hge.range)
+  prop_hge <- OP("hge.prop")
+  mean_hge <- OP("hge.mean")
+  sd_hge <- OP("hge.sd")
+  max_var <- OP("hge.max.var")
+  hge_range <- OP("hge.range")
 
   if (prop_hge <= 0) {
     sim$hge_scale <- 1
@@ -177,7 +177,7 @@
   n_val <- length(params_region)
   # get the rank of all values as an 1d vector (by column)
   ranks <- rank(as.vector(params_region))
-  n_zero <- floor(n_val * OP(atac.p_zero))
+  n_zero <- floor(n_val * OP("atac.p_zero"))
   n_nonzero <- n_val - n_zero
   # sample values
   sampled <- sort(SampleDen(n_nonzero, den_fun = dens_nonzero))
@@ -201,9 +201,9 @@
   N <- sim$N
   options <- sim$options
 
-  phyla <- OP(tree)
-  do_velo <- OP(do.velocity)
-  is_discrete <- OP(discrete.cif)
+  phyla <- OP("tree")
+  do_velo <- OP("do.velocity")
+  is_discrete <- OP("discrete.cif")
 
   c(edges, root, tips, internal) %<-% .tree_info(phyla)
   neutral <- CIF_all$neutral[1:N$cell,]
@@ -220,8 +220,8 @@
     sim$state_mat <- matrix(nrow = N$cell, ncol = N$gene)
     sim$cell_time <- numeric(length = N$cell)
     sim$velocity <- matrix(nrow = N$cell, ncol = N$gene)
-    sim$d_genes <- rnorm(n = N$gene, mean = OP(d), sd = 0.1)
-    sim$beta_genes <- rnorm(n = N$gene, mean = OP(beta), sd = 0.1)
+    sim$d_genes <- rnorm(n = N$gene, mean = OP("d"), sd = 0.1)
+    sim$beta_genes <- rnorm(n = N$gene, mean = OP("beta"), sd = 0.1)
   }
   if (sim$is_dyn_grn) {
     sim$dyngrn_ver_map <- numeric(N$cell)
@@ -246,7 +246,7 @@
     curr_cif <- if (no_grn) {
       NULL
     } else {
-      rnorm(GRN$n_reg, OP(cif.center), OP(cif.sigma))
+      rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma"))
     }
     .rnaSimEdge(sim, 1:N$cell, s_base, curr_cif, NULL)
     return()
@@ -263,7 +263,7 @@
       NULL
     } else if (is_first_edge) {
       # initial CIF
-      rnorm(GRN$n_reg, OP(cif.center), OP(cif.sigma))
+      rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma"))
     } else {
       # get parent's CIF from last edge
       grandparent <- edges[edges[, "to"] == parent,]["from"]
@@ -285,11 +285,11 @@
   no_grn <- is.null(curr_cif)
 
   ncells <- length(cell_idx)
-  do_velo <- OP(do.velocity)
-  is_discrete <- OP(discrete.cif)
-  intr_noise <- OP(intrinsic.noise)
-  cycle_length <- OP(cycle.len)
-  num_cycle <- OP(num.cycles)
+  do_velo <- OP("do.velocity")
+  is_discrete <- OP("discrete.cif")
+  intr_noise <- OP("intrinsic.noise")
+  cycle_length <- OP("cycle.len")
+  num_cycle <- OP("num.cycles")
 
   # each cell
   for (n in seq_along(cell_idx)) {
@@ -305,7 +305,7 @@
       .matchParamsDen(s_base[i_cell,] + curr_cif %*% t(sim$GRN$geff), sim, 3)
     }
     s_cell <- (10^s_cell) *
-      OP(scale.s) *
+      OP("scale.s") *
       sim$hge_scale %>% as.vector()
 
     counts <- if (do_velo) {
@@ -371,10 +371,10 @@
 
   is_debug <- isTRUE(options$debug)
   no_grn <- is.null(GRN)
-  phyla <- OP(tree)
-  do_velo <- OP(do.velocity)
-  intr_noise <- OP(intrinsic.noise)
-  is_discrete <- OP(discrete.cif)
+  phyla <- OP("tree")
+  do_velo <- OP("do.velocity")
+  intr_noise <- OP("intrinsic.noise")
+  is_discrete <- OP("discrete.cif")
   del_lr_pair <- N$sp_del_lr_pair
   has_ctype_factor <- !is.null(sim$sp_ctype_param)
 
@@ -435,8 +435,8 @@
     sim$state_mat <- matrix(nrow = N$cell, ncol = N$gene)
     sim$cell_time <- numeric(length = N$cell)
     sim$velocity <- matrix(nrow = N$cell, ncol = N$gene)
-    sim$d_genes <- rnorm(n = N$gene, mean = OP(d), sd = 0.1)
-    sim$beta_genes <- rnorm(n = N$gene, mean = OP(beta), sd = 0.1)
+    sim$d_genes <- rnorm(n = N$gene, mean = OP("d"), sd = 0.1)
+    sim$beta_genes <- rnorm(n = N$gene, mean = OP("beta"), sd = 0.1)
   }
 
   # CIF for regulators; cell x n_regu
@@ -449,9 +449,9 @@
   curr_cif <- if (no_grn) {
     lapply(1:N$cell, \(.) numeric())
   } else {
-    lapply(1:N$cell, \(.) rnorm(GRN$n_reg, OP(cif.center), OP(cif.sigma)))
+    lapply(1:N$cell, \(.) rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma")))
   }
-  curr_lig_cif <- lapply(1:N$cell, \(.)  rnorm(N$sp_regulators, OP(cif.center), OP(cif.sigma)))
+  curr_lig_cif <- lapply(1:N$cell, \(.)  rnorm(N$sp_regulators, OP("cif.center"), OP("cif.sigma")))
 
   cat("Simulating...")
   for (t_real in 1:n_steps) {
@@ -539,7 +539,7 @@
         regu_cif %*% t(cbind(geff, sim$sp_effect))
       s_cell <- .matchParamsDen(s_cell, sim, 3)
       s_cell <- (10^s_cell) *
-        OP(scale.s) *
+        OP("scale.s") *
         sim$hge_scale %>% as.vector()
 
       # Beta-poisson model

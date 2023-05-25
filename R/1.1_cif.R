@@ -247,12 +247,12 @@
   set.seed(seed)
   param_names <- c("kon", "koff", "s")
 
-  phyla <- OP(tree)
-  cif_center <- OP(cif.center)
-  cif_sigma <- OP(cif.sigma)
-  user_popsize <- OP(discrete.pop.size)
-  min_popsize <- OP(discrete.min.pop.size)
-  i_minpop <- OP(discrete.min.pop.index)
+  phyla <- OP("tree")
+  cif_center <- OP("cif.center")
+  cif_sigma <- OP("cif.sigma")
+  user_popsize <- OP("discrete.pop.size")
+  min_popsize <- OP("discrete.min.pop.size")
+  i_minpop <- OP("discrete.min.pop.index")
 
   npop <- length(phyla$tip.label)
   if (!is.null(sim$ncells_pop)) {
