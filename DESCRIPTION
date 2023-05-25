@@ -1,6 +1,6 @@
 Package: scMultiSim
 Title: Simulation of Multi-Modality Single Cell Data Guided By Gene Regulatory Networks and Cell-Cell Interactions
-Version: 1.0.1
+Version: 0.99.0
 Authors@R:
     c(person(given = "Hechen",
              family = "i",
@@ -58,6 +58,5 @@ Suggests:
 biocViews: SingleCell, Transcriptomics
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-Maintainer: Hechen Li <hli691@gatech.edu>
 BugReports: https://github.com/ZhangLabGT/scMultiSim/issues
 Config/testthat/edition: 3
