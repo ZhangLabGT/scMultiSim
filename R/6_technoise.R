@@ -20,6 +20,7 @@
 #' add_expr_noise(results)
 add_expr_noise <- function(results, ...) {
   cat("Adding experimental noise...\n")
+  start_time <- Sys.time()
   data(gene_len_pool, envir = environment())
   gene_len <- sample(gene_len_pool, results$num_genes, replace = FALSE)
   args <- list(...)
@@ -31,7 +32,8 @@ add_expr_noise <- function(results, ...) {
   }
   rna_args <- .defaultArgs(rna_args, randseed = 0,
                            protocol = "nonUMI", alpha_mean = 0.1, alpha_sd = 0.02,
-                           gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3)
+                           gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3,
+                           nPCR1 = 16, nPCR2 = 10)
   atac_args <- .defaultArgs(atac_args, atac.obs.prob = 0.3, atac.sd.frac = 0.5)
   rna_args$true_counts <- floor(results$counts)
   rna_args$meta_cell <- results$cell_meta
@@ -48,6 +50,8 @@ add_expr_noise <- function(results, ...) {
   results$atacseq_obs <- True2ObservedATAC(atac_data, randseed = args$randseed,
                                            observation_prob = atac_args$atac.obs.prob,
                                            sd_frac = atac_args$atac.sd.frac)
+  message(sprintf("Time spent: %.2f mins\n",
+                  as.numeric(Sys.time() - start_time, units = "mins")))
 }
 
 
@@ -134,12 +138,12 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI)
-.amplifyOneCell <- function(true_counts_1cell, protocol, rate_2cap_ref, rate_2cap, gene_len, amp_bias,
+.amplifyOneCell <- function(true_counts_1cell, protocol, rate_2cap, gene_len, amp_bias,
                             rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ) {
   ngenes <- length(gene_len)
   if (protocol == "nonUMI") {
-    data(len2nfrag, envir = environment())
-  } else if (protocol == "UMI") { } else {
+    if (!exists("len2nfrag")) data(len2nfrag)
+  } else if (protocol == "UMI") { } else  {
     stop("protocol input should be nonUMI or UMI")
   }
   inds <- vector("list", 2)
@@ -148,18 +152,17 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
   expanded_res <- .expandToBinary(c(true_counts_1cell, 1))
   expanded_vec <- expanded_res[[1]]
   trans_idx <- expanded_res[[2]]
-  inds[[1]] <- which(expanded_vec > 0)
+  inds[[1]] <- expanded_vec > 0
   expanded_vec <- expanded_vec[inds[[1]]]
   trans_idx <- trans_idx[inds[[1]]]
 
   rate_2cap_gene <- rate_2cap[trans_idx]
-  rate_2cap_gene[length(rate_2cap_gene)] <- rate_2cap_ref
   captured_vec <- expanded_vec
   captured_vec[runif(length(captured_vec)) > rate_2cap_gene] <- 0
   if (sum(captured_vec[1:(length(captured_vec) - 1)]) < 1) { return(rep(0, ngenes)) }
   captured_vec[length(captured_vec)] <- 1
 
-  inds[[2]] <- which(captured_vec > 0);
+  inds[[2]] <- captured_vec > 0
   captured_vec <- captured_vec[inds[[2]]]
   trans_idx <- trans_idx[inds[[2]]]
   amp_rate <- c((rate_2PCR + amp_bias[trans_idx[1:(length(trans_idx) - 1)]]), 1)
@@ -293,11 +296,12 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
   observed_counts <- lapply(1:ncells, function(icell) {
     if (icell %% 50 == 0) cat(sprintf("%d..", icell))
     .amplifyOneCell(true_counts_1cell = true_counts[, icell], protocol = protocol,
-                    rate_2cap_ref = rate_2cap_vec[icell], rate_2cap = rate_2cap[, icell],
+                    rate_2cap = c(rate_2cap[, icell], rate_2cap_vec[icell]),
                     gene_len = gene_len, amp_bias = amp_bias,
                     rate_2PCR = rate_2PCR, nPCR1 = nPCR1, nPCR2 = nPCR2, LinearAmp = LinearAmp,
                     LinearAmp_coef = LinearAmp_coef, N_molecules_SEQ = depth_vec[icell])
   })
+  gc()
 
   meta_cell2 <- data.frame(alpha = rate_2cap_vec, depth = depth_vec, stringsAsFactors = FALSE)
   meta_cell <- cbind(meta_cell, meta_cell2)
