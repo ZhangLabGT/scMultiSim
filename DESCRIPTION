@@ -49,7 +49,8 @@ Imports:
     grDevices,
     graphics,
     stats,
-    utils
+    utils,
+    markdown
 Suggests:
     knitr,
     rmarkdown,
