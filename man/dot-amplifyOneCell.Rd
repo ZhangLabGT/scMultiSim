@@ -7,7 +7,6 @@
 .amplifyOneCell(
   true_counts_1cell,
   protocol,
-  rate_2cap_ref,
   rate_2cap,
   gene_len,
   amp_bias,
@@ -23,8 +22,6 @@
 \item{true_counts_1cell}{the true transcript counts for one cell (one vector)}
 
 \item{protocol}{a string, can be "nonUMI" or "UMI"}
-
-\item{rate_2cap_ref}{the capture efficiency reference}
 
 \item{rate_2cap}{the capture efficiency for this cell}
 

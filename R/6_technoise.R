@@ -127,7 +127,6 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #' This function simulates the amplification, library prep, and the sequencing processes.
 #' @param true_counts_1cell the true transcript counts for one cell (one vector)
 #' @param protocol a string, can be "nonUMI" or "UMI"
-#' @param rate_2cap_ref the capture efficiency reference
 #' @param rate_2cap the capture efficiency for this cell
 #' @param gene_len gene lengths for the genes/transcripts, sampled from real human transcript length
 #' @param amp_bias amplification bias for each gene, a vector of length ngenes

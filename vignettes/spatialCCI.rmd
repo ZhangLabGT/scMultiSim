@@ -72,6 +72,7 @@ each segment is treated as a cell type in CCI.
 We set `cell.type.interaction` to `random`, so the CCI network between each cell type pair is randomly sampled from the database.
 
 ```{r}
+data(GRN_params_100)
 set.seed(42)
 
 options_ <- list(
