@@ -214,7 +214,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
     return(read_count)
   } else if (protocol == "UMI") {
 
-    prob_vec <- sapply(gene_len[trans_idx[1:(length(trans_idx) - 1)]], get_prob)
+    prob_vec <- sapply(gene_len[trans_idx[1:(length(trans_idx) - 1)]], .getProb)
     # fragmentation:
     frag_vec <- sapply(1:(length(PCRed_vec) - 1), function(igene)
     { return(rbinom(n = 1, size = PCRed_vec[igene], prob = prob_vec[igene])) })
@@ -413,4 +413,12 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
     vec1[beyond_idx] <- substi_vec
   }
   return(vec1)
+}
+
+.getProb <- function(glength) {
+  if (glength >= 1000) { prob <- 0.7 } else {
+    if (glength >= 100 & glength < 1000) { prob <- 0.78 }
+    else if (glength < 100) { prob <- 0 }
+  }
+  return(prob)
 }
