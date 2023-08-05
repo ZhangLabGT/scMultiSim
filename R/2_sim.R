@@ -406,7 +406,7 @@
   N_lig_cif <- N$sp_regulators * N$max_nbs
   n_steps <- if (is_discrete) N$cell else max(sim$path_len)
   # continue for another 10 steps after the final layer
-  n_steps <- n_steps + 10
+  n_steps <- n_steps + sim$sp_static_steps
 
   # results
   sim$counts_s <- matrix(nrow = N$cell, ncol = N$gene)
@@ -452,6 +452,30 @@
     lapply(1:N$cell, \(.) rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma")))
   }
   curr_lig_cif <- lapply(1:N$cell, \(.)  rnorm(N$sp_regulators, OP("cif.center"), OP("cif.sigma")))
+  
+  # final cell type at the last layer
+  final_ctype <- integer(length = N$cell)
+  for (i in seq_len(N$cell)) {
+    final_ctype[i] <- if (is_discrete) {
+      CIF$meta[i, "cell.type.idx"] 
+    } else {
+      path_i <- sim$cell_path[i]
+      layer <- N$cell - i + 1
+      CIF$meta_by_path[[path_i]][layer, "cell.type.idx"] 
+    }
+  }
+  grid$set_final_ctypes(final_ctype)
+  
+  # stationary cci ground truth
+  if (sim$sp_sc_gt) {
+    sim$cci_single_cell <- array(0, dim = c(N$cell, N$cell, N$sp_regulator))
+    # for each LR pair
+    full_gt <- sim$sp_ctype_param[final_ctype, final_ctype,]
+    ones <- which(full_gt > 0)
+    ones <- sample(ones, round(length(ones) * 0.8))
+    sim$cci_single_cell[ones] <- 1
+    rm(full_gt); rm(ones)
+  }
 
   cat("Simulating...")
   for (t_real in 1:n_steps) {
@@ -468,7 +492,8 @@
       }
       grid$allocate(t, new_cell_type)
     }
-
+    is_stationary <- t != t_real && sim$sp_sc_gt
+    
     if (t_real %% 50 == 0) gc()
 
     # there are t cells now
@@ -491,11 +516,14 @@
         base <- (i - 1) * N$sp_regulators
         inactive_one <- if (del_lr_pair) sample(1:N$sp_regulators, 1) else -1
         for (j in 1:N$sp_regulators) {
-          ctype_factor <- if (j == inactive_one) {
+          # ctype_factor: lig interaction factor between icell and j
+          ctype_factor <- if (is_stationary) {
+            sim$cci_single_cell[icell, nb, j]
+          } else if (j == inactive_one) {
             0
           } else if (has_ctype_factor) {
             if (is_discrete) {
-              tp1 <- CIF$meta[icell, "cell.type.idx"]
+              tp1 <- CIF$meta[icell, "cell.type.idx"] 
               tp2 <- CIF$meta[nb, "cell.type.idx"]
               sim$sp_ctype_param[tp1, tp2, j]
             } else {

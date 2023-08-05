@@ -115,7 +115,9 @@ sim_true_counts <- function(options) {
       N$sp_del_lr_pair,
       same_type_prob,
       grid_size,
-      sim$sp_layout
+      sim$sp_layout,
+      sim$sp_sc_gt,
+      sim$sp_static_steps
     )
 
     sim$grid <- CreateSpatialGrid(
@@ -348,6 +350,12 @@ sim_true_counts <- function(options) {
       cci_cell_type_param = ctype_param,
       cci_cell_types = sim$cell_type_map
     ))
+    
+    if (sim$sp_sc_gt) {
+      result <- c(result, list(
+        cci_gt = sim$cci_single_cell
+      ))
+    }
   }
 
   if (is_debug) {
