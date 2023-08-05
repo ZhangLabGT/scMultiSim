@@ -60,15 +60,23 @@
   grid_size = params$grid.size %||% NA
   del_lr_pair = params$del.lr.pair %||% TRUE
   layout = params$layout %||% "enhanced"
-
-  if (layout %in% c("basic", "enhanced", "enhanced2")) {
+  
+  if (layout %in% c("basic", "enhanced", "enhanced2", "islands", "layers")) {
     grid_method <- layout
   } else if (layout == "enhanced+oracle" || layout == "basic+oracle") {
     grid_method <- substring(layout, 1, nchar(layout) - 7)
   } else {
     stop(sprintf("CCI grid layout '%s' is not supported.", layout))
   }
-
+  
+  if (!is.null(params$single.cell.gt) && params$single.cell.gt == TRUE) {
+    sc_gt <- T
+    static_steps <- params$static.state.len %||% 50
+  } else {
+    sc_gt <- F
+    static_steps <- 10 
+  }
+  
   list(
     params = spatial_list,
     regulators = regulators,
@@ -82,7 +90,9 @@
     del_lr_pair = del_lr_pair,
     same_type_prob = same_type_prob,
     grid_size = grid_size,
-    grid_method = grid_method
+    grid_method = grid_method,
+    sc_gt = sc_gt,
+    static_steps = static_steps
   )
 }
 
@@ -240,10 +250,18 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   "cell_types",
   # the probability of a new cell placed next to a cell with the same type
   "same_type_prob",
-  "max_nbs", "nb_map"
+  "max_nbs", "nb_map",
+  "final_types"
 ))
 
 .SpatialGrid$methods(
+  set_final_ctypes = function(ctypes) {
+    final_types <<- ctypes
+    # initialization
+    if (method == "islands") {
+      print(final_types) 
+    }
+  },
   find_nearby = function(icell, cell.type) {
     # get available locations
     nb_list <- list(c(-1, 0), c(1, 0), c(0, -1), c(0, 1))
@@ -321,6 +339,8 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
       } else {
         find_nearby(icell, cell.type)
       }
+    } else if (method == "island") {
+      final_types
     } else {
       loc <- loc_order[icell]
       x <- ceiling(loc / grid_size)
@@ -370,7 +390,8 @@ CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob 
     locs = list(), loc_order = loc_order,
     cell_types = list(),
     max_nbs = max_nbs,
-    nb_map = list()
+    nb_map = list(),
+    final_types = NULL
   )
 }
 
