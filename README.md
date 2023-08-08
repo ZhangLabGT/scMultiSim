@@ -49,10 +49,10 @@ The following figure briefly shows results from the same cell differential tree:
 
 ## Installation
 
-Please install from this repo:
+Please install from this repo and specify the `main` branch:
 
 ```R
-devtools::install_github("ZhangLabGT/scMultiSim")
+devtools::install_github("ZhangLabGT/scMultiSim@main")
 ```
 
 ## Basic Workflow
