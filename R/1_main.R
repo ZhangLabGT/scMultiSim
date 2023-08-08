@@ -396,8 +396,8 @@ sim_true_counts <- function(options) {
       setNames(seq_along(sp_genes_only) + length(name_map), sp_genes_only)
     )
     renamed_sp <- data.frame(
-      receptor = name_map[sp_params[, 1]],
-      ligand = name_map[sp_params[, 2]],
+      receptor = name_map[as.character(sp_params[, 1])],
+      ligand = name_map[as.character(sp_params[, 2])],
       effect = sp_params[, 3]
     )
   }

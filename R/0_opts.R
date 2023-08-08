@@ -226,7 +226,7 @@
   scale.s                                                                = list(
     .default(1),
     NULL,
-    "Scale of the s parameter. Use smaller value for cell types known to be small (like naive cells)."
+    "Scale of the s parameter. Use smaller value for cell types known to be small (like naive cells). When discrete.cif = T, it can be a vector specifying the scale.s for each cluster."
   ),
   intrinsic.noise                                                        = list(
     .default(1),
