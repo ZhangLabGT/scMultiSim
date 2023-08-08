@@ -290,6 +290,16 @@
   intr_noise <- OP("intrinsic.noise")
   cycle_length <- OP("cycle.len")
   num_cycle <- OP("num.cycles")
+  scale_s <- OP("scale.s")
+  scale_s_is_vector <- if (length(scale_s) > 1) {
+    if (is_discrete && length(sim$ncells_pop) == length(scale_s)) {
+      T
+    } else {
+      stop("scale.s is a vector. This only works when discrete.cif = T and length(scale.s) equals to the number of clusters.")
+    }
+  } else {
+    F
+  }
 
   # each cell
   for (n in seq_along(cell_idx)) {
@@ -304,8 +314,15 @@
     } else {
       .matchParamsDen(s_base[i_cell,] + curr_cif %*% t(sim$GRN$geff), sim, 3)
     }
+    
+    # scale s
+    scale_s_cell <- if (scale_s_is_vector) {
+      scale_s[sim$CIF_all$meta$pop[i_cell]]
+    } else {
+      scale_s
+    }
     s_cell <- (10^s_cell) *
-      OP("scale.s") *
+      scale_s_cell *
       sim$hge_scale %>% as.vector()
 
     counts <- if (do_velo) {
@@ -377,7 +394,17 @@
   is_discrete <- OP("discrete.cif")
   del_lr_pair <- N$sp_del_lr_pair
   has_ctype_factor <- !is.null(sim$sp_ctype_param)
-
+  scale_s <- OP("scale.s")
+  scale_s_is_vector <- if (length(scale_s) > 1) {
+    if (is_discrete && length(sim$ncells_pop) == length(scale_s)) {
+      T
+    } else {
+      stop("scale.s is a vector. This only works when discrete.cif = T and length(scale.s) equals to the number of clusters.")
+    }
+  } else {
+    F
+  }
+  
   # hge
   CIF_s_base <- lapply(1:N$cell, function(icell) {
     path_i <- sim$cell_path[icell]
@@ -566,8 +593,15 @@
       s_cell <- CIF_s_base[[icell]][layer,] %*% t(GIV_s) +
         regu_cif %*% t(cbind(geff, sim$sp_effect))
       s_cell <- .matchParamsDen(s_cell, sim, 3)
+      
+      # scale s 
+      scale_s_cell <- if (scale_s_is_vector) {
+        scale_s[CIF$meta[icell, "cell.type.idx"]]
+      } else {
+        scale_s
+      }
       s_cell <- (10^s_cell) *
-        OP("scale.s") *
+        scale_s_cell *
         sim$hge_scale %>% as.vector()
 
       # Beta-poisson model
