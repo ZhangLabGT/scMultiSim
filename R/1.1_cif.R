@@ -261,6 +261,7 @@
     ncells_pop <- N$cell
   } else if (is.integer(user_popsize)) {
     stopifnot(length(user_popsize) == npop)
+    stopifnot(sum(user_popsize) == N$cell)
     ncells_pop <- user_popsize
   } else {
     ncells_pop <- rep(min_popsize, npop)

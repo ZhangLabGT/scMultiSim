@@ -56,15 +56,26 @@
     NULL
   }
 
-  same_type_prob = params$same.type.prob %||% 0.8
-  grid_size = params$grid.size %||% NA
-  del_lr_pair = params$del.lr.pair %||% TRUE
-  layout = params$layout %||% "enhanced"
-  
-  if (layout %in% c("basic", "enhanced", "enhanced2", "islands", "layers")) {
+  same_type_prob <- params$same.type.prob %||% 0.8
+  grid_size <- params$grid.size %||% NA
+  del_lr_pair <- params$del.lr.pair %||% TRUE
+  layout <- params$layout %||% "enhanced"
+
+  grid_ex_params <- NULL
+  if (layout %in% c("basic", "enhanced", "enhanced2", "layers")) {
     grid_method <- layout
+  } else if (startsWith(layout, "islands")) {
+    grid_method <- "islands"
+    grid_ex_params <- substring(layout, 9) %>%
+      strsplit(",") %>%
+      unlist() %>%
+      as.numeric()
+    if (length(grid_ex_params) == 0 || any(is.na(grid_ex_params))) {
+      stop("layout=island: please specify the island cell types, e.g. 'layout = island:1,2'")
+    }
   } else if (layout == "enhanced+oracle" || layout == "basic+oracle") {
     grid_method <- substring(layout, 1, nchar(layout) - 7)
+    grid_ex_params <- "oracle"
   } else {
     stop(sprintf("CCI grid layout '%s' is not supported.", layout))
   }
@@ -91,6 +102,7 @@
     same_type_prob = same_type_prob,
     grid_size = grid_size,
     grid_method = grid_method,
+    grid_ex_params = grid_ex_params,
     sc_gt = sc_gt,
     static_steps = static_steps
   )
@@ -243,6 +255,46 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   )
 }
 
+.gen_clutter <- function(n_cell, grid_size = NA, center = c(0, 0),
+                         existing_loc = NULL, existing_grid = NULL) {
+  .in_grid <- function(x, y) {
+    if (is.null(existing_grid)) {
+      if (is.na(grid_size)) return(TRUE)
+      x >= 1 &&
+        x <= grid_size &&
+        y >= 1 &&
+        y <= grid_size
+    } else {
+      any((existing_grid[, 1] == x) & (existing_grid[, 2] == y))
+    }
+  }
+
+  nb_list <- list(c(-1, 0), c(1, 0), c(0, -1), c(0, 1))
+  center <- matrix(center, nrow = 1)
+  locs <- center[rep(1, n_cell),]
+  if (!is.null(existing_loc)) {
+    locs <- rbind(locs, existing_loc)
+  }
+  for (i in 2:n_cell) {
+    done <- FALSE
+    while (!done) {
+      # randomly pick a cell
+      idx <- sample(1:(i - 1), 1)
+      # pick a neighbor
+      for (j in sample(1:4, 4)) {
+        nb <- locs[idx,] + nb_list[[j]]
+        if (.in_grid(nb[1], nb[2]) &&
+          !any((locs[, 1] == nb[1]) & (locs[, 2] == nb[2]))) {
+          locs[i,] <- nb
+          done <- TRUE
+          break
+        }
+      }
+    }
+  }
+  locs
+}
+
 
 .SpatialGrid <- setRefClass("spatialGrid", fields = c(
   "method", "grid_size", "ncells", "grid", "locs", "loc_order",
@@ -251,15 +303,110 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   # the probability of a new cell placed next to a cell with the same type
   "same_type_prob",
   "max_nbs", "nb_map",
-  "final_types"
+  "final_types", "pre_allocated_pos", "method_param"
 ))
 
 .SpatialGrid$methods(
   set_final_ctypes = function(ctypes) {
     final_types <<- ctypes
-    # initialization
     if (method == "islands") {
-      print(final_types) 
+      #========================================================================
+      pre_allocated_pos <<- data.frame(x = rep(0, ncells), y = rep(0, ncells))
+      ct_other <- setdiff(unique(final_types), method_param)
+      # generate the islands first
+      clutter_loc <- list(); n_islands <- length(method_param)
+      ncells_island <- 0
+      for (ct in method_param) {
+        ncells_ct <- sum(final_types == ct)
+        if (ncells_ct == 0) stop(sprintf("cell type %d is not found in cell types", ct))
+        clutter <- .gen_clutter(ncells_ct)
+        clutter_loc <- c(clutter_loc, list(clutter))
+        ncells_island <- ncells_island + ncells_ct
+      }
+      # generate the outline
+      grid_center <- c(round(grid_size / 2), round(grid_size / 2))
+      outline <- .gen_clutter(ncells_island * 2, grid_size, grid_center)
+      # put the islands in the outline
+      done <- FALSE
+      while (!done) {
+        # sample center for the islands
+        centers <- outline[sample(1:nrow(outline), n_islands),]
+        if (n_islands == 1) {
+          break
+        }
+        done <- TRUE
+        # if islands don't overlap
+        for (i in 1:(n_islands - 1)) {
+          for (j in (i + 1):n_islands) {
+            loc1 <- centers[i,] + clutter_loc[[i]]
+            loc2 <- centers[j,] + clutter_loc[[j]]
+            if (anyDuplicated(rbind(loc1, loc2), MARGIN = 1) > 0) {
+              done <- FALSE
+              break
+            }
+          }
+        }
+      }
+      clutter_loc2 <- lapply(1:n_islands, function(i) {
+        centers[rep(i, nrow(clutter_loc[[i]])),] + clutter_loc[[i]]
+      })
+      # for cells not in the islands
+      clutter_loc_all <- do.call(rbind, clutter_loc2)
+      ncells_island <- nrow(clutter_loc_all)
+      ncells_other <- ncells - ncells_island
+      other_loc <- matrix(NA, nrow = ncells_other, ncol = 2)
+      all_loc <- rbind(clutter_loc_all, other_loc)
+      nb_list <- list(c(-1, 0), c(1, 0), c(0, -1), c(0, 1))
+      for (i in (ncells_island + 1):ncells) {
+        done <- FALSE
+        while (!done) {
+          # randomly pick a cell
+          idx <- sample(1:(i - 1), 1)
+          # pick a neighbor
+          for (j in sample(1:4, 4)) {
+            nb <- all_loc[idx,] + nb_list[[j]]
+            if (.in_grid(nb[1], nb[2]) &&
+              !any((all_loc[, 1] == nb[1]) & (all_loc[, 2] == nb[2]), na.rm = TRUE)) {
+              all_loc[i,] <- nb
+              done <- TRUE
+              break
+            }
+          }
+        }
+      }
+      # randomize background cell types
+      other_loc_ct <- lapply(
+        ct_other, function(i) rep(i, sum(final_types == i))
+      ) %>% unlist()
+      rand_cells <- sample(seq_along(other_loc_ct), round(length(other_loc_ct) * 0.5))
+      other_loc_ct[rand_cells] <- sample(
+        other_loc_ct[rand_cells], length(rand_cells), replace = FALSE)
+      # assign cell types corresponding to all_loc
+      islands_loc_ct <- lapply(
+        method_param, function(i) rep(i, sum(final_types == i))
+      ) %>% unlist()
+      all_loc_ct <- c(islands_loc_ct, other_loc_ct)
+      # randomize all cell types
+      rand_cells <- sample(seq_along(all_loc_ct), round(ncells * 0.1))
+      all_loc_ct[rand_cells] <- sample(
+        all_loc_ct[rand_cells], length(rand_cells), replace = FALSE)
+      # assign the locations based on cell types
+      pre_allocated_pos <<- all_loc
+      for (i in unique(final_types)) {
+        pre_allocated_pos[final_types == i] <<- all_loc[all_loc_ct == i,]
+      }
+      #========================================================================
+    } else if (method == "layers") {
+      #========================================================================
+      grid_center <- c(round(grid_size / 2), round(grid_size / 2))
+      all_locs <- .gen_clutter(ncells, grid_size, grid_center)
+      # center is bottom-left
+      left_ones <- which(all_locs[,1] == min(all_locs[,1]))
+      new_center <- all_locs[left_ones[which.min(all_locs[left_ones, 2])],]
+      new_locs <- .gen_clutter(ncells, grid_size, new_center, existing_grid = all_locs)
+      rand_cells <- sample(seq_len(ncells), round(ncells * 0.05))
+      new_locs[rand_cells,] <- new_locs[sample(rand_cells, length(rand_cells), replace = FALSE),]
+      pre_allocated_pos <<- new_locs[order(final_types),]
     }
   },
   find_nearby = function(icell, cell.type) {
@@ -339,8 +486,8 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
       } else {
         find_nearby(icell, cell.type)
       }
-    } else if (method == "island") {
-      final_types
+    } else if (method == "islands" || method == "layers") {
+      pre_allocated_pos[icell,]
     } else {
       loc <- loc_order[icell]
       x <- ceiling(loc / grid_size)
@@ -379,7 +526,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   }
 )
 
-CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8, .method = "enhanced") {
+CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8, .method = "enhanced", .method.param = NULL) {
   grid_size <- if (is.na(.grid.size)) ceiling(sqrt(ncells) * 3) else .grid.size
   grid <- matrix(NA, grid_size, grid_size)
   loc_order <- sample(1:ncells)
@@ -391,7 +538,9 @@ CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob 
     cell_types = list(),
     max_nbs = max_nbs,
     nb_map = list(),
-    final_types = NULL
+    final_types = NULL,
+    pre_allocated_pos = NULL,
+    method_param = .method.param
   )
 }
 

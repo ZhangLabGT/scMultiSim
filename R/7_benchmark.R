@@ -236,8 +236,7 @@ plot_cell_loc <- function(
   data <- data.frame(
     x = locs[1,],
     y = locs[2,],
-    cell_pop = .cell.pop,
-    cell_type = results$cell_meta$cell.type
+    cell_type = if (is.null(.cell.pop)) results$cell_meta$cell.type else .cell.pop
   )
   p <- ggplot()
   p <- p +
