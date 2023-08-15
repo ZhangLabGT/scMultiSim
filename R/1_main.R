@@ -116,13 +116,15 @@ sim_true_counts <- function(options) {
       same_type_prob,
       grid_size,
       sim$sp_layout,
+      sim$sp_layout_param,
       sim$sp_sc_gt,
       sim$sp_static_steps
     )
 
     sim$grid <- CreateSpatialGrid(
       N$cell, N$max_nbs,
-      .grid.size = grid_size, .same.type.prob = same_type_prob, .method = sim$sp_layout
+      .grid.size = grid_size, .same.type.prob = same_type_prob,
+      .method = sim$sp_layout, .method.param = sim$sp_layout_param
     )
 
     if (is_discrete) {
@@ -519,7 +521,12 @@ sim_true_counts <- function(options) {
   } else if (npop == 1) {
     ncells_pop <- N$cell
   } else if (is.integer(user_popsize)) {
-    stopifnot(length(user_popsize) == npop)
+    if (length(user_popsize) != npop) {
+      stop("The number of discrete.pop.size must be equal to the total number of cell types.")
+    }
+    if (sum(user_popsize) != N$cell) {
+      stop("The sum of discrete.pop.size must be equal to the total number of cells.")
+    }
     ncells_pop <- user_popsize
   } else {
     ncells_pop <- rep(min_popsize, npop)
