@@ -60,6 +60,7 @@
   grid_size <- params$grid.size %||% NA
   del_lr_pair <- params$del.lr.pair %||% TRUE
   layout <- params$layout %||% "enhanced"
+  nb_radius <- params$radius %||% 1
 
   grid_ex_params <- NULL
   if (layout %in% c("basic", "enhanced", "enhanced2", "layers")) {
@@ -78,6 +79,13 @@
     grid_ex_params <- "oracle"
   } else {
     stop(sprintf("CCI grid layout '%s' is not supported.", layout))
+  }
+
+  if (nb_radius < 1) {
+    stop("radius must be >= 1")
+  }
+  if (!(layout %in% c("layers", "islands")) && nb_radius > 1) {
+    stop("radius > 1 only supports layers and islands layout")
   }
   
   if (!is.null(params$single.cell.gt) && params$single.cell.gt == TRUE) {
@@ -104,7 +112,8 @@
     grid_method = grid_method,
     grid_ex_params = grid_ex_params,
     sc_gt = sc_gt,
-    static_steps = static_steps
+    static_steps = static_steps,
+    nb_radius = nb_radius
   )
 }
 
@@ -206,7 +215,7 @@
 #' @return A 3D matrix of (n_cell_type, n_cell_type, n_lr). The value at (i, j, k) is 1 if there exist CCI of LR-pair k between cell type i and cell type j.
 #' @export
 #'
-cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand = TRUE, discrete = FALSE) {
+cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, rand = TRUE, discrete = FALSE) {
   .tree_info(tree) %->% c(edges, root, tips, internal)
 
   states <- if (discrete) {
@@ -302,7 +311,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
   "cell_types",
   # the probability of a new cell placed next to a cell with the same type
   "same_type_prob",
-  "max_nbs", "nb_map",
+  "max_nbs", "nb_map", "nb_adj", "nb_radius",
   "final_types", "pre_allocated_pos", "method_param"
 ))
 
@@ -407,6 +416,18 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
       rand_cells <- sample(seq_len(ncells), round(ncells * 0.05))
       new_locs[rand_cells,] <- new_locs[sample(rand_cells, length(rand_cells), replace = FALSE),]
       pre_allocated_pos <<- new_locs[order(final_types),]
+    } else {
+      return()
+    }
+    if (nb_radius > 1) {
+      nb_adj <<- matrix(FALSE, ncells, ncells)
+      for (i in seq_len(ncells)) {
+        for (j in seq_len(i - 1)) {
+          if (.in_radius(pre_allocated_pos[i,], pre_allocated_pos[j,])) {
+            nb_adj[i, j] <<- nb_adj[j, i] <<- TRUE
+          }
+        }
+      }
     }
   },
   find_nearby = function(icell, cell.type) {
@@ -447,7 +468,13 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
     loc <- sample(pool, 1)[[1]]
   },
   allocate = function(icell, cell.type = NULL) {
-    nb_map[[icell]] <<- sample(1:4, max_nbs)
+    nb_map[[icell]] <<- if (is.null(nb_adj)) {
+      # if nb_adj is not defined, layout is generated at the simulation time
+      # don't support radius > 1, so max possible neighbors = 4
+      sample(seq_len(4), max_nbs, replace = FALSE)
+    } else {
+      sample(which(nb_adj[icell,]), max_nbs, replace = FALSE)
+    }
     loc <- if (method == "accumulated") {
       if (icell == 1) {
         # allocate the first cell at the center
@@ -501,19 +528,24 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
     grid[loc[1], loc[2]] <<- icell
   },
   get_neighbours = function(icell, omit.NA = TRUE) {
+    # message(sprintf("nb_radius = %d", nb_radius))
     loc <- locs[[icell]]
     nbs <- nb_map[[icell]]
     x <- loc[1]; y <- loc[2]
-    res <- c(
-      grid_val(x - 1, y),
-      grid_val(x + 1, y),
-      grid_val(x, y - 1),
-      grid_val(x, y + 1)
-    )[nbs]
-    if (omit.NA) na.omit(res) else res
-    # return(c(
-    #   grid_val(x - 1, y)
-    # ))
+    res <- if (nb_radius == 1) {
+      c(grid_val(x - 1, y), grid_val(x + 1, y),
+        grid_val(x, y - 1), grid_val(x, y + 1))[nbs]
+    } else {
+      if (is.null(nb_adj)) {
+        stop("radius > 1 only supports layers and islands layout")
+      }
+      nbs
+    }
+    if (omit.NA) {
+      na.omit(res)
+    } else {
+      res
+    }
   },
   grid_val = function(x, y) {
     if (.in_grid(x, y)) grid[x, y] else NA
@@ -523,14 +555,17 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr, step.size = 1, rand =
       x <= grid_size &&
       y >= 1 &&
       y <= grid_size
+  },
+  .in_radius = function (p1, p2) {
+    sqrt((p1[1] - p2[1])^2 + (p1[2] - p2[2])^2) <= nb_radius
   }
 )
 
-CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8, .method = "enhanced", .method.param = NULL) {
+CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8, .method = "enhanced", .method.param = NULL, .nb.radius = 1) {
   grid_size <- if (is.na(.grid.size)) ceiling(sqrt(ncells) * 3) else .grid.size
   grid <- matrix(NA, grid_size, grid_size)
   loc_order <- sample(1:ncells)
-  .SpatialGrid$new(
+  grid <- .SpatialGrid$new(
     method = .method,
     grid_size = grid_size, ncells = ncells, grid = grid,
     same_type_prob = .same.type.prob,
@@ -538,9 +573,12 @@ CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob 
     cell_types = list(),
     max_nbs = max_nbs,
     nb_map = list(),
+    nb_adj = NULL,
+    nb_radius = .nb.radius,
     final_types = NULL,
     pre_allocated_pos = NULL,
     method_param = .method.param
   )
+  grid
 }
 
