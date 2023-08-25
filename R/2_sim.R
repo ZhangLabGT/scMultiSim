@@ -538,7 +538,7 @@
       lig_cif <- double(N_lig_cif)
       for (i in seq_along(neighbours)) {
         nb <- neighbours[i]
-        if (is.na(nb)) next
+        if (is.na(nb) || nb > t) next
         # n1_lig1  n1_lig2 | n2_lig1  n2_lig2  ...
         base <- (i - 1) * N$sp_regulators
         inactive_one <- if (del_lr_pair) sample(1:N$sp_regulators, 1) else -1

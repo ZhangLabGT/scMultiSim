@@ -118,13 +118,15 @@ sim_true_counts <- function(options) {
       sim$sp_layout,
       sim$sp_layout_param,
       sim$sp_sc_gt,
-      sim$sp_static_steps
+      sim$sp_static_steps,
+      sim$sp_radius
     )
 
     sim$grid <- CreateSpatialGrid(
       N$cell, N$max_nbs,
       .grid.size = grid_size, .same.type.prob = same_type_prob,
-      .method = sim$sp_layout, .method.param = sim$sp_layout_param
+      .method = sim$sp_layout, .method.param = sim$sp_layout_param,
+      .nb.radius = sim$sp_radius
     )
 
     if (is_discrete) {
