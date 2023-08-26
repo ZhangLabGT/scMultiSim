@@ -289,7 +289,8 @@ plot_cell_loc <- function(
   }
 
   if (show.label) {
-    p <- p + geom_text(aes(label = as.character(seq_along(x))), size = 2, color = 'black')
+    p <- p + geom_text(aes(label = as.character(seq_along(.cell.pop)), x = x, y = y),
+                       data = data, size = 2, color = 'black')
   }
   p
 }
