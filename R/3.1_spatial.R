@@ -343,9 +343,9 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
         if (n_islands == 1) {
           break
         }
-        done <- TRUE
         # if islands don't overlap
-        for (i in 1:(n_islands - 1)) {
+        done <- TRUE
+        for (i in seq_len(n_islands - 1)) {
           for (j in (i + 1):n_islands) {
             loc1 <- centers[i,] + clutter_loc[[i]]
             loc2 <- centers[j,] + clutter_loc[[j]]
@@ -383,6 +383,8 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
           }
         }
       }
+      # shift all_loc to make sure coordinates are positive
+      all_loc <- all_loc - apply(all_loc, 2, min) + 1
       # randomize background cell types
       other_loc_ct <- lapply(
         ct_other, function(i) rep(i, sum(final_types == i))
