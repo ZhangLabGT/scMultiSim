@@ -116,6 +116,11 @@
   params$kon <- apply(t(params$kon), 2, \(x) 10^(x - bimod_vec))
   params$koff <- apply(t(params$koff), 2, \(x) 10^(x - bimod_vec))
 
+  if (is.list(sim$params_mpl_fn)) {
+    params$kon <- sim$params_mpl_fn$kon(params$kon)
+    params$koff <- sim$params_mpl_fn$koff(params$koff)
+  }
+
   # return
   params
 }
@@ -285,6 +290,7 @@
   no_grn <- is.null(curr_cif)
 
   ncells <- length(cell_idx)
+  grn_effect <- OP("grn.effect")
   do_velo <- OP("do.velocity")
   is_discrete <- OP("discrete.cif")
   intr_noise <- OP("intrinsic.noise")
@@ -309,61 +315,80 @@
       sim$dyngrn_ver_map[i_cell] <- sim$GRN$update()
     }
 
-    s_cell <- if (no_grn) {
-      .matchParamsDen(s_base[i_cell,], sim, 3)
-    } else {
-      .matchParamsDen(s_base[i_cell,] + curr_cif %*% t(sim$GRN$geff), sim, 3)
-    }
-    
-    # scale s
-    scale_s_cell <- if (scale_s_is_vector) {
-      scale_s[sim$CIF_all$meta$pop[i_cell]]
-    } else {
-      scale_s
-    }
-    s_cell <- (10^s_cell) *
-      scale_s_cell *
-      sim$hge_scale %>% as.vector()
+    done <- 2
+    while (done > 0) {
+      if (done == 1) {
+        done <- 0
+      }
 
-    counts <- if (do_velo) {
-      # Kinetic model
-      last_idx <- if (n == 1) last_parent else cell_idx[n - 1]
-      FST <- is.null(last_idx)
-      cycles <- if (FST) 15 else num_cycle
-      start_cell_time <- if (FST) 0 else sim$cell_time[last_idx]
+      s_cell <- if (no_grn) {
+        .matchParamsDen(s_base[i_cell,], sim, 3)
+      } else {
+        .matchParamsDen(s_base[i_cell,] + curr_cif %*% t(sim$GRN$geff) * grn_effect, sim, 3)
+      }
 
-      result <- gen_1branch(
-        kinet_params = list(
-          k_on = sim$params$kon[, i_cell],
-          k_off = sim$params$koff[, i_cell],
-          s = s_cell
-        ),
-        start_state = if (FST) sim$root_state else sim$state_mat[last_idx,],
-        start_u = if (FST) NULL else sim$counts_u[last_idx,],
-        start_s = if (FST) NULL else sim$counts_s[last_idx,],
-        cycle_length_factor = cycle_length,
-        randpoints1 = runif(n = cycles, min = 0, max = 1),
-        ncells1 = cycles,
-        ngenes = N$gene,
-        beta_vec = sim$beta_genes,
-        d_vec = sim$d_genes,
-        cell = n
-      )
-      sim$state_mat[i_cell,] <- result$state_mat[, cycles]
-      sim$cell_time[i_cell] <- result$cell_time[[cycles]] + start_cell_time
-      sim$velocity[i_cell,] <- result$velocity[, cycles]
-      sim$counts_u[i_cell,] <- result$counts_u[, cycles]
-      sim$counts_s[i_cell,] <- result$counts_s[, cycles]
-    } else {
-      # Beta-poisson model
-      sim$counts_s[i_cell,] <- vapply(1:N$gene, function(i_gene) {
-        .betaPoisson(
-          kon = sim$params$kon[i_gene, i_cell],
-          koff = sim$params$koff[i_gene, i_cell],
-          s = s_cell[i_gene],
-          intr.noise = intr_noise
+      # scale s
+      scale_s_cell <- if (scale_s_is_vector) {
+        scale_s[sim$CIF_all$meta$pop[i_cell]]
+      } else {
+        scale_s
+      }
+      s_cell <- (10^s_cell) *
+        scale_s_cell *
+        sim$hge_scale %>% as.vector()
+
+      if (is.list(sim$params_mpl_fn$s)) {
+        s_cell <- sim$params_mpl_fn$s(s_cell)
+      }
+
+      counts <- if (do_velo) {
+        # Kinetic model
+        last_idx <- if (n == 1) last_parent else cell_idx[n - 1]
+        FST <- is.null(last_idx)
+        cycles <- if (FST) 15 else num_cycle
+        start_cell_time <- if (FST) 0 else sim$cell_time[last_idx]
+
+        result <- gen_1branch(
+          kinet_params = list(
+            k_on = sim$params$kon[, i_cell],
+            k_off = sim$params$koff[, i_cell],
+            s = s_cell
+          ),
+          start_state = if (FST) sim$root_state else sim$state_mat[last_idx,],
+          start_u = if (FST) NULL else sim$counts_u[last_idx,],
+          start_s = if (FST) NULL else sim$counts_s[last_idx,],
+          cycle_length_factor = cycle_length,
+          randpoints1 = runif(n = cycles, min = 0, max = 1),
+          ncells1 = cycles,
+          ngenes = N$gene,
+          beta_vec = sim$beta_genes,
+          d_vec = sim$d_genes,
+          cell = n
         )
-      }, double(1))
+        sim$state_mat[i_cell,] <- result$state_mat[, cycles]
+        sim$cell_time[i_cell] <- result$cell_time[[cycles]] + start_cell_time
+        sim$velocity[i_cell,] <- result$velocity[, cycles]
+        sim$counts_u[i_cell,] <- result$counts_u[, cycles]
+        sim$counts_s[i_cell,] <- result$counts_s[, cycles]
+      } else {
+        # Beta-poisson model
+        sim$counts_s[i_cell,] <- vapply(1:N$gene, function(i_gene) {
+          .betaPoisson(
+            kon = sim$params$kon[i_gene, i_cell],
+            koff = sim$params$koff[i_gene, i_cell],
+            s = s_cell[i_gene],
+            intr.noise = intr_noise
+          )
+        }, double(1))
+      }
+
+      if (is_discrete && done > 0) {
+        counts_regu <- counts[sim$GRN$regulators]
+        curr_cif <- counts_regu / (counts_regu + mean(counts))
+        done <- 1
+      } else {
+        done <- 0
+      }
     }
 
     if (!is_discrete && !no_grn) {
@@ -389,6 +414,7 @@
   is_debug <- isTRUE(options$debug)
   no_grn <- is.null(GRN)
   phyla <- OP("tree")
+  grn_effect <- OP("grn.effect")
   do_velo <- OP("do.velocity")
   intr_noise <- OP("intrinsic.noise")
   is_discrete <- OP("discrete.cif")
@@ -591,7 +617,7 @@
       # get s
       params <- sim$params_spatial[[icell]]
       s_cell <- CIF_s_base[[icell]][layer,] %*% t(GIV_s) +
-        regu_cif %*% t(cbind(geff, sim$sp_effect))
+        (regu_cif %*% t(cbind(geff, sim$sp_effect))) * grn_effect
       s_cell <- .matchParamsDen(s_cell, sim, 3)
       
       # scale s 

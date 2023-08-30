@@ -61,6 +61,11 @@
     ),
     "The GRN network."
   ),
+  grn.effect                                                             = list(
+    .default(1),
+    .should.be.num.between(0, Inf),
+    "Overall strength of the GRN effect on the expression. Different from the effect column in the GRN data frame, which is the relative effect of each TF-target pair."
+  ),
   num.genes                                                              = list(
     .default(NULL),
     .should.be.int.between(1, Inf),

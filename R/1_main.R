@@ -153,6 +153,10 @@ sim_true_counts <- function(options) {
   sim$N <- N
   sim$options <- options
 
+  if (is.list(options$manipulate.params)) {
+    sim$params_mpl_fn <- options$manipulate.params
+  }
+
   # 1.1 CIF
   if (!sim$do_spatial) {
     sim$CIF_all <- if (is_discrete) {
