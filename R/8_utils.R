@@ -14,6 +14,30 @@
 }
 
 
+.regionToTFMatrix <- function(GRN, region_to_gene, .all.genes = FALSE) {
+  res <- matrix(0, nrow = nrow(region_to_gene), ncol = GRN$n_reg)
+  # GRN$geff: gene x tf
+  geff <- GRN$geff > 0
+  # region_to_gene: region x gene
+  # for each region
+  for (i in seq_len(nrow(region_to_gene))) {
+    # get genes in this region
+    genes <- which(region_to_gene[i, ] > 0)
+    if (length(genes) == 0) {
+      next
+    }
+    if (.all.genes) {
+      # if a TF also regulates all these genes
+      tfs <- which(colSums(geff[genes, , drop = F]) == length(genes))
+    } else {
+      tfs <- which(colSums(geff[genes, , drop = F]) > 0)
+    }
+    res[i, tfs] <- 1
+  }
+  res
+}
+
+
 #' sample from smoothed density function
 #' @param nsample number of samples needed
 #' @param den_fun density function estimated from density() from R default
