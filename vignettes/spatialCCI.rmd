@@ -71,14 +71,16 @@ Here, we set the `step.size` to 0.5, so the differentiation tree is divided into
 each segment is treated as a cell type in CCI.
 We set `cell.type.interaction` to `random`, so the CCI network between each cell type pair is randomly sampled from the database.
 
+Here, we use only 100 cells to speed up the simulation. Feel free to try a larger number of cells when running this vignette locally.
+
 ```{r}
 data(GRN_params_100)
 set.seed(42)
 
 options_ <- list(
   GRN = GRN_params_100,
-  num.genes = 200,
-  num.cells = 300,
+  num.genes = 120,
+  num.cells = 100,
   num.cifs = 50,
   cif.sigma = 0.2,
   tree = Phyla3(),
@@ -86,6 +88,7 @@ options_ <- list(
   cci = list(
     params = lig_params,
     max.neighbors = 4,
+    grid.size = 15,
     cell.type.interaction = "random",
     step.size = 0.5
   )
@@ -95,7 +98,7 @@ results <- sim_true_counts(options_)
 ```
 
 The `results$cell_meta` will contain the cell type information used in CCI.
-We can plot the cell spatial locations using `plotCellLoc()`.
+We can plot the cell spatial locations using `plot_cell_loc()`.
 The arrows indicate cell-cell interactions between two cells (for the first ligand-receptor pair).
 
 ```{r plot-cell-loc, fig.width=4.5, fig.height=4}
