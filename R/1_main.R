@@ -394,7 +394,7 @@ sim_true_counts <- function(options) {
   renamed_sp <- NULL
   grn_genes <- NULL
   if (is.data.frame(grn_params)) {
-    grn_genes <- sort(as.character(unique(c(grn_params[, 1], grn_params[, 2]))))
+    grn_genes <- as.character(sort(unique(c(grn_params[, 1], grn_params[, 2]))))
     name_map <- setNames(seq_along(grn_genes), grn_genes)
     renamed_grn <- data.frame(
       target = name_map[as.character(grn_params[, 1])],
@@ -403,7 +403,7 @@ sim_true_counts <- function(options) {
     )
   }
   if (is.data.frame(sp_params)) {
-    sp_genes <- sort(as.character(unique(c(sp_params[, 1], sp_params[, 2]))))
+    sp_genes <- as.character(sort(unique(c(sp_params[, 1], sp_params[, 2]))))
     sp_genes_only <- setdiff(sp_genes, grn_genes)
     name_map <- c(
       name_map,
