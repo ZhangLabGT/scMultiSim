@@ -191,8 +191,6 @@ Phyla1 <- function(len = 1) {
 #' @param velocity whether to simulate RNA velocity
 #' @return the simulation result
 #' @export
-#' @examples
-#' sim_example_200_cells()
 sim_example_200_cells <- function(velocity = FALSE) {
   data(GRN_params_100, envir = environment())
   options <- list(

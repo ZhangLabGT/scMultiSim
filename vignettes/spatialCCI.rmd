@@ -71,7 +71,7 @@ Here, we set the `step.size` to 0.5, so the differentiation tree is divided into
 each segment is treated as a cell type in CCI.
 We set `cell.type.interaction` to `random`, so the CCI network between each cell type pair is randomly sampled from the database.
 
-Here, we use only 50 cells to speed up the simulation. Feel free to try a larger number of cells when running this vignette locally.
+Here, we use only 100 cells to speed up the simulation. Feel free to try a larger number of cells when running this vignette locally.
 
 ```{r}
 data(GRN_params_100)
@@ -80,7 +80,7 @@ set.seed(42)
 options_ <- list(
   GRN = GRN_params_100,
   num.genes = 120,
-  num.cells = 50,
+  num.cells = 100,
   num.cifs = 50,
   cif.sigma = 0.2,
   tree = Phyla3(),
