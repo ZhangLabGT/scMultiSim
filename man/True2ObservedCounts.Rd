@@ -71,12 +71,3 @@ if UMI, a list with two elements, the first is the observed count matrix, the se
 \description{
 Simulate observed count matrix given technical biases and the true counts
 }
-\examples{
-results <- sim_example_200_cells()
-data(gene_len_pool)
-gene_len <- sample(gene_len_pool, results$num_genes, replace = FALSE)
-True2ObservedCounts(
-  results$counts, results$cell_meta, protocol = "nonUMI", randseed = 1,
-  alpha_mean = 0.1, alpha_sd = 0.05, gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3
-)
-}

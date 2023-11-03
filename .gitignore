@@ -96,3 +96,6 @@ vignettes/common.Rmd
 /tmp
 /doc/
 /Meta/
+
+R/.Rhistory
+scMultiSim.Rproj

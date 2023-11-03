@@ -26,7 +26,3 @@ none
 \description{
 Plot the ligand-receptor correlation summary
 }
-\examples{
-results <- sim_example_200_cells_spatial()
-gene_corr_cci(results)
-}

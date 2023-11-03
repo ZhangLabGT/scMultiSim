@@ -26,7 +26,3 @@ a matrix of observed ATAC-seq data
 \description{
 Simulate observed ATAC-seq matrix given technical noise and the true counts
 }
-\examples{
-results <- sim_example_200_cells()
-True2ObservedATAC(results$atac_counts, randseed = 1)
-}

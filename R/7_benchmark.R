@@ -110,9 +110,6 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
 #' @return none
 #' @export
 #'
-#' @examples
-#' results <- sim_example_200_cells_spatial()
-#' plot_grid(results)
 plot_grid <- function(results = .getResultsFromGlobal()) {
   grid <- results$grid
   locs <- sapply(grid$locs, \(a) a)

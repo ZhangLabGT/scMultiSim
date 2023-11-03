@@ -7,7 +7,7 @@
 cci_cell_type_params(
   tree,
   total.lr,
-  ctype.lr,
+  ctype.lr = 4:6,
   step.size = 1,
   rand = TRUE,
   discrete = FALSE

@@ -60,7 +60,7 @@ data(GRN_params_100, envir = environment())
 sim_true_counts(list(
   rand.seed = 0,
   GRN = GRN_params_100,
-  num.cells = 1000,
+  num.cells = 200,
   num.cifs = 50,
   tree = Phyla5()
 ))

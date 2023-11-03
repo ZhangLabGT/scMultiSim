@@ -44,7 +44,3 @@ the figure if not \code{save}, otherwise save the figure as \code{plot.name}.pdf
 \description{
 Plot t-SNE visualization of a data matrix
 }
-\examples{
-results <- sim_example_200_cells()
-plot_tsne(log2(results$counts + 1), results$cell_meta$pop)
-}

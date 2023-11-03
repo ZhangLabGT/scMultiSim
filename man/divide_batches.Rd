@@ -21,8 +21,3 @@ none
 \description{
 Divide batches for observed counts
 }
-\examples{
-results <- sim_example_200_cells()
-add_expr_noise(results)
-divide_batches(results)
-}

@@ -312,9 +312,6 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
 #' @param randseed (should produce same result if nregions, nevf and randseed are all the same)
 #' @return a matrix of observed ATAC-seq data
 #' @export
-#' @examples
-#' results <- sim_example_200_cells()
-#' True2ObservedATAC(results$atac_counts, randseed = 1)
 True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd_frac = 0.1) {
   # set.seed(randseed)
   atacseq_data <- round(atacseq_data)

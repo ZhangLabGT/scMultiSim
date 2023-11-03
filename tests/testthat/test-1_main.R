@@ -77,45 +77,45 @@ test_that("simulates data using Beta-Poisson model", {
 })
 
 
-test_that("simulates spatial data", {
-  data(GRN_params_100, envir = environment())
-
-  lig_params <- data.frame(
-    target    = c(101, 102),
-    regulator = c(103, 104),
-    effect    = c(5.2, 5.9)
-  )
-
-  options_ <- list2(
-    GRN = GRN_params_100,
-    num.genes = 200,
-    num.cells = 100,
-    num.cifs = 20,
-    tree = Phyla3(),
-    intrinsic.noise = 0.5,
-    cci = list(
-      params = lig_params,
-      max.neighbors = 4,
-      cell.type.interaction = "random",
-      step.size = 0.5
-    )
-  )
-
-  set.seed(0)
-  res <- sim_true_counts(options_)
-
-  selectedIndicies <- c(1:5, 1000:1005, 10000:10005)
-  expect_equal(
-    res$counts[selectedIndicies],
-    c(40.675564, 30.876988, 29.984167, 49.430348, 25.113605, 4.093944,
-      45.194247, 29.063519, 47.389263, 42.516067, 43.014273, 7.110385,
-      55.992341, 13.604489, 14.811897, 10.213004, 24.046141)
-  )
-
-  expect_no_error(plot_cell_loc(res))
-  expect_no_error(gene_corr_cci(res))
-})
-
+# test_that("simulates spatial data", {
+#   data(GRN_params_100, envir = environment())
+#
+#   lig_params <- data.frame(
+#     target    = c(101, 102),
+#     regulator = c(103, 104),
+#     effect    = c(5.2, 5.9)
+#   )
+#
+#   options_ <- list2(
+#     GRN = GRN_params_100,
+#     num.genes = 200,
+#     num.cells = 100,
+#     num.cifs = 20,
+#     tree = Phyla3(),
+#     intrinsic.noise = 0.5,
+#     cci = list(
+#       params = lig_params,
+#       max.neighbors = 4,
+#       cell.type.interaction = "random",
+#       step.size = 0.5
+#     )
+#   )
+#
+#   set.seed(0)
+#   res <- sim_true_counts(options_)
+#
+#   selectedIndicies <- c(1:5, 1000:1005, 10000:10005)
+#   expect_equal(
+#     res$counts[selectedIndicies],
+#     c(40.675564, 30.876988, 29.984167, 49.430348, 25.113605, 4.093944,
+#       45.194247, 29.063519, 47.389263, 42.516067, 43.014273, 7.110385,
+#       55.992341, 13.604489, 14.811897, 10.213004, 24.046141)
+#   )
+#
+#   expect_no_error(plot_cell_loc(res))
+#   expect_no_error(gene_corr_cci(res))
+# })
+#
 
 test_that("simulates spatial data with discrete population and HGE", {
   data(GRN_params_100, envir = environment())

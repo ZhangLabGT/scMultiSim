@@ -21,10 +21,6 @@ none
 \description{
 Add experimental noise to true counts
 }
-\examples{
-results <- sim_example_200_cells()
-add_expr_noise(results)
-}
 \seealso{
 The underlying methods
 \link{True2ObservedCounts} and \link{True2ObservedATAC}
