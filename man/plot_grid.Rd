@@ -15,3 +15,7 @@ none
 \description{
 In normal cases, please use \code{plotCellLoc} instead.
 }
+\examples{
+results <- sim_example_spatial(ncells = 10)
+plot_grid(results)
+}

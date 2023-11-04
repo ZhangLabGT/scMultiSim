@@ -17,3 +17,7 @@ none
 \description{
 Print the correlations between targets of each regulator
 }
+\examples{
+results <- sim_example(ncells = 10)
+gene_corr_regulator(results, 2)
+}

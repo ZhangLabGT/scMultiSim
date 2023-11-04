@@ -45,7 +45,7 @@
 #' sim_true_counts(list(
 #'   rand.seed = 0,
 #'   GRN = GRN_params_100,
-#'   num.cells = 200,
+#'   num.cells = 100,
 #'   num.cifs = 50,
 #'   tree = Phyla5()
 #' ))

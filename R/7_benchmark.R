@@ -54,6 +54,9 @@ plot_phyla <- function(tree) {
 #' @return the figure if not `save`, otherwise save the figure as `plot.name`.pdf
 #' @export
 #'
+#' @examples
+#' results <- sim_example(ncells = 10)
+#' plot_tsne(log2(results$counts + 1), results$cell_meta$pop, perplexity = 3)
 plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = FALSE, rand.seed = 0,
                       continuous = FALSE, labels2 = NULL, lim = NULL) {
   # set.seed(rand.seed)
@@ -110,6 +113,9 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
 #' @return none
 #' @export
 #'
+#' @examples
+#' results <- sim_example_spatial(ncells = 10)
+#' plot_grid(results)
 plot_grid <- function(results = .getResultsFromGlobal()) {
   grid <- results$grid
   locs <- sapply(grid$locs, \(a) a)
@@ -159,6 +165,9 @@ plot_grid <- function(results = .getResultsFromGlobal()) {
 #' @return none
 #' @export
 #'
+#' @examples
+#' results <- sim_example(ncells = 10)
+#' plot_gene_module_cor_heatmap(results)
 plot_gene_module_cor_heatmap <- function(
   results = .getResultsFromGlobal(),
   seed = 0,
@@ -213,6 +222,9 @@ plot_gene_module_cor_heatmap <- function(
 #' @return none
 #' @export
 #'
+#' @examples
+#' results <- sim_example_spatial(ncells = 10)
+#' plot_cell_loc(results)
 plot_cell_loc <- function(
   results = .getResultsFromGlobal(),
   size = 4, show.label = FALSE, show.arrows = TRUE, lr.pair = 1, .cell.pop = NULL
@@ -318,6 +330,9 @@ plot_grn <- function(params) {
 #' @return none
 #' @export
 #'
+#' @examples
+#' results <- sim_example(ncells = 10)
+#' gene_corr_regulator(results, 2)
 gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
   grn_params <- results$.options$GRN
   regu <- grn_params[grn_params[, 2] == regulator, 1] %>% as.character()
@@ -387,6 +402,9 @@ gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
 #'
 #' @return none
 #' @export
+#' @examples
+#' results <- sim_example_spatial(ncells = 10)
+#' gene_corr_cci(results)
 gene_corr_cci <- function(
   results = .getResultsFromGlobal(),
   all.genes = FALSE,
@@ -816,6 +834,9 @@ plot_rna_velocity <- function(
 #' @param region2gene a 0 1 coupling matrix between regions and genes of shape (nregions) x (num_genes), where a value of 1 indicates the gene is affected by a particular region
 #' @return the correlation value
 #' @export
+#' @examples
+#' results <- sim_example(ncells = 10)
+#' Get_1region_ATAC_correlation(results$counts, results$atacseq_data, results$region_to_gene)
 Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
   target_genes <- which(colSums(region2gene > 0) == 1)
   ATAC_1region_correlation <- numeric()
@@ -834,6 +855,9 @@ Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
 #' @param num_genes number of genes
 #' @return the correlation value
 #' @export
+#' @examples
+#' results <- sim_example(ncells = 10)
+#' Get_ATAC_correlation(results$counts, results$atacseq_data, results$num_genes)
 Get_ATAC_correlation <- function(counts, atacseq_data, num_genes) {
   ATAC_correlation <- numeric()
   for (gene_index in 1:num_genes) {

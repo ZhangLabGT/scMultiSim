@@ -188,15 +188,18 @@ Phyla1 <- function(len = 1) {
 
 
 #' Simulate a small example dataset with 200 cells and the 100-gene GRN
+#' @param ncells number of cells, please increase this number on your machine
 #' @param velocity whether to simulate RNA velocity
 #' @return the simulation result
 #' @export
-sim_example_200_cells <- function(velocity = FALSE) {
+#' @examples
+#' sim_example(ncells = 10)
+sim_example <- function(ncells = 10, velocity = FALSE) {
   data(GRN_params_100, envir = environment())
   options <- list(
     rand.seed = 0,
     GRN = GRN_params_100,
-    num.cells = 200,
+    num.cells = ncells,
     num.cifs = 20,
     cif.sigma = 0.5,
     tree = Phyla3(),
@@ -208,11 +211,12 @@ sim_example_200_cells <- function(velocity = FALSE) {
 
 
 #' Simulate a small example dataset with 200 cells and the 100-gene GRN, with CCI enabled
+#' @param ncells number of cells, please increase this number on your machine
 #' @return the simulation result
 #' @export
 #' @examples
-#' sim_example_200_cells_spatial()
-sim_example_200_cells_spatial <- function() {
+#' sim_example_spatial(ncells = 10)
+sim_example_spatial <- function(ncells = 10) {
   data(GRN_params_100, envir = environment())
   lig_params <- data.frame(
     target    = c(101, 102),
@@ -223,7 +227,7 @@ sim_example_200_cells_spatial <- function() {
     rand.seed = 0,
     GRN = GRN_params_100,
     num.genes = 110,
-    num.cells = 200,
+    num.cells = ncells,
     num.cifs = 50,
     tree = Phyla3(),
     intrinsic.noise = 0.5,

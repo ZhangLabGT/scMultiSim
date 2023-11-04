@@ -33,3 +33,7 @@ none
 \description{
 Plot cell locations
 }
+\examples{
+results <- sim_example_spatial(ncells = 10)
+plot_cell_loc(results)
+}
