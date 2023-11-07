@@ -5,6 +5,7 @@
 #' @import ape
 #' @import rlang
 #' @import foreach
+#' @import markdown
 #' @importFrom crayon bgBlack green
 #' @importFrom dplyr enexpr expr lst
 #' @importFrom igraph graph_from_data_frame V

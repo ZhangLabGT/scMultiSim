@@ -89,10 +89,10 @@
   }
   
   if (!is.null(params$single.cell.gt) && params$single.cell.gt == TRUE) {
-    sc_gt <- T
+    sc_gt <- TRUE
     static_steps <- params$static.state.len %||% 50
   } else {
-    sc_gt <- F
+    sc_gt <- FALSE
     static_steps <- 10 
   }
   

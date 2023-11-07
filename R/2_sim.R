@@ -293,12 +293,12 @@
   scale_s <- OP("scale.s")
   scale_s_is_vector <- if (length(scale_s) > 1) {
     if (is_discrete && length(sim$ncells_pop) == length(scale_s)) {
-      T
+      TRUE
     } else {
       stop("scale.s is a vector. This only works when discrete.cif = T and length(scale.s) equals to the number of clusters.")
     }
   } else {
-    F
+    FALSE
   }
 
   # each cell
@@ -397,12 +397,12 @@
   scale_s <- OP("scale.s")
   scale_s_is_vector <- if (length(scale_s) > 1) {
     if (is_discrete && length(sim$ncells_pop) == length(scale_s)) {
-      T
+      TRUE
     } else {
       stop("scale.s is a vector. This only works when discrete.cif = T and length(scale.s) equals to the number of clusters.")
     }
   } else {
-    F
+    FALSE
   }
   
   # hge
