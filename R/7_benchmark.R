@@ -19,6 +19,7 @@ plot_phyla <- function(tree) {
 }
 
 
+# plot histogram
 .plotHist <- function(res, log = FALSE, title = NULL) {
   if (is(res, "scMultiSim_output")) {
     res <- res$res
@@ -358,6 +359,7 @@ gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
 }
 
 
+# get the correlation matrix for the genes in the GRN
 .geneCorrGRN <- function(results = .getResultsFromGlobal()) {
   counts <- log2(results$counts + 1)
   grn_params <- results$.options$GRN
@@ -372,6 +374,7 @@ gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
 }
 
 
+# get the correlation matrix for all genes
 .geneCorr <- function(
   results = .getResultsFromGlobal(),
   genes = NULL

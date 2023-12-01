@@ -252,6 +252,7 @@ sim_true_counts <- function(options) {
 }
 
 
+# return the result of the simulation
 .getResult <- function(sim, do_velocity, is_debug) {
   cell_meta <- if (sim$do_spatial) {
     sim$meta_spatial
@@ -378,6 +379,9 @@ sim_true_counts <- function(options) {
 }
 
 
+# normalize the gene names:
+# - if the gene names are integers, convert them to strings
+# - if there are additional unnamed genes (user specified num.genes), give them names
 .renameGenes <- function(sim, grn_params, sp_params) {
   name_map <- integer()
   renamed_grn <- NULL
@@ -455,6 +459,7 @@ sim_true_counts <- function(options) {
 }
 
 
+# construct the sim$N object, which contains the numbers of genes, CIFs, etc.
 .getNumbers <- function(GRN, options) {
   N <- list()
   N$cell <- OP("num.cells")
@@ -509,6 +514,7 @@ sim_true_counts <- function(options) {
 }
 
 
+# generate CIF for discrete cell population
 .discreteCIF <- function(seed, N, options, sim) {
   phyla <- OP("tree")
   cif_center <- OP("cif.center")
@@ -671,6 +677,7 @@ sim_true_counts <- function(options) {
   # ===== metadata & output ====================================================
 
   if (is_spatial) {
+    # metadata is already returned from .continuousCIFParamSpatial
     c(cif, list(neutral = neutral))
   } else {
     meta <- data.frame(
@@ -683,7 +690,7 @@ sim_true_counts <- function(options) {
 }
 
 
-# gene x regulator
+# gene x regulator matrix for the GRN
 .geneEffectsByRegulator <- function(seed, GRN, N) {
   # set.seed(seed)
 
@@ -705,7 +712,7 @@ sim_true_counts <- function(options) {
 }
 
 
-# size x cif matrix
+# generate GIV or RIV, return a size x cif matrix
 .identityVectors <- function(size, n_cif, prob, mean, sd) {
   lapply(1:size, function(i) {
     nonzero <- sample(c(0, 1),

@@ -2,6 +2,7 @@
 `%+%` <- function(a, b) paste0(a, b)
 
 
+# get default arguments
 .defaultArgs <- function(args = NULL, ...) {
   defaults <- list2(...)
   if (is.null(args)) {
@@ -114,6 +115,7 @@ Phyla1 <- function(len = 1) {
   list(edges = edges, root = root, tips = tips, internal = internal)
 }
 
+# print a summary of simulation parameters
 .print_param_summary <- function(sim) {
   cat(sprintf("intr noise: %g\n", sim$options$intrinsic.noise))
   

@@ -5,6 +5,7 @@
 # use_impulse
 
 
+# called by .continuousCIF() to generate the CIF for a continuous population
 .continuousCIFParam <- function(is_spatial, ...) {
   if (is_spatial) {
     .continuousCIFParamSpatial(...)
@@ -14,6 +15,8 @@
 }
 
 
+# generate the CIF for a continuous population, when spatial mode is enabled
+# @return a list of cif, diff_cif_by_path, meta_by_path, layer_idx_by_path
 .continuousCIFParamSpatial <- function(
   ncells, N_nd.cif, N_diff.cif, n_reg_cif,
   cif_center, cif_sigma, step_size,
@@ -174,6 +177,7 @@
 }
 
 
+# generate the CIF for a continuous population, when spatial mode is disabled
 .continuousCIFParamNormal <- function(
   ncells, N_nd.cif, N_diff.cif, n_reg_cif,
   cif_center, cif_sigma, step_size,

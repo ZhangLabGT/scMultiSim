@@ -302,6 +302,7 @@
 }
 
 
+# manually add line breaks to a long string after 72 characters
 .split_long_string <- function(x) {
   if (!is.character(x)) return(NULL)
   ss <- strsplit(x, "(?<=.{72})", perl = TRUE)[[1]]
@@ -309,6 +310,7 @@
 }
 
 
+# utils: print the option list
 .print_opt <- function(name = NULL) {
   opt_list <- .opt_list()
   names <- names(opt_list)
@@ -358,6 +360,7 @@ OP <- function(..., .name = 'options') {
 }
 
 
+# print the help message for dynamic grn params
 .dynamic_grn_default_params <- function(help = FALSE) {
   if (help) {
     cat("Dynamic GRN deletes and creates some edges in the GRN in each epoch.

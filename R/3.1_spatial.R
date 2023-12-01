@@ -1,3 +1,4 @@
+# parse the spatial parameters
 .parseSpatialParams <- function(params, num_genes, phyla, is_discrete) {
   max_nb <- params$max.neighbors
   if (!is.numeric(max_nb) || !(max_nb %in% 1:4)) max_nb <- 4
@@ -118,9 +119,9 @@
 }
 
 
+# get all possible paths in the tree (from root to any tip)
 .getPaths <- function(N, options) {
   ncell <- N$cell
-  # get all possible paths in the tree; save them in `paths`
   phyla <- OP("tree")
   c(edges, root, tips, internal) %<-% .tree_info(phyla)
   paths <- list()
@@ -166,6 +167,7 @@
 }
 
 
+# get the length of each path (number of cells along the path)
 .getPathLen <- function(atac_neutral, paths, N) {
   edge_len <- apply(unique(atac_neutral[, 1:2]), 1, function(edge) {
     c(edge,
@@ -264,6 +266,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
   )
 }
 
+# generate a clutter of cells by growing from the center
 .gen_clutter <- function(n_cell, grid_size = NA, center = c(0, 0),
                          existing_loc = NULL, existing_grid = NULL) {
   .in_grid <- function(x, y) {
@@ -305,11 +308,25 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
 }
 
 
+# The class for spatial grids
+# method: the method to generate the cell layout
+# grid_size: the width and height of the grid
+# ncells: the number of cells
+# grid: the grid matrix
+# locs: a list containing the locations of all cells
+# loc_order: deprecated, don't use; the order of the locations
+# cell_types: a map to save the cell type of each allocated cell
+# same_type_prob: the probability of a new cell placed next to a cell with the same type
+# max_nbs: the maximum number of neighbors for each cell
+# nb_map: a list containing the neighbors for each cell
+# nb_adj: adjacency matrix for neighbors
+# nb_radius: the radius of neighbors
+# final_types: the final cell types after the final time step
+# pre_allocated_pos: the pre-allocated positions for each cell, if any
+# method_param: additional parameters for the layout method
 .SpatialGrid <- setRefClass("spatialGrid", fields = c(
   "method", "grid_size", "ncells", "grid", "locs", "loc_order",
-  # a map to save the cell type of each allocated cell
   "cell_types",
-  # the probability of a new cell placed next to a cell with the same type
   "same_type_prob",
   "max_nbs", "nb_map", "nb_adj", "nb_radius",
   "final_types", "pre_allocated_pos", "method_param"

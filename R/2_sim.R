@@ -1,3 +1,4 @@
+# match the density of the given values (X) with the density of sim$N$params_den[[i]]
 .matchParamsDen <- function(X, sim, i) {
   N <- sim$N
   if (is.null(sim$param_sample)) {
@@ -121,6 +122,7 @@
 }
 
 
+# prepare for generating highly expressed genes
 .prepareHGE <- function(seed, sim, s_base) {
   # set.seed(seed)
   N <- sim$N
@@ -165,7 +167,7 @@
 }
 
 
-# return region x cell matrix
+# simulate ATAC-seq, return region x cell matrix
 .atacSeq <- function(seed, sim) {
   data(dens_nonzero, envir = environment())
   # set.seed(seed)
@@ -192,6 +194,7 @@
 }
 
 
+# simulate RNA-seq when spatial is disabled
 .rnaSeq <- function(seed, sim) {
   # set.seed(seed)
 
@@ -279,6 +282,8 @@
 }
 
 
+# called by .rnaSeq()
+# simulate RNA-seq for a single edge (parent -> child) on the tree
 .rnaSimEdge <- function(sim, cell_idx, s_base, curr_cif, last_parent) {
   N <- sim$N
   options <- sim$options
@@ -376,6 +381,7 @@
   stopifnot(n == ncells)
 }
 
+# simulate RNA-seq when spatial is enabled
 .rnaSeqSpatial <- function(seed, sim) {
   # set.seed(seed)
 
@@ -781,6 +787,7 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
 }
 
 
+# sample from the Beta-Poisson distribution
 .betaPoisson <- function (kon, koff, s, intr.noise) {
   yMean <- kon / (kon + koff)
   xMean <- yMean * s
@@ -791,6 +798,8 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
   intr.noise * x + (1 - intr.noise) * xMean
 }
 
+
+# add intrinsic noise to ATAC-seq data
 .atacIntrNoise <- function(atac) {
   m <- mean(atac)
   res <- atac + rnorm(length(atac), 0, m * 1.5)
