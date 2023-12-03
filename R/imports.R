@@ -1,7 +1,6 @@
 #' @import ggplot2
 #' @import Rtsne
 #' @import phytools
-#' @import SummarizedExperiment
 #' @import ape
 #' @import rlang
 #' @import foreach

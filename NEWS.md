@@ -1,3 +1,3 @@
-# scMultiSim 1.0.0
+## scMultiSim 0.99.7
 
-Initial version for Bioconductor
+Prepare for the Bioconductor release

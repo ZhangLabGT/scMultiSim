@@ -32,7 +32,7 @@ The following chunk will install all the required packages.
   install(r_packages, install.packages)
 
   if (requireNamespace("BiocManager", quietly = TRUE)) {
-    bioc_packages <- c('Biobase', 'SummarizedExperiment')
+    bioc_packages <- c('Biobase')
     install(bioc_packages, BiocManager::install)
   }
 })()

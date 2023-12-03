@@ -110,7 +110,7 @@
 
   # ==== adjust parameters with the bimod parameter
   bimod_percentage <- 0.5
-  bimod_genes <- sample(1:N$gene, ceiling(N$gene * bimod_percentage))
+  bimod_genes <- sample(seq(N$gene), ceiling(N$gene * bimod_percentage))
   bimod_vec <- numeric(N$gene)
   bimod_vec[bimod_genes] <- OP("bimod")
   # decrease kon & koff in some genes to increase the bimod effect
@@ -139,7 +139,7 @@
   }
 
   in_range <- rep(TRUE, N$gene)
-  in_range[1:(hge_range - 1)] <- FALSE
+  in_range[seq(hge_range - 1)] <- FALSE
 
   gene_var <- colVars(s_base)
   n_hge <- ceiling(N$gene * prop_hge)
@@ -209,7 +209,7 @@
   is_discrete <- OP("discrete.cif")
 
   c(edges, root, tips, internal) %<-% .tree_info(phyla)
-  neutral <- CIF_all$neutral[1:N$cell,]
+  neutral <- CIF_all$neutral[seq(N$cell),]
 
   # results
   sim$counts_s <- matrix(nrow = N$cell, ncol = N$gene)
@@ -251,11 +251,11 @@
     } else {
       rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma"))
     }
-    .rnaSimEdge(sim, 1:N$cell, s_base, curr_cif, NULL)
+    .rnaSimEdge(sim, seq(N$cell), s_base, curr_cif, NULL)
     return()
   }
 
-  for (i_edge in 1:nrow(edges)) {
+  for (i_edge in seq(nrow(edges))) {
     c(., parent, child, .) %<-% edges[i_edge,]
 
     cells_on_edge <- which(neutral[, "from"] == parent & neutral[, "to"] == child)
@@ -361,7 +361,7 @@
       sim$counts_s[i_cell,] <- result$counts_s[, cycles]
     } else {
       # Beta-poisson model
-      sim$counts_s[i_cell,] <- vapply(1:N$gene, function(i_gene) {
+      sim$counts_s[i_cell,] <- vapply(seq(N$gene), function(i_gene) {
         .betaPoisson(
           kon = sim$params$kon[i_gene, i_cell],
           koff = sim$params$koff[i_gene, i_cell],
@@ -412,7 +412,7 @@
   }
   
   # hge
-  CIF_s_base <- lapply(1:N$cell, function(icell) {
+  CIF_s_base <- lapply(seq(N$cell), function(icell) {
     path_i <- sim$cell_path[icell]
     cif_ <- CIF$cif[[icell]]$s
     cif_diff <- if (is_discrete) {
@@ -480,11 +480,11 @@
   }
 
   curr_cif <- if (no_grn) {
-    lapply(1:N$cell, \(.) numeric())
+    lapply(seq(N$cell), \(.) numeric())
   } else {
-    lapply(1:N$cell, \(.) rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma")))
+    lapply(seq(N$cell), \(.) rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma")))
   }
-  curr_lig_cif <- lapply(1:N$cell, \(.)  rnorm(N$sp_regulators, OP("cif.center"), OP("cif.sigma")))
+  curr_lig_cif <- lapply(seq(N$cell), \(.)  rnorm(N$sp_regulators, OP("cif.center"), OP("cif.sigma")))
   
   # final cell type at the last layer
   final_ctype <- integer(length = N$cell)
@@ -511,7 +511,7 @@
   }
 
   cat("Simulating...")
-  for (t_real in 1:n_steps) {
+  for (t_real in seq(n_steps)) {
     # num of steps is 10 more than default
     t <- if (t_real > N$cell) N$cell else t_real
     if (t_real %% 50 == 0) cat(sprintf("%d..", t_real))
@@ -530,7 +530,7 @@
     if (t_real %% 50 == 0) gc()
 
     # there are t cells now
-    for (icell in 1:t) {
+    for (icell in seq(t)) {
       # the corresponding layer index for this cell
       path_i <- sim$cell_path[icell]
       max_layer <- if (is_discrete) N$cell else sim$path_len[path_i]
@@ -547,8 +547,8 @@
         if (is.na(nb) || nb > t) next
         # n1_lig1  n1_lig2 | n2_lig1  n2_lig2  ...
         base <- (i - 1) * N$sp_regulators
-        inactive_one <- if (del_lr_pair) sample(1:N$sp_regulators, 1) else -1
-        for (j in 1:N$sp_regulators) {
+        inactive_one <- if (del_lr_pair) sample(seq(N$sp_regulators), 1) else -1
+        for (j in seq(N$sp_regulators)) {
           # ctype_factor: lig interaction factor between icell and j
           ctype_factor <- if (is_stationary) {
             sim$cci_single_cell[icell, nb, j]
@@ -611,7 +611,7 @@
         sim$hge_scale %>% as.vector()
 
       # Beta-poisson model
-      counts <- vapply(1:N$gene, function(i_gene) {
+      counts <- vapply(seq(N$gene), function(i_gene) {
         .betaPoisson(
           kon = sim$params_spatial[[icell]]$kon[i_gene, layer],
           koff = sim$params_spatial[[icell]]$koff[i_gene, layer],
@@ -631,8 +631,8 @@
       if (no_grn) {
         curr_lig_cif[[icell]] <- next_cif
       } else {
-        curr_cif[[icell]] <- next_cif[1:GRN$n_reg]
-        curr_lig_cif[[icell]] <- next_cif[-(1:GRN$n_reg)]
+        curr_cif[[icell]] <- next_cif[seq(GRN$n_reg)]
+        curr_lig_cif[[icell]] <- next_cif[-(seq(GRN$n_reg))]
       }
       # if (t == 500) {
       #   if (icell == 1 || !is.null(sim$boc)) browser()
@@ -692,7 +692,7 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
   ys <- list()
   which_cells <- list()
 
-  for (igene in 1:ngenes) {
+  for (igene in seq(ngenes)) {
     k_on <- kinet_params$k_on[igene]
     k_off <- kinet_params$k_off[igene]
     s <- kinet_params$s[igene]
@@ -764,7 +764,7 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
     }
     xs[[igene]] <- x; ys[[igene]] <- y; which_cells[[igene]] <- which_cell
     # extract value for each cell
-    for (icell in 1:ncells1) {
+    for (icell in seq(ncells1)) {
       all_idx <- which(which_cell == icell)
       closest <- which.min(abs((curr_time[all_idx] - (icell - 1)) - randpoints1[icell]))
       counts_u1[igene, icell] <- as.integer(x[all_idx[closest]])

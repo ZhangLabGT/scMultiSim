@@ -145,7 +145,7 @@ plot_grid <- function(results = .getResultsFromGlobal()) {
   names(all_colors) <- as.character(regulator_ID_list)
   gene_module_color_vector <- character(num_genes)
   gene_module_color_vector[(num_GRN_genes + 1):num_genes] <- NA
-  for (gene_index in 1:num_GRN_genes) {
+  for (gene_index in seq(num_GRN_genes)) {
     if (is.element(gene_index, regulator_ID_list)) {
       gene_module_color_vector[gene_index] <- all_colors[as.character(gene_index)]
     } else {
@@ -197,7 +197,7 @@ plot_gene_module_cor_heatmap <- function(
     if (save != FALSE) {
       pdf(save_path, 5, 5)
     }
-    heatmap.2(count_correlation_matrix[1:num_GRN_genes, 1:num_GRN_genes], scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector[1:num_GRN_genes], ColSideColors = gene_module_color_vector[1:num_GRN_genes], col = bluered(75), main = '          GRN Gene Corr by Main Regulator')
+    heatmap.2(count_correlation_matrix[seq(num_GRN_genes), seq(num_GRN_genes)], scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector[seq(num_GRN_genes)], ColSideColors = gene_module_color_vector[seq(num_GRN_genes)], col = bluered(75), main = '          GRN Gene Corr by Main Regulator')
   } else {
     if (save != FALSE) {
       pdf(save_path, 5, 5)
@@ -244,7 +244,7 @@ plot_cell_loc <- function(
     geom_point(aes(x = x, y = y, color = cell_type), data = data, size = size) +
     labs(color = 'Population')
 
-  # inter_data <- lapply(1:ncol(locs), \(i) cbind(results$grid$get_neighbours(i, omit.NA = FALSE), i)) %>%
+  # inter_data <- lapply(seq(ncol(locs)), \(i) cbind(results$grid$get_neighbours(i, omit.NA = FALSE), i)) %>%
   #   do.call(rbind, .) %>% na.omit() %>%
   #   apply(1, \(row) c(locs[,row[1]], locs[,row[2]])) %>%
   #   as.matrix() %>% t() %>% as.data.frame()
@@ -257,7 +257,7 @@ plot_cell_loc <- function(
   ctp <- ctp[ctp$ligand == l & ctp$receptor == r,]
 
   if (show.arrows) {
-    for (i in 1:ncol(locs)) {
+    for (i in seq(ncol(locs))) {
       tp1 <- results$cell_meta$cell.type.idx[i]
       nbs <- results$grid$get_neighbours(i)
       for (nb in nbs) {
@@ -385,7 +385,7 @@ gene_corr_regulator <- function(results = .getResultsFromGlobal(), regulator) {
 
   res <- matrix(nrow = ngenes, ncol = ngenes)
   for (i in seq_along(genes)) {
-    for (j in 1:i) {
+    for (j in seq(i)) {
       g1 <- genes[i]
       g2 <- genes[j]
       res[i, j] <- res[j, i] <- cor(counts[g1,], counts[g2,])
@@ -426,9 +426,9 @@ gene_corr_cci <- function(
 
   nb_list <- list()
   non_nb_list <- list()
-  for (icell in 1:ncells) {
+  for (icell in seq(ncells)) {
     nb_list[[icell]] <- nbs <- na.omit(results$grid$get_neighbours(icell))
-    non_nb_list[[icell]] <- sample(setdiff(1:ncells, nbs), size = 4)
+    non_nb_list[[icell]] <- sample(setdiff(seq(ncells), nbs), size = 4)
   }
 
   if (all.genes) {
@@ -439,11 +439,11 @@ gene_corr_cci <- function(
     regulators <- unique(sp_params[, 2])
     cor_list <- lapply(regulators, function(rg) {
       # each target; return cor(rg, all_tg)
-      sapply(1:ngenes, function(tg) {
+      sapply(seq(ngenes), function(tg) {
         rg_list <- numeric()
         tg_list <- numeric()
         # each pair
-        for (icell in 1:ncells) {
+        for (icell in seq(ncells)) {
           nbs <- nb_list[[icell]]
           rg_cnt <- results$counts[rg, icell]
           for (nb in nbs) {
@@ -467,13 +467,13 @@ gene_corr_cci <- function(
       unlist() %>%
       unique()
 
-    tg_ordered <- c(tg_ordered, setdiff(1:ngenes, tg_ordered)) %>% as.character()
+    tg_ordered <- c(tg_ordered, setdiff(seq(ngenes), tg_ordered)) %>% as.character()
 
     cor_df <- data.frame(tg = character(), rg = character(), cor = numeric())
 
     for (rg in seq_along(cor_list)) {
       cor_df <- rbind(cor_df, data.frame(
-        tg = as.character(1:ngenes),
+        tg = as.character(seq(ngenes)),
         rg = as.character(regulators[rg]),
         cor = cor_list[[rg]]
       ))
@@ -496,7 +496,7 @@ gene_corr_cci <- function(
     res_pair <- NULL
     ctp <- results$cci_cell_type_param
 
-    for (j in 1:nrow(sp_params)) {
+    for (j in seq(nrow(sp_params))) {
       rg <- sp_params[j, 2]
       tg <- sp_params[j, 1]
 
@@ -508,7 +508,7 @@ gene_corr_cci <- function(
       non_tg_list <- numeric()
 
       total <- 0
-      for (icell in 1:ncells) {
+      for (icell in seq(ncells)) {
         nbs <- nb_list[[icell]]
         rg_cnt <- results$counts[rg, icell]
         ct1 <- results$cell_meta$cell.type.idx[icell]
@@ -600,7 +600,7 @@ gene_corr_cci <- function(
 
   n <- nrow(counts_s)
   data_tsne <- Rtsne(combined, perplexity = perplexity)
-  current_counts_s_tsne <- data_tsne$Y[1:n,]
+  current_counts_s_tsne <- data_tsne$Y[seq(n),]
 
   future_1 <- data_tsne$Y[(n + 1):(n * 2),]
 
@@ -690,7 +690,7 @@ plot_rna_velocity <- function(
   y1 <- current_counts_s_tsne[, 2]
 
   args <- .defaultArgs(width = 5, height = 5, units = "in", dpi = 1000)
-  plot_tsne <- data.frame(x1 = x1, y1 = y1, index = seq(length(x1)), label = cell_pop)
+  plot_tsne <- data.frame(x1 = x1, y1 = y1, index = seq_along(x1), label = cell_pop)
 
   types <- c("raw", "normalized", "knn_normalized")
   titles <- c("Raw Values", "Normalized Values", "KNN Average Normalized Values")
@@ -814,7 +814,7 @@ plot_rna_velocity <- function(
     )
   }
 
-  sapply(1:nrow(gt_velo_mean), function(i) .cosineSim(gt_velo_mean[i,], res_velo_mean[i,]))
+  sapply(seq(nrow(gt_velo_mean)), function(i) .cosineSim(gt_velo_mean[i,], res_velo_mean[i,]))
   # paired_simil(gt_velo_mean, res_velo_mean, margin = 1, method = "cosine")
 }
 
@@ -863,7 +863,7 @@ Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
 #' Get_ATAC_correlation(results$counts, results$atacseq_data, results$num_genes)
 Get_ATAC_correlation <- function(counts, atacseq_data, num_genes) {
   ATAC_correlation <- numeric()
-  for (gene_index in 1:num_genes) {
+  for (gene_index in seq(num_genes)) {
     ATAC_correlation <- c(ATAC_correlation, suppressWarnings(cor(atacseq_data[gene_index,], counts[gene_index,], method = "spearman")))
   }
   ATAC_correlation <- mean(ATAC_correlation, na.rm = TRUE)

@@ -33,7 +33,7 @@
   )
 
   # nd and reg cif
-  cif <- foreach(i_cell = 1:ncells) %do% {
+  cif <- foreach(i_cell = seq(ncells)) %do% {
     i_path <- cell_path[i_cell]
     n_layers <- path_len[i_path]
 
@@ -45,8 +45,8 @@
       n_diff_cif <- N_diff.cif[i]
 
       # nd cif
-      nd_cif <- lapply(1:n_nd_cif, \(icif) rnorm(n_layers, cif_center, cif_sigma)) %>% do.call(cbind, .)
-      colnames(nd_cif) <- paste(param_name, "nonDE", 1:n_nd_cif, sep = "_")
+      nd_cif <- lapply(seq(n_nd_cif), \(icif) rnorm(n_layers, cif_center, cif_sigma)) %>% do.call(cbind, .)
+      colnames(nd_cif) <- paste(param_name, "nonDE", seq(n_nd_cif), sep = "_")
 
       # diff cif
       need_diff_cif <- n_diff_cif > 0
@@ -62,7 +62,7 @@
           # impulse model
           # pdf(file = .plot.name, width = 15, height = 5)
           tip <- rep(tips, ceiling(n_diff_cif / length(tips)))
-          lapply(1:n_diff_cif, function(cif_i) {
+          lapply(seq(n_diff_cif), function(cif_i) {
             impulse <- Impulsecifpertip(phyla, edges, root, tips, internal, neutral, tip[cif_i], cif_sigma, cif_center, step_size)
             # if (.plot) { PlotRoot2Leave(impulse, tips, edges, root, internal) }
             re_order <- match(
@@ -74,14 +74,14 @@
           # dev.off()
         } else {
           # Gaussian sample
-          lapply(1:n_diff_cif, function(icif) {
+          lapply(seq(n_diff_cif), function(icif) {
             # supply neutral to have the same t_sample values for all cells
             SampleSubtree(tree_info$root, 0, cif_center, tree_info$edges, ncells, step_size, neutral = neutral)[, 4]
           }) %>%
             do.call(cbind, .) %>%
-            .[1:max_layers,]
+            .[seq(max_layers),]
         }
-        colnames(diff_cif) <- paste(param_name, "DE", 1:n_diff_cif, sep = "_")
+        colnames(diff_cif) <- paste(param_name, "DE", seq(n_diff_cif), sep = "_")
         # ================================================ COPY
 
         diff_cif
@@ -91,10 +91,10 @@
       reg_cif <- NULL
       if (i <= 2 && n_reg_cif > 0) {
         reg_cif <- lapply(
-          1:n_reg_cif,
+          seq(n_reg_cif),
           \(.) rnorm(n_layers, cif_center, cif_sigma)
         ) %>% do.call(cbind, .)
-        colnames(reg_cif) <- paste(param_name, "reg", 1:n_reg_cif, sep = "_")
+        colnames(reg_cif) <- paste(param_name, "reg", seq(n_reg_cif), sep = "_")
       }
 
       # TRUE if diff_cif is needed to be combined later
@@ -117,10 +117,10 @@
   }
 
   # get the index on each path
-  neutral <- neutral[1:max_layers,]
+  neutral <- neutral[seq(max_layers),]
   layer_idx_by_path <- lapply(paths, function(path) {
     idx <- integer()
-    for (i in 1:(length(path) - 1)) {
+    for (i in seq(length(path) - 1)) {
       a <- path[i]
       b <- path[i + 1]
       idx <- c(idx, which(neutral[, 1] == a & neutral[, 2] == b))
@@ -139,7 +139,7 @@
 
   # cell types & meta
   cell_types <- character(length = nrow(neutral))
-  for (i in 1:nrow(tree_info$edges)) {
+  for (i in seq(nrow(tree_info$edges))) {
     c(id, from, to, len) %<-% tree_info$edges[i,]
     n_steps <- len %/% step_size + ceiling(len %% step_size)
     pts <- which(neutral[, 1] == from & neutral[, 2] == to)
@@ -147,7 +147,7 @@
     cell_types[pts] <- if (n_steps == 1) {
       paste(from, to, sep = "_")
     } else {
-      type_id <- ceiling(1:n_pts * (n_steps / n_pts))
+      type_id <- ceiling(seq(n_pts) * (n_steps / n_pts))
       paste(from, to, type_id, sep = "_")
     }
   }
@@ -192,8 +192,8 @@
     n_diff_cif <- N_diff.cif[i]
 
     # ========== de_cif ==========
-    nd_cif <- lapply(1:n_nd_cif, \(icif) rnorm(ncells, cif_center, cif_sigma)) %>% do.call(cbind, .)
-    colnames(nd_cif) <- paste(param_name, "nonDE", 1:n_nd_cif, sep = "_")
+    nd_cif <- lapply(seq(n_nd_cif), \(icif) rnorm(ncells, cif_center, cif_sigma)) %>% do.call(cbind, .)
+    colnames(nd_cif) <- paste(param_name, "nonDE", seq(n_nd_cif), sep = "_")
     cifs <- nd_cif
 
     # ========== nd_cif ==========
@@ -204,7 +204,7 @@
         # impulse model
         # pdf(file = .plot.name, width = 15, height = 5)
         tip <- rep(tips, ceiling(n_diff_cif / length(tips)))
-        lapply(1:n_diff_cif, function(cif_i) {
+        lapply(seq(n_diff_cif), function(cif_i) {
           impulse <- Impulsecifpertip(phyla, edges, root, tips, internal, neutral, tip[cif_i], cif_sigma, cif_center, step_size)
           # if (.plot) { PlotRoot2Leave(impulse, tips, edges, root, internal) }
           re_order <- match(
@@ -216,14 +216,14 @@
         # dev.off()
       } else {
         # Gaussian sample
-        lapply(1:n_diff_cif, function(icif) {
+        lapply(seq(n_diff_cif), function(icif) {
           # supply neutral to have the same t_sample values for all cells
           SampleSubtree(tree_info$root, 0, cif_center, tree_info$edges, ncells, step_size, neutral = neutral)[, 4]
         }) %>%
           do.call(cbind, .) %>%
-          .[1:ncells,]
+          .[seq(ncells),]
       }
-      colnames(diff_cif) <- paste(param_name, "DE", 1:n_diff_cif, sep = "_")
+      colnames(diff_cif) <- paste(param_name, "DE", seq(n_diff_cif), sep = "_")
       cifs <- cbind(nd_cif, diff_cif)
     }
 
@@ -275,7 +275,7 @@
         min_popsize, npop, N$cell))
     }
 
-    larger_pops <- setdiff(1:npop, i_minpop)
+    larger_pops <- setdiff(seq(npop), i_minpop)
     ncells_pop[larger_pops] <- floor((N$cell - min_popsize) / length(larger_pops))
     leftover <- N$cell - sum(ncells_pop)
     if (leftover > 0) {
@@ -292,7 +292,7 @@
   param_name <- c("kon", "koff", "s")
 
   # nd and reg cif
-  cif <- foreach(i_cell = 1:N$cell) %do% {
+  cif <- foreach(i_cell = seq(N$cell)) %do% {
     # === each cell ===
     n_layers <- N$cell
 
@@ -304,17 +304,17 @@
       need_diff_cif <- n_diff_cif > 0
 
       # nd cif
-      nd_cif <- lapply(1:n_nd_cif, \(icif) rnorm(n_layers, cif_center, cif_sigma)) %>% do.call(cbind, .)
-      colnames(nd_cif) <- paste(param_name, "nonDE", 1:n_nd_cif, sep = "_")
+      nd_cif <- lapply(seq(n_nd_cif), \(icif) rnorm(n_layers, cif_center, cif_sigma)) %>% do.call(cbind, .)
+      colnames(nd_cif) <- paste(param_name, "nonDE", seq(n_nd_cif), sep = "_")
 
       # reg cif
       reg_cif <- NULL
       if (i <= 2 && N$reg_cif > 0) {
         reg_cif <- lapply(
-          1:N$reg_cif,
+          seq(N$reg_cif),
           \(.) rnorm(n_layers, cif_center, cif_sigma)
         ) %>% do.call(cbind, .)
-        colnames(reg_cif) <- paste(param_name, "reg", 1:N$reg_cif, sep = "_")
+        colnames(reg_cif) <- paste(param_name, "reg", seq(N$reg_cif), sep = "_")
       }
 
       list(nd = nd_cif, diff = need_diff_cif, reg = reg_cif)
@@ -331,8 +331,8 @@
     need_diff_cif <- n_diff_cif > 0
     if (need_diff_cif) {
       pop_diff_cif_mean <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
-      dcif <- lapply(1:npop, function(ipop) {
-        evf <- sapply(1:n_diff_cif, function(ievf) {
+      dcif <- lapply(seq(npop), function(ipop) {
+        evf <- sapply(seq(n_diff_cif), function(ievf) {
           rnorm(ncells_pop[ipop], pop_diff_cif_mean[ievf, ipop], cif_sigma)
         })
         return(evf)
@@ -345,7 +345,7 @@
   })
   diff_cif <- setNames(diff_cif, param_names)
 
-  pop <- do.call(c, lapply(1:npop, function(i) rep(i, ncells_pop[i])))
+  pop <- do.call(c, lapply(seq(npop), function(i) rep(i, ncells_pop[i])))
 
   meta <- data.frame(
     pop = pop, cell.type = pop, cell.type.idx = pop
@@ -383,7 +383,7 @@ SampleEdge <- function(edge, depth, anc_state, edges, ncells, step_size, t_sampl
 SampleSubtree <- function(par, depth, anc_state, edges, ncells, step_size, neutral = NA) {
   # get the children of the current node
   children <- edges[edges[, 2] == par, 3]
-  result <- lapply(c(1:length(children)), function(j) {
+  result <- lapply(c(seq_along(children)), function(j) {
     edge <- edges[edges[, 2] == par & edges[, 3] == children[j],] # given the parent and child, find the edge
     if (sum(edges[, 2] == children[j]) == 0) { # this means the current node is a leaf
       if (is.na(neutral[1])) {
@@ -392,7 +392,7 @@ SampleSubtree <- function(par, depth, anc_state, edges, ncells, step_size, neutr
         t_sample <- neutral[neutral[, 1] == edge[2] & neutral[, 2] == edge[3], 3]
         result <- SampleEdge(edge, depth, anc_state, edges, ncells, step_size, t_sample)
       }
-      result <- result[c(1:(length(result[, 1] - 1))),]
+      result <- result[c(seq(length(result[, 1] - 1))),]
     } else {
       if (is.na(neutral[1])) {
         result <- SampleEdge(edge, depth, anc_state, edges, ncells, step_size)
@@ -402,7 +402,7 @@ SampleSubtree <- function(par, depth, anc_state, edges, ncells, step_size, neutr
       }
       anc_state <- result[length(result[, 1]), 4]
       # !!! why this line
-      result <- result[c(1:(length(result[, 1] - 1))),]
+      result <- result[c(seq(length(result[, 1] - 1))),]
       depth <- depth + edge[4]
       result1 <- SampleSubtree(children[j], depth, anc_state, edges, ncells, step_size, neutral)
       result <- rbind(result, result1)

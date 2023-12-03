@@ -182,7 +182,7 @@ sim_true_counts <- function(options) {
       .continuousCIF(seed[6], N, options, ncell_key = "max_layer")
     }
     # get edge length
-    atac_neutral <- CIF_atac_all$neutral[1:N$max_layer, ]
+    atac_neutral <- CIF_atac_all$neutral[seq(N$max_layer), ]
     if (!is_discrete) {
       sim$path_len <- .getPathLen(atac_neutral, paths, N)
     }
@@ -224,7 +224,7 @@ sim_true_counts <- function(options) {
   # 1.5 Params
   if (sim$do_spatial) {
     cat("Get params...")
-    sim$params_spatial <- lapply(1:N$cell, \(i) .getParams(
+    sim$params_spatial <- lapply(seq(N$cell), \(i) .getParams(
       seed[8] + i, sim,
       sp_cell_i = i, sp_path_i = sim$cell_path[i]
     ))
@@ -258,11 +258,11 @@ sim_true_counts <- function(options) {
     sim$meta_spatial
   } else {
     cbind(
-      cell_id = paste0("cell", 1:sim$N$cell),
+      cell_id = paste0("cell", seq(sim$N$cell)),
       sim$CIF_all$meta
     )
   }
-  rownames(cell_meta) <- paste0("cell", 1:sim$N$cell)
+  rownames(cell_meta) <- paste0("cell", seq(sim$N$cell))
 
   if (is.null(sim$GRN)) {
     grn_params <- NULL
@@ -283,7 +283,7 @@ sim_true_counts <- function(options) {
 
   counts <- t(sim$counts_s)
   rownames(counts) <- names(sim$gene_name_map)
-  colnames(counts) <- paste0("cell", 1:sim$N$cell)
+  colnames(counts) <- paste0("cell", seq(sim$N$cell))
 
   result <- list(
     counts = counts,
@@ -314,7 +314,7 @@ sim_true_counts <- function(options) {
   if (sim$is_dyn_grn) {
     result <- c(result, list(
       cell_specific_grn = lapply(
-        1:sim$N$cell, \(i) sim$GRN$history[[sim$dyngrn_ver_map[i]]]
+        seq(sim$N$cell), \(i) sim$GRN$history[[sim$dyngrn_ver_map[i]]]
       )
     ))
   }
@@ -347,7 +347,7 @@ sim_true_counts <- function(options) {
 
     cci_locs <- do.call(rbind, sim$grid$locs)
     colnames(cci_locs) <- c("x", "y")
-    rownames(cci_locs) <- paste0("cell", 1:sim$N$cell)
+    rownames(cci_locs) <- paste0("cell", seq(sim$N$cell))
 
     result <- c(result, list(
       grid = sim$grid,
@@ -545,7 +545,7 @@ sim_true_counts <- function(options) {
       ))
     }
 
-    larger_pops <- setdiff(1:npop, i_minpop)
+    larger_pops <- setdiff(seq(npop), i_minpop)
     ncells_pop[larger_pops] <- floor((N$cell - min_popsize) / length(larger_pops))
     leftover <- N$cell - sum(ncells_pop)
     if (leftover > 0) {
@@ -567,8 +567,8 @@ sim_true_counts <- function(options) {
 
     # ========== nd_cif ==========
     if (n_nd_cif > 0) {
-      pop_evf_nonDE <- lapply(1:npop, function(ipop) {
-        evf <- sapply(1:(n_nd_cif), function(ievf) {
+      pop_evf_nonDE <- lapply(seq(npop), function(ipop) {
+        evf <- sapply(seq(n_nd_cif), function(ievf) {
           rnorm(ncells_pop[ipop], cif_center, cif_sigma)
         })
         return(evf)
@@ -594,8 +594,8 @@ sim_true_counts <- function(options) {
     # ========== de_cif ==========
     if (n_diff_cif > 0) {
       pop_evf_mean_DE <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
-      pop_evf_DE <- lapply(1:npop, function(ipop) {
-        evf <- sapply(1:n_diff_cif, function(ievf) {
+      pop_evf_DE <- lapply(seq(npop), function(ipop) {
+        evf <- sapply(seq(n_diff_cif), function(ievf) {
           rnorm(ncells_pop[ipop], pop_evf_mean_DE[ievf, ipop], cif_sigma)
         })
         return(evf)
@@ -609,23 +609,23 @@ sim_true_counts <- function(options) {
     cif <- cbind(pop_evf_nonDE, pop_evf_DE)
     colnames(cif) <- sprintf(
       "%s_%s_cif%d", param_name[iparam], colnames(cif),
-      1:(n_nd_cif + n_diff_cif)
+      seq(n_nd_cif + n_diff_cif)
     )
 
     # ========== generate reg_cif for k_on, k_off ===========
     if (iparam <= 2 && N$reg_cif > 0) {
       reg_cif <- lapply(
-        1:N$reg_cif,
+        seq(N$reg_cif),
         \(.) rnorm(N$cell, cif_center, cif_sigma)
       ) %>% do.call(cbind, .)
-      colnames(reg_cif) <- paste(param_name, "reg", 1:N$reg_cif, sep = "_")
+      colnames(reg_cif) <- paste(param_name, "reg", seq(N$reg_cif), sep = "_")
       cif <- cbind(cif, reg_cif)
     }
     return(cif)
   })
 
   names(evfs) <- param_name
-  meta <- data.frame(pop = do.call(c, lapply(1:npop, function(i) {
+  meta <- data.frame(pop = do.call(c, lapply(seq(npop), function(i) {
     rep(i, ncells_pop[i])
   })))
 
@@ -683,7 +683,7 @@ sim_true_counts <- function(options) {
     meta <- data.frame(
       pop = apply(neutral[, 1:2], 1, \(X) paste0(X, collapse = "_")),
       depth = neutral[, 3]
-    )[1:ncells, ]
+    )[seq(ncells), ]
 
     list(cif = cif, meta = meta, neutral = neutral)
   }
@@ -695,7 +695,7 @@ sim_true_counts <- function(options) {
   # set.seed(seed)
 
   geff <- matrix(0L, nrow = N$grn.gene, ncol = N$regulator)
-  for (r in 1:nrow(GRN$params)) {
+  for (r in seq_len(nrow(GRN$params))) {
     c(target, regulator, effect) %<-% GRN$params[r, ]
     regu_idx <- which(GRN$regulators %in% regulator)
     geff[target, regu_idx] <- effect
@@ -714,7 +714,7 @@ sim_true_counts <- function(options) {
 
 # generate GIV or RIV, return a size x cif matrix
 .identityVectors <- function(size, n_cif, prob, mean, sd) {
-  lapply(1:size, function(i) {
+  lapply(seq(size), function(i) {
     nonzero <- sample(c(0, 1),
       size = n_cif,
       prob = c(1 - prob, prob),
@@ -759,13 +759,13 @@ sim_true_counts <- function(options) {
       regu_list <- GRN$regulators
       tgt_list <- GRN$targets
     }
-    non_grn_gene <- setdiff(1:N$gene, c(regu_list, tgt_list))
+    non_grn_gene <- setdiff(seq(N$gene), c(regu_list, tgt_list))
     giv$s[-non_grn_gene, ] <- 0
     regu_diff_cif <- matrix(0, n_reg, N$diff.cif[3])
     # regulator rows: gene effect of 2 added to two random differential cifs
     # for each master regulator gene
-    indices <- replicate(n_reg, sample(1:(N$diff.cif[3]), 2, replace = FALSE)) %>% as.vector()
-    regu_diff_cif[cbind(rep(1:n_reg, each = 2), indices)] <- 2
+    indices <- replicate(n_reg, sample(seq(N$diff.cif[3]), 2, replace = FALSE)) %>% as.vector()
+    regu_diff_cif[cbind(rep(seq(n_reg), each = 2), indices)] <- 2
     giv$s[regu_list, ] <- cbind(matrix(0, n_reg, N$nd.cif[3]), regu_diff_cif)
     # target rows: for every target gene, it should use the same gene_effect vector
     # as its regulators. if a gene has multiple regulators, its gene effects will
@@ -782,7 +782,7 @@ sim_true_counts <- function(options) {
     grn_target <- giv$s[GRN$targets, ] <- grn_eff
     # ---
     if (sim$do_spatial) {
-      sp_eff <- sim$sp_effect[sim$sp_targets, 1:N$sp_regulators]
+      sp_eff <- sim$sp_effect[sim$sp_targets, seq(N$sp_regulators)]
       sp_target <- na.omit(sp_eff %*% giv$s[sim$sp_regulators, ] / 2)
       sp_factor <- mean(grn_target[grn_target > 0]) / mean(sp_target[sp_target > 0])
       if (is.nan(sp_factor)) {
@@ -827,9 +827,9 @@ sim_true_counts <- function(options) {
   regu_by_1 <- which(regu_by == 1)
   regu_by_2 <- which(regu_by == 2)
   # for genes regulated by 1 region, select a random region
-  res[cbind(sample(1:N$region, length(regu_by_1), replace = TRUE), regu_by_1)] <- 1
+  res[cbind(sample(seq(N$region), length(regu_by_1), replace = TRUE), regu_by_1)] <- 1
   # for genes regulated by 2 regions, select 2 consecutive random regions
-  region_idx <- sample(1:(N$region - 1), length(regu_by_2), replace = TRUE) %>% c(., . + 1)
+  region_idx <- sample(seq(N$region - 1), length(regu_by_2), replace = TRUE) %>% c(., . + 1)
   res[cbind(region_idx, rep(regu_by_2, 2))] <- 1
 
   # return

@@ -22,10 +22,10 @@
 SampleDen <- function(nsample, den_fun) {
   probs <- den_fun$y / sum(den_fun$y)
   bw <- den_fun$x[2] - den_fun$x[1]
-  bin_id <- sample(size = nsample, x = c(1:length(probs)), prob = probs, replace = TRUE)
+  bin_id <- sample(size = nsample, x = seq_along(probs), prob = probs, replace = TRUE)
   counts <- table(bin_id)
   sampled_bins <- as.numeric(names(counts))
-  samples <- lapply(c(1:length(counts)), function(j) {
+  samples <- lapply(seq_along(counts), function(j) {
     runif(n = counts[j], min = (den_fun$x[sampled_bins[j]] - 0.5 * bw), max = (den_fun$x[sampled_bins[j]] + 0.5 * bw))
   })
   samples <- do.call(c, samples)
@@ -104,7 +104,7 @@ Phyla1 <- function(len = 1) {
 
 # get root, internal nodes and tips from a tree.
 .tree_info <- function(tree) {
-  edges <- cbind(1:nrow(tree$edge), tree$edge, tree$edge.length)
+  edges <- cbind(seq_len(nrow(tree$edge)), tree$edge, tree$edge.length)
   colnames(edges) <- c("id", "from", "to", "len")
   parents <- unique(edges[, 2])
   children <- unique(edges[, 3])

@@ -46,7 +46,7 @@
     if (remaining_cells == 0) {
       # update gradually
       s <- 1 / max_steps
-      for (row in 1:nrow(del_edges)) {
+      for (row in seq_len(nrow(del_edges))) {
         i <- del_edges[row, 1]
         j <- del_edges[row, 2]
         w <- del_edges[row, 3]
@@ -55,7 +55,7 @@
           geff[i, j] <<- 0
         }
       }
-      for (row in 1:nrow(gen_edges)) {
+      for (row in seq_len(nrow(gen_edges))) {
         i <- gen_edges[row, 1]
         j <- gen_edges[row, 2]
         w <- gen_edges[row, 3]

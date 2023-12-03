@@ -84,8 +84,8 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
     counts = merged, meta_cell = results$cell_meta,
     nbatch = nbatch, batch_effect_size = effect, randseed = 0
   )
-  results$counts_with_batches <- b$counts[1:ngene,]
-  results$atac_with_batches <- b$counts[-(1:ngene),]
+  results$counts_with_batches <- b$counts[seq(ngene),]
+  results$atac_with_batches <- b$counts[-(seq(ngene)),]
   results$cell_meta <- b$cell_meta
 }
 
@@ -102,20 +102,20 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
   ## add batch effects to observed counts
   # use different mean and same sd to create the multiplicative factor for different part (gene/region) in different batch
   ncells <- dim(counts)[2]; nparts <- dim(counts)[1]
-  batchIDs <- sample(1:nbatch, ncells, replace = TRUE)
+  batchIDs <- sample(seq(nbatch), ncells, replace = TRUE)
   meta_cell2 <- data.frame(batch = batchIDs, stringsAsFactors = FALSE)
   meta_cell <- cbind(meta_cell, meta_cell2)
 
   mean_matrix <- matrix(0, nparts, nbatch)
   part_mean <- rnorm(nparts, 0, 1)
-  temp <- lapply(1:nparts, function(ipart) {
+  temp <- lapply(seq(nparts), function(ipart) {
     return(runif(nbatch, min = part_mean[ipart] - batch_effect_size, max = part_mean[ipart] + batch_effect_size))
   })
   mean_matrix <- do.call(rbind, temp)
 
   batch_factor <- matrix(0, nparts, ncells)
-  for (ipart in 1:nparts) {
-    for (icell in 1:ncells) {
+  for (ipart in seq(nparts)) {
+    for (icell in seq(ncells)) {
       batch_factor[ipart, icell] <- rnorm(n = 1, mean = mean_matrix[ipart, batchIDs[icell]], sd = 0.01)
     }
   }
@@ -158,13 +158,13 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
   rate_2cap_gene <- rate_2cap[trans_idx]
   captured_vec <- expanded_vec
   captured_vec[runif(length(captured_vec)) > rate_2cap_gene] <- 0
-  if (sum(captured_vec[1:(length(captured_vec) - 1)]) < 1) { return(rep(0, ngenes)) }
+  if (sum(captured_vec[seq(length(captured_vec) - 1)]) < 1) { return(rep(0, ngenes)) }
   captured_vec[length(captured_vec)] <- 1
 
   inds[[2]] <- captured_vec > 0
   captured_vec <- captured_vec[inds[[2]]]
   trans_idx <- trans_idx[inds[[2]]]
-  amp_rate <- c((rate_2PCR + amp_bias[trans_idx[1:(length(trans_idx) - 1)]]), 1)
+  amp_rate <- c((rate_2PCR + amp_bias[trans_idx[seq(length(trans_idx) - 1)]]), 1)
   # pre-amplification:
   if (LinearAmp) {
     PCRed_vec <- captured_vec * LinearAmp_coef
@@ -188,7 +188,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
       temp_vec1 <- numeric(); temp_vec1[inds[[i]]] <- temp_vec;
       temp_vec <- temp_vec1; temp_vec[is.na(temp_vec)] <- 0
     }
-    recovered_vec <- temp_vec[1:(length(temp_vec) - 1)]
+    recovered_vec <- temp_vec[seq(length(temp_vec) - 1)]
     amp_mol_count <- numeric(ngenes);
     GI <- c(0, cumsum(true_counts_1cell));
     for (i in which(true_counts_1cell > 0)) {
@@ -214,9 +214,9 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
     return(read_count)
   } else if (protocol == "UMI") {
 
-    prob_vec <- sapply(gene_len[trans_idx[1:(length(trans_idx) - 1)]], .getProb)
+    prob_vec <- sapply(gene_len[trans_idx[seq(length(trans_idx) - 1)]], .getProb)
     # fragmentation:
-    frag_vec <- sapply(1:(length(PCRed_vec) - 1), function(igene)
+    frag_vec <- sapply(seq(length(PCRed_vec) - 1), function(igene)
     { return(rbinom(n = 1, size = PCRed_vec[igene], prob = prob_vec[igene])) })
 
     # another 10 rounds of amplification to the fragments (fragmentation bias gets amplified)
@@ -235,7 +235,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
       temp_vec1 <- numeric(); temp_vec1[inds[[i]]] <- temp_vec;
       temp_vec <- temp_vec1; temp_vec[is.na(temp_vec)] <- 0
     }
-    recovered_vec <- temp_vec[1:(length(temp_vec) - 1)]
+    recovered_vec <- temp_vec[seq(length(temp_vec) - 1)]
 
     UMI_counts <- numeric(ngenes);
     GI <- c(0, cumsum(true_counts_1cell));
@@ -292,7 +292,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
   rate_2cap_vec_gene <- .rnormTrunc(n = ngenes, mean = alpha_gene_mean, sd = alpha_gene_sd, a = 0, b = 3)
   rate_2cap <- rate_2cap_vec_gene %o% rate_2cap_vec
   depth_vec <- .rnormTrunc(n = ncells, mean = depth_mean, sd = depth_sd, a = depth_lb, b = Inf)
-  observed_counts <- lapply(1:ncells, function(icell) {
+  observed_counts <- lapply(seq(ncells), function(icell) {
     if (icell %% 50 == 0) cat(sprintf("%d..", icell))
     .amplifyOneCell(true_counts_1cell = true_counts[, icell], protocol = protocol,
                     rate_2cap = c(rate_2cap[, icell], rate_2cap_vec[icell]),
@@ -334,8 +334,8 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
   # set.seed(randseed)
   atacseq_data <- round(atacseq_data)
   atacseq_noisy <- atacseq_data
-  for (icell in 1:ncol(atacseq_data)) {
-    for (iregion in 1:nrow(atacseq_data)) {
+  for (icell in seq(ncol(atacseq_data))) {
+    for (iregion in seq(nrow(atacseq_data))) {
       if (atacseq_data[iregion, icell] > 0) {
         atacseq_noisy[iregion, icell] <- rbinom(n = 1, size = atacseq_data[iregion, icell], prob = observation_prob)
         atacseq_noisy[iregion, icell] <- max(atacseq_noisy[iregion, icell] + rnorm(1, mean = 0, sd = atacseq_noisy[iregion, icell] * sd_frac), 0)
@@ -354,7 +354,7 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
 #' @return a vector
 .calAmpBias <- function(lenslope, nbins, gene_len, amp_bias_limit) {
   ngenes <- length(gene_len)
-  len_bias_bin <- (-(1:nbins)) * lenslope
+  len_bias_bin <- (-(seq(nbins))) * lenslope
   len_bias_bin <- len_bias_bin - median(len_bias_bin)
   if (max(len_bias_bin) > amp_bias_limit[2]) {
     stop("The lenslope parameter is too large.")
@@ -369,7 +369,7 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
   binsize <- floor(ngenes / nbins)
   genes_in_bins <- vector("list", nbins)
   bin4genes <- numeric(ngenes)
-  for (ibin in 1:(nbins - 1)) {
+  for (ibin in seq(nbins - 1)) {
     genes_in_bins[[ibin]] <- order(gene_len)[((ibin - 1) * binsize + 1):(ibin * binsize)]
     bin4genes[genes_in_bins[[ibin]]] <- ibin
   }

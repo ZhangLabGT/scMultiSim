@@ -23,7 +23,7 @@
   # e.g. 2 regulators => c(0, 2, 4, 8)
   rg_idx_base <- 0:(max_nb - 1) * num_regulators
 
-  for (irow in 1:nrow(spatial_list)) {
+  for (irow in seq(nrow(spatial_list))) {
     tg <- spatial_list[irow, 1]
     rg <- which(regulators %in% spatial_list[irow, 2])
     weight <- spatial_list[irow, 3]
@@ -148,7 +148,7 @@
   path_abs_len <- sapply(seq_along(paths), function(i) {
     path <- paths[[i]]
     len <- 0
-    for (j in 1:(length(path) - 1)) {
+    for (j in seq(length(path) - 1)) {
       parent <- path[[j]]
       child <- path[[j + 1]]
       len <- len + edges[edges[, 2] == parent & edges[, 3] == child, 4]
@@ -176,7 +176,7 @@
 
   path_len <- sapply(paths, function(path) {
     len <- 0
-    for (j in 1:(length(path) - 1)) {
+    for (j in seq(length(path) - 1)) {
       parent <- path[j]
       child <- path[j + 1]
       idx <- atac_neutral[, 1] == parent & atac_neutral[, 2] == child
@@ -195,7 +195,7 @@
   mtx <- matrix(0, n, n)
   rownames(mtx) <- states
   colnames(mtx) <- states
-  for (i in 1:nrow(params)) {
+  for (i in seq(nrow(params))) {
     mtx[params[i, 1], params[i, 2]] <-
       mtx[params[i, 2], params[i, 1]] <- params[i, 3]
   }
@@ -229,30 +229,30 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
     } else {
       edges[, 4] %/% step.size + ceiling(edges[, 4] %% step.size)
     }
-    lapply(1:nrow(edges), \(i) {
+    lapply(seq(nrow(edges)), \(i) {
       branch <- as.character(edges[i, 2:3])
       if (n_steps[i] == 1) {
         paste(branch[1], branch[2], sep = "_")
       } else {
-        paste(branch[1], branch[2], 1:n_steps[i], sep = "_")
+        paste(branch[1], branch[2], seq(n_steps[i]), sep = "_")
       }
     }) %>% unlist()
   }
 
   n <- length(states)
-  cell_type_map <- setNames(1:n, states)
+  cell_type_map <- setNames(seq(n), states)
   res <- array(0, dim = c(n, n, total.lr))
 
   if (rand) {
     min_lr <- max(0, min(min(ctype.lr), total.lr - 2))
     max_lr <- min(max(ctype.lr), total.lr)
 
-    for (i in 1:n) {
-      for (j in 1:i) {
+    for (i in seq(n)) {
+      for (j in seq(i)) {
         if (i == j && n > 1) next
         # pick 4-6 LR pair
         n_pair <- sample(min_lr:max_lr, 1)
-        pairs <- sample(1:total.lr, n_pair)
+        pairs <- sample(seq(total.lr), n_pair)
         for (p in pairs) {
           res[j, i, p] <- res[i, j, p] <- 1
         }
@@ -291,7 +291,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
     done <- FALSE
     while (!done) {
       # randomly pick a cell
-      idx <- sample(1:(i - 1), 1)
+      idx <- sample(seq(i - 1), 1)
       # pick a neighbor
       for (j in sample(1:4, 4)) {
         nb <- locs[idx,] + nb_list[[j]]
@@ -356,7 +356,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
       done <- FALSE
       while (!done) {
         # sample center for the islands
-        centers <- outline[sample(1:nrow(outline), n_islands),]
+        centers <- outline[sample(seq(nrow(outline)), n_islands),]
         if (n_islands == 1) {
           break
         }
@@ -373,7 +373,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
           }
         }
       }
-      clutter_loc2 <- lapply(1:n_islands, function(i) {
+      clutter_loc2 <- lapply(seq(n_islands), function(i) {
         centers[rep(i, nrow(clutter_loc[[i]])),] + clutter_loc[[i]]
       })
       # for cells not in the islands
@@ -583,7 +583,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
 CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob = 0.8, .method = "enhanced", .method.param = NULL, .nb.radius = 1) {
   grid_size <- if (is.na(.grid.size)) ceiling(sqrt(ncells) * 3) else .grid.size
   grid <- matrix(NA, grid_size, grid_size)
-  loc_order <- sample(1:ncells)
+  loc_order <- sample(seq(ncells))
   grid <- .SpatialGrid$new(
     method = .method,
     grid_size = grid_size, ncells = ncells, grid = grid,
