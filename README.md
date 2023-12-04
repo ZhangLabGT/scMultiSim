@@ -49,6 +49,21 @@ The following figure briefly shows results from the same cell differential tree:
 
 ## Installation
 
+scMultiSim can be installed from BioConductor using the following command:
+
+```R
+if (!require("BiocManager")) {
+  install.packages("BiocManager")
+}
+BiocManager::install("scMultiSim")
+```
+
+Alternatively, you can install the latest version from GitHub:
+
+```R
+devtools::install_github("ZhangLabGT/scMultiSim")
+```
+
 #### Installing from the `main` branch
 
 scMultiSim is still under active development.
@@ -60,8 +75,6 @@ This branch is for the BioConductor submission, therefore, to ensure stability, 
 ```R
 devtools::install_github("ZhangLabGT/scMultiSim@main")
 ```
-
-(_or, install the `bioconductor` branch_ `devtools::install_github("ZhangLabGT/scMultiSim")`)
 
 ## Basic Workflow
 

@@ -593,7 +593,7 @@ sim_true_counts <- function(options) {
 
     # ========== de_cif ==========
     if (n_diff_cif > 0) {
-      pop_evf_mean_DE <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
+      pop_evf_mean_DE <- MASS::mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
       pop_evf_DE <- lapply(seq(npop), function(ipop) {
         evf <- sapply(seq(n_diff_cif), function(ievf) {
           rnorm(ncells_pop[ipop], pop_evf_mean_DE[ievf, ipop], cif_sigma)

@@ -23,7 +23,7 @@
 
 
 write_files <- function(res, dataset_name, dir = "sim", prefix = NULL, suffix = NULL) {
-  if (is(res, "scMultiSim_output")) {
+  if (methods:is(res, "scMultiSim_output")) {
     res <- res$res
   }
   
@@ -71,7 +71,7 @@ write_files <- function(res, dataset_name, dir = "sim", prefix = NULL, suffix = 
 
 .plt_tsne <- function(data, name, legend = "pop", tsne.seed = 0) {
   results <- get("results", envir = caller_env())
-  lst(name,
+  dplyr::lst(name,
       .type = "plot",
       plot = plot_tsne(
         log2(data + 1),

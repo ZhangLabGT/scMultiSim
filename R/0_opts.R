@@ -352,7 +352,7 @@
 #' @return the parameter value
 OP <- function(..., .name = 'options') {
   options <- get(.name, envir = caller_env())
-  k <- as.character(expr(...))
+  k <- as.character(dplyr::expr(...))
   if (!(k %in% names(options))) {
     stop(sprintf("Option %s is required but not presented.", k))
   }

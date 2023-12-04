@@ -330,7 +330,7 @@
     n_diff_cif <- N$diff.cif[i]
     need_diff_cif <- n_diff_cif > 0
     if (need_diff_cif) {
-      pop_diff_cif_mean <- mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
+      pop_diff_cif_mean <- MASS::mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
       dcif <- lapply(seq(npop), function(ipop) {
         evf <- sapply(seq(n_diff_cif), function(ievf) {
           rnorm(ncells_pop[ipop], pop_diff_cif_mean[ievf, ipop], cif_sigma)

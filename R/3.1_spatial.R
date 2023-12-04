@@ -308,22 +308,23 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
 }
 
 
-# The class for spatial grids
-# method: the method to generate the cell layout
-# grid_size: the width and height of the grid
-# ncells: the number of cells
-# grid: the grid matrix
-# locs: a list containing the locations of all cells
-# loc_order: deprecated, don't use; the order of the locations
-# cell_types: a map to save the cell type of each allocated cell
-# same_type_prob: the probability of a new cell placed next to a cell with the same type
-# max_nbs: the maximum number of neighbors for each cell
-# nb_map: a list containing the neighbors for each cell
-# nb_adj: adjacency matrix for neighbors
-# nb_radius: the radius of neighbors
-# final_types: the final cell types after the final time step
-# pre_allocated_pos: the pre-allocated positions for each cell, if any
-# method_param: additional parameters for the layout method
+#' The class for spatial grids
+#' @exportClass spatialGrid
+#' @field method the method to generate the cell layout
+#' @field grid_size the width and height of the grid
+#' @field ncells the number of cells
+#' @field grid the grid matrix
+#' @field locs a list containing the locations of all cells
+#' @field loc_order deprecated, don't use; the order of the locations
+#' @field cell_types a map to save the cell type of each allocated cell
+#' @field same_type_prob the probability of a new cell placed next to a cell with the same type
+#' @field max_nbs the maximum number of neighbors for each cell
+#' @field nb_map a list containing the neighbors for each cell
+#' @field nb_adj adjacency matrix for neighbors
+#' @field nb_radius the radius of neighbors
+#' @field final_types the final cell types after the final time step
+#' @field pre_allocated_pos the pre-allocated positions for each cell, if any
+#' @field method_param additional parameters for the layout method
 .SpatialGrid <- setRefClass("spatialGrid", fields = c(
   "method", "grid_size", "ncells", "grid", "locs", "loc_order",
   "cell_types",

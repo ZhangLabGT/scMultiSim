@@ -13,7 +13,7 @@
 #' @examples
 #' plot_phyla(Phyla5())
 plot_phyla <- function(tree) {
-  plotTree(tree, offset = -0.5)
+  phytools::plotTree(tree, offset = -0.5)
   tiplabels(cex = 2)
   nodelabels(cex = 2)
 }
@@ -21,7 +21,7 @@ plot_phyla <- function(tree) {
 
 # plot histogram
 .plotHist <- function(res, log = FALSE, title = NULL) {
-  if (is(res, "scMultiSim_output")) {
+  if (methods::is(res, "scMultiSim_output")) {
     res <- res$res
   }
 
@@ -32,9 +32,9 @@ plot_phyla <- function(tree) {
   }
 
   if (log) {
-    hist(counts, breaks = 100)
+    graphics::hist(counts, breaks = 100)
   } else {
-    hist(log(counts + 1), breaks = 100)
+    graphics::hist(log(counts + 1), breaks = 100)
   }
 }
 
@@ -94,9 +94,9 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
     } else {
       paste0(plot.name, '.pdf')
     }
-    pdf(save_path, 5, 5)
+    grDevices::pdf(save_path, 5, 5)
     print(p)
-    dev.off()
+    grDevices::dev.off()
     return(NULL)
   } else {
     p <- p + ggtitle(plot.name)
@@ -141,7 +141,7 @@ plot_grid <- function(results = .getResultsFromGlobal()) {
   num_regulators <- length(regulator_ID_list)
   num_GRN_genes <- num_target_genes + num_regulators
 
-  all_colors <- rainbow(num_regulators)
+  all_colors <- grDevices::rainbow(num_regulators)
   names(all_colors) <- as.character(regulator_ID_list)
   gene_module_color_vector <- character(num_genes)
   gene_module_color_vector[(num_GRN_genes + 1):num_genes] <- NA
@@ -195,17 +195,17 @@ plot_gene_module_cor_heatmap <- function(
 
   if (grn.genes.only) {
     if (save != FALSE) {
-      pdf(save_path, 5, 5)
+      grDevices::pdf(save_path, 5, 5)
     }
-    heatmap.2(count_correlation_matrix[seq(num_GRN_genes), seq(num_GRN_genes)], scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector[seq(num_GRN_genes)], ColSideColors = gene_module_color_vector[seq(num_GRN_genes)], col = bluered(75), main = '          GRN Gene Corr by Main Regulator')
+    gplots::heatmap.2(count_correlation_matrix[seq(num_GRN_genes), seq(num_GRN_genes)], scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector[seq(num_GRN_genes)], ColSideColors = gene_module_color_vector[seq(num_GRN_genes)], col = gplots::bluered(75), main = '          GRN Gene Corr by Main Regulator')
   } else {
     if (save != FALSE) {
-      pdf(save_path, 5, 5)
+      grDevices::pdf(save_path, 5, 5)
     }
-    heatmap.2(count_correlation_matrix, scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector, ColSideColors = gene_module_color_vector, col = bluered(75), main = '       Gene Corr by Main Regulator')
+    gplots::heatmap.2(count_correlation_matrix, scale = "none", Rowv = TRUE, Colv = TRUE, dendrogram = "both", distfun = dist, hclustfun = hclust, key = TRUE, trace = "none", cexRow = 1, cexCol = 1, RowSideColors = gene_module_color_vector, ColSideColors = gene_module_color_vector, col = gplots::bluered(75), main = '       Gene Corr by Main Regulator')
   }
   if (save != FALSE) {
-    dev.off()
+    grDevices::dev.off()
   }
   return()
 }
@@ -623,8 +623,8 @@ gene_corr_cci <- function(
     n_cells <- nrow(dist_mat)
     k <- ceiling(n_cells / 50)
 
-    vx_knn <- distMat.KernelKnn(dist_mat, TEST_indices = NULL, weights_function = 'gaussian', y = vx_raw, k = k, regression = TRUE)
-    vy_knn <- distMat.KernelKnn(dist_mat, TEST_indices = NULL, weights_function = 'gaussian', y = vy_raw, k = k, regression = TRUE)
+    vx_knn <- KernelKnn::distMat.KernelKnn(dist_mat, TEST_indices = NULL, weights_function = 'gaussian', y = vx_raw, k = k, regression = TRUE)
+    vy_knn <- KernelKnn::distMat.KernelKnn(dist_mat, TEST_indices = NULL, weights_function = 'gaussian', y = vy_raw, k = k, regression = TRUE)
 
     normalize_velocity(vx_knn, vy_knn) %->% c(
       vx_knn_normalized,

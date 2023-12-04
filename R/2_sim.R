@@ -141,7 +141,7 @@
   in_range <- rep(TRUE, N$gene)
   in_range[seq(hge_range - 1)] <- FALSE
 
-  gene_var <- colVars(s_base)
+  gene_var <- matrixStats::colVars(s_base)
   n_hge <- ceiling(N$gene * prop_hge)
   pool <- which(gene_var < max_var & in_range)
   if (length(pool) < n_hge) {
