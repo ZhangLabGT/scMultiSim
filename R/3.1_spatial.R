@@ -325,6 +325,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
 #' @field final_types the final cell types after the final time step
 #' @field pre_allocated_pos the pre-allocated positions for each cell, if any
 #' @field method_param additional parameters for the layout method
+#' @return a spatialGrid object
 .SpatialGrid <- setRefClass("spatialGrid", fields = c(
   "method", "grid_size", "ncells", "grid", "locs", "loc_order",
   "cell_types",

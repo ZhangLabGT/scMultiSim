@@ -5,6 +5,9 @@
 \alias{spatialGrid-class}
 \alias{.SpatialGrid}
 \title{The class for spatial grids}
+\value{
+a spatialGrid object
+}
 \description{
 The class for spatial grids
 }
