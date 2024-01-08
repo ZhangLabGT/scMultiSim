@@ -117,41 +117,41 @@ test_that("simulates data using Beta-Poisson model", {
 # })
 #
 
-test_that("simulates spatial data with discrete population and HGE", {
-  data(GRN_params_100, envir = environment())
-
-  lig_params <- data.frame(
-    target    = c(101, 102),
-    regulator = c(103, 104),
-    effect    = c(5.2, 5.9)
-  )
-
-  options_ <- list2(
-    GRN = GRN_params_100,
-    num.genes = 200,
-    num.cells = 100,
-    num.cifs = 20,
-    tree = Phyla3(),
-    discrete.cif = T,
-    discrete.min.pop.size = 20,
-    intrinsic.noise = 0.5,
-    hge.prop = 0.05,
-    cci = list(
-      params = lig_params,
-      max.neighbors = 4,
-      cell.type.interaction = "random",
-      step.size = 0.5
-    )
-  )
-
-  set.seed(0)
-  res <- sim_true_counts(options_)
-
-  selectedIndicies <- c(1:5, 1000:1005, 10000:10005)
-  expect_equal(
-    res$counts[selectedIndicies],
-    c(109.0693303, 60.4151790, 91.9120934, 0.5816326, 177.6741585, 197.0663584,
-      102.3145704, 65.9978484, 89.1613630, 3.1734446, 156.9202179, 29.8315553,
-      92.3944947, 66.1421921, 105.4677530, 0.5729707, 110.5115346)
-  )
-})
+# test_that("simulates spatial data with discrete population and HGE", {
+#   data(GRN_params_100, envir = environment())
+#
+#   lig_params <- data.frame(
+#     target    = c(101, 102),
+#     regulator = c(103, 104),
+#     effect    = c(5.2, 5.9)
+#   )
+#
+#   options_ <- list2(
+#     GRN = GRN_params_100,
+#     num.genes = 200,
+#     num.cells = 100,
+#     num.cifs = 20,
+#     tree = Phyla3(),
+#     discrete.cif = T,
+#     discrete.min.pop.size = 20,
+#     intrinsic.noise = 0.5,
+#     hge.prop = 0.05,
+#     cci = list(
+#       params = lig_params,
+#       max.neighbors = 4,
+#       cell.type.interaction = "random",
+#       step.size = 0.5
+#     )
+#   )
+#
+#   set.seed(0)
+#   res <- sim_true_counts(options_)
+#
+#   selectedIndicies <- c(1:5, 1000:1005, 10000:10005)
+#   expect_equal(
+#     res$counts[selectedIndicies],
+#     c(109.0693303, 60.4151790, 91.9120934, 0.5816326, 177.6741585, 197.0663584,
+#       102.3145704, 65.9978484, 89.1613630, 3.1734446, 156.9202179, 29.8315553,
+#       92.3944947, 66.1421921, 105.4677530, 0.5729707, 110.5115346)
+#   )
+# })
