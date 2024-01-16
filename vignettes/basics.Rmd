@@ -14,30 +14,6 @@ require("knitr")
 opts_chunk$set(fig.width=4, fig.height=3)
 ```
 
-The following chunk will install all the required packages.
-```{r install-packages, include=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
-(function() {
-  installed <- installed.packages()[,"Package"]
-  install <- function(list, fn) {
-    pkg <- setdiff(list, installed)
-    if (length(pkg)) fn(pkg, dependencies=TRUE)
-  }
-
-  r_packages <- c(
-    "devtools", "dplyr", "ggplot2", "Rtsne", "rlang",
-    "reshape", "ape", "phytools", "repr", "KernelKnn",
-    "gridExtra", "parallel", 'foreach', 'phytools', "doParallel",
-    "zeallot", "gtools", "gplots", "roxygen2", "usethis"
-  )
-  install(r_packages, install.packages)
-
-  if (requireNamespace("BiocManager", quietly = TRUE)) {
-    bioc_packages <- c('Biobase')
-    install(bioc_packages, BiocManager::install)
-  }
-})()
-```
-
 We define a utility function to modify a list.
 ```{r}
 list_modify <- function (curr_list, ...) {
@@ -132,8 +108,8 @@ set.seed(42)
 
 options <- list(
   GRN = GRN_params,
-  num.cells = 500,
-  num.cifs = 50,
+  num.cells = 300,
+  num.cifs = 20,
   cif.sigma = 1,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
@@ -202,8 +178,8 @@ set.seed(42)
 
 options <- list(
   GRN = GRN_params,
-  num.cells = 400,
-  num.cifs = 50,
+  num.cells = 300,
+  num.cifs = 20,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
   discrete.cif = TRUE
@@ -233,8 +209,8 @@ set.seed(42)
 
 options <- list(
   GRN = GRN_params,
-  num.cells = 400,
-  num.cifs = 50,
+  num.cells = 300,
+  num.cifs = 20,
   tree = Phyla5(),
   diff.cif.fraction = 0.8
 )
@@ -265,8 +241,8 @@ set.seed(42)
 
 options <- list(
   GRN = GRN_params,
-  num.cells = 400,
-  num.cifs = 50,
+  num.cells = 300,
+  num.cifs = 20,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
   cif.sigma = 0.5
@@ -301,8 +277,8 @@ set.seed(42)
 
 options <- list(
   GRN = GRN_params,
-  num.cells = 400,
-  num.cifs = 50,
+  num.cells = 300,
+  num.cifs = 20,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
   intrinsic.noise = 1
@@ -334,8 +310,8 @@ set.seed(42)
 
 options_ <- list(
   GRN = GRN_params,
-  num.cells = 400,
-  num.cifs = 50,
+  num.cells = 300,
+  num.cifs = 20,
   tree = Phyla1(),
   diff.cif.fraction = 0.8,
   do.velocity = FALSE,

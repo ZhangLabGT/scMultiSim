@@ -14,29 +14,6 @@ require("knitr")
 opts_chunk$set(fig.width=4, fig.height=3)
 ```
 
-The following chunk will install all the required packages.
-```{r install-packages, include=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
-(function() {
-  installed <- installed.packages()[,"Package"]
-  install <- function(list, fn) {
-    pkg <- setdiff(list, installed)
-    if (length(pkg)) fn(pkg, dependencies=TRUE)
-  }
-
-  r_packages <- c(
-    "devtools", "dplyr", "ggplot2", "Rtsne", "rlang",
-    "reshape", "ape", "phytools", "repr", "KernelKnn",
-    "gridExtra", "parallel", 'foreach', 'phytools', "doParallel",
-    "zeallot", "gtools", "gplots", "roxygen2", "usethis"
-  )
-  install(r_packages, install.packages)
-
-  if (requireNamespace("BiocManager", quietly = TRUE)) {
-    bioc_packages <- c('Biobase')
-    install(bioc_packages, BiocManager::install)
-  }
-})()
-```
 
 # Simulating Spatial Cell-Cell Interactions
 
@@ -80,15 +57,15 @@ set.seed(42)
 options_ <- list(
   GRN = GRN_params_100,
   num.genes = 120,
-  num.cells = 100,
-  num.cifs = 50,
+  num.cells = 80,
+  num.cifs = 20,
   cif.sigma = 0.2,
   tree = Phyla3(),
   intrinsic.noise = 0.5,
   cci = list(
     params = lig_params,
     max.neighbors = 4,
-    grid.size = 15,
+    grid.size = 13,
     cell.type.interaction = "random",
     step.size = 0.5
   )
