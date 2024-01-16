@@ -178,7 +178,7 @@ set.seed(42)
 
 options <- list(
   GRN = GRN_params,
-  num.cells = 300,
+  num.cells = 400,
   num.cifs = 20,
   tree = Phyla5(),
   diff.cif.fraction = 0.8,
