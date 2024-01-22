@@ -4,12 +4,14 @@
 \alias{SampleDen}
 \title{sample from smoothed density function}
 \usage{
-SampleDen(nsample, den_fun)
+SampleDen(nsample, den_fun, reduce.mem = FALSE)
 }
 \arguments{
 \item{nsample}{number of samples needed}
 
 \item{den_fun}{density function estimated from density() from R default}
+
+\item{reduce.mem}{use alternative implementation to reduce memory usage}
 }
 \value{
 a vector of samples

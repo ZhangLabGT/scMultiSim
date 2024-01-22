@@ -51,6 +51,11 @@
     .should.be.int.between(1, 4096),
     "Set to larger than 1 to use multithreading for some part of the simulation."
   ),
+  speed.up                                                               = list(
+    .default(FALSE),
+    .should.be.logical,
+    "Use experimental speed and memory optimization."
+  ),
   # ========================== Gene ============================================
   "GENE",
   GRN                                                                    = list(

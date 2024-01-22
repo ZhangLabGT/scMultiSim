@@ -72,6 +72,10 @@ sim_true_counts <- function(options) {
   sim <- new.env()
   attr(sim, "name") <- "scMultiSim Session"
   sim$start_time <- Sys.time()
+  sim$speedup <- OP("speed.up")
+  if (sim$speedup) {
+    message("Experimental speed optimization enabled.")
+  }
 
   # seeds
   set.seed(OP("rand.seed"))

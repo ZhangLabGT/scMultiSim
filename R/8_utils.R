@@ -41,17 +41,35 @@
 #' sample from smoothed density function
 #' @param nsample number of samples needed
 #' @param den_fun density function estimated from density() from R default
+#' @param reduce.mem use alternative implementation to reduce memory usage
 #' @return a vector of samples
-SampleDen <- function(nsample, den_fun) {
+SampleDen <- function(nsample, den_fun, reduce.mem = FALSE) {
   probs <- den_fun$y / sum(den_fun$y)
   bw <- den_fun$x[2] - den_fun$x[1]
-  bin_id <- sample(size = nsample, x = c(1:length(probs)), prob = probs, replace = TRUE)
-  counts <- table(bin_id)
-  sampled_bins <- as.numeric(names(counts))
-  samples <- lapply(c(1:length(counts)), function(j) {
-    runif(n = counts[j], min = (den_fun$x[sampled_bins[j]] - 0.5 * bw), max = (den_fun$x[sampled_bins[j]] + 0.5 * bw))
-  })
-  samples <- do.call(c, samples)
+  probs_seq = seq_along(probs)
+  mins <- den_fun$x[probs_seq] - 0.5 * bw
+  maxs <- den_fun$x[probs_seq] + 0.5 * bw
+  
+  if (reduce.mem) {
+    counts <- rmultinom(n = 1, size = nsample, prob = probs)
+    total_samples <- sum(counts)
+    samples <- runif(total_samples) *
+      rep(maxs - mins, times = counts) +
+      rep(mins, times = counts)
+  } else {
+    bin_id <- sample(size = nsample, x = probs_seq, prob = probs, replace = TRUE)
+    counts <- tabulate(bin_id, nbins = length(probs))
+    total_samples <- sum(counts)
+    samples <- numeric(length = total_samples)
+    cum_counts <- c(0, cumsum(counts))
+    for (j in 1:length(counts)) {
+      if (counts[j] > 0) {
+        samples[(cum_counts[j] + 1):cum_counts[j + 1]] <- 
+          runif(counts[j], min = mins[j], max = maxs[j])
+      }
+    }
+  }
+  
   return(samples)
 }
 

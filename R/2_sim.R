@@ -1,4 +1,5 @@
 .matchParamsDen <- function(X, sim, i) {
+  keep_prev_val <- if (sim$speedup) 10000 else 20000
   N <- sim$N
   if (is.null(sim$param_sample)) {
     sim$param_sample <- list(numeric(), numeric(), numeric())
@@ -11,8 +12,10 @@
   values_X <- as.vector(X)
   values <- c(values_X, prev_values)
   ranks <- rank(values)
-  sorted <- sort(SampleDen(nsample = max(ranks), den_fun = N$params_den[[i]]))
-  if (length(prev_values) < 20000) {
+  sorted <- sort(SampleDen(nsample = max(ranks),
+                           den_fun = N$params_den[[i]],
+                           reduce.mem = sim$speedup))
+  if (length(prev_values) < keep_prev_val) {
     sim$param_sample[[i]] <- values
   }
   # return
@@ -104,7 +107,9 @@
   atac_eff <- OP("atac.effect")
   atac_val <- ATAC_kon[, cols]
   ranks <- atac_eff * rank(ATAC_kon[, cols]) + (1 - atac_eff) * rank(params$kon[, cols])
-  sorted <- sort(SampleDen(nsample = max(ranks), den_fun = N$params_den[[1]]))
+  sorted <- sort(SampleDen(nsample = max(ranks),
+                           den_fun = N$params_den[[1]],
+                           reduce.mem = sim$speedup))
   params$kon[, cols] <- sorted[ranks]
 
   # ==== adjust parameters with the bimod parameter
@@ -185,7 +190,8 @@
   n_zero <- floor(n_val * OP("atac.p_zero"))
   n_nonzero <- n_val - n_zero
   # sample values
-  sampled <- sort(SampleDen(n_nonzero, den_fun = dens_nonzero))
+  sampled <- sort(SampleDen(n_nonzero, den_fun = dens_nonzero,
+                            reduce.mem = sim$speedup))
   # create the result
   res <- numeric(n_val)
   # replace the non-zero indices in the original value with the corresponding
@@ -372,14 +378,23 @@
         sim$counts_s[i_cell,] <- result$counts_s[, cycles]
       } else {
         # Beta-poisson model
-        sim$counts_s[i_cell,] <- vapply(1:N$gene, function(i_gene) {
-          .betaPoisson(
-            kon = sim$params$kon[i_gene, i_cell],
-            koff = sim$params$koff[i_gene, i_cell],
-            s = s_cell[i_gene],
-            intr.noise = intr_noise
-          )
-        }, double(1))
+        sim$counts_s[i_cell,] <- if (sim$speedup) {
+            .betaPoisson.vec(
+              kon = sim$params$kon[, i_cell],
+              koff = sim$params$koff[, i_cell],
+              s = s_cell,
+              intr.noise = intr_noise
+            )
+        } else {
+          vapply(1:N$gene, function(i_gene) {
+            .betaPoisson(
+              kon = sim$params$kon[i_gene, i_cell],
+              koff = sim$params$koff[i_gene, i_cell],
+              s = s_cell[i_gene],
+              intr.noise = intr_noise
+            )
+          }, double(1))
+        }
       }
 
       if (is_discrete && done > 0) {
@@ -631,14 +646,23 @@
         sim$hge_scale %>% as.vector()
 
       # Beta-poisson model
-      counts <- vapply(1:N$gene, function(i_gene) {
-        .betaPoisson(
-          kon = sim$params_spatial[[icell]]$kon[i_gene, layer],
-          koff = sim$params_spatial[[icell]]$koff[i_gene, layer],
-          s = s_cell[i_gene],
+      counts <- if (sim$speedup) {
+        .betaPoisson.vec(
+          kon = sim$params_spatial[[icell]]$kon[, layer],
+          koff = sim$params_spatial[[icell]]$koff[, layer],
+          s = s_cell,
           intr.noise = intr_noise
         )
-      }, double(1))
+      } else {
+        vapply(1:N$gene, function(i_gene) {
+          .betaPoisson(
+            kon = sim$params_spatial[[icell]]$kon[i_gene, layer],
+            koff = sim$params_spatial[[icell]]$koff[i_gene, layer],
+            s = s_cell[i_gene],
+            intr.noise = intr_noise
+          )
+        }, double(1))
+      }
 
       counts_regu <- if (no_grn) {
         counts[sim$sp_regulators]
@@ -816,6 +840,17 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
   # floor(intr_noise * x + (1 - intr_noise) * x_mean)
   intr.noise * x + (1 - intr.noise) * xMean
 }
+
+
+# Vectorized .betaPoisson
+.betaPoisson.vec <- function (kon, koff, s, intr.noise) {
+  yMean <- kon / (kon + koff)
+  xMean <- yMean * s
+  y <- rbeta(length(kon), kon, koff)
+  x <- rpois(length(kon), y * s)
+  intr.noise * x + (1 - intr.noise) * xMean
+}
+
 
 .atacIntrNoise <- function(atac) {
   m <- mean(atac)
