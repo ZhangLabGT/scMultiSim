@@ -93,7 +93,9 @@ sim_true_counts <- function(options) {
   }
 
   GRN <- .normalizeGRNParams(.grn_params)
-  GRN$name_map <- sim$gene_name_map
+  if (is.list(GRN)) {
+    GRN$name_map <- sim$gene_name_map
+  }
   N <- .getNumbers(GRN, options)
   if (!is.null(GRN)) {
     GRN$geff <- .geneEffectsByRegulator(seed[1], GRN, N)
@@ -182,7 +184,9 @@ sim_true_counts <- function(options) {
   if (is.null(sim$region_to_gene)) {
     sim$region_to_gene <- .regionToGeneMatrix(seed[5], N, options)
     # TG = TR * RG
-    sim$region_to_tf <- .regionToTFMatrix(GRN, sim$region_to_gene)
+    if (!is.null(GRN)) {
+      sim$region_to_tf <- .regionToTFMatrix(GRN, sim$region_to_gene)
+    }
   }
 
   # 1.4 ATAC-seq & CIF (for spatial)
