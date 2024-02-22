@@ -63,7 +63,7 @@
   nb_radius <- params$radius %||% 1
 
   grid_ex_params <- NULL
-  if (layout %in% c("basic", "enhanced", "enhanced2", "layers")) {
+  if (is.function(layout) || layout %in% c("basic", "enhanced", "enhanced2", "layers")) {
     grid_method <- layout
   } else if (startsWith(layout, "islands")) {
     grid_method <- "islands"
@@ -84,7 +84,7 @@
   if (nb_radius < 1) {
     stop("radius must be >= 1")
   }
-  if (!(layout %in% c("layers", "islands")) && nb_radius > 1) {
+  if (!is.function(layout) && !(layout %in% c("layers", "islands")) && nb_radius > 1) {
     stop("radius > 1 only supports layers and islands layout")
   }
   
@@ -264,7 +264,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
   )
 }
 
-.gen_clutter <- function(n_cell, grid_size = NA, center = c(0, 0),
+gen_clutter <- function(n_cell, grid_size = NA, center = c(0, 0),
                          existing_loc = NULL, existing_grid = NULL) {
   .in_grid <- function(x, y) {
     if (is.null(existing_grid)) {
@@ -312,13 +312,17 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
   # the probability of a new cell placed next to a cell with the same type
   "same_type_prob",
   "max_nbs", "nb_map", "nb_adj", "nb_radius",
-  "final_types", "pre_allocated_pos", "method_param"
+  "final_types", "pre_allocated_pos", "method_param",
+  "pre_alloc_func"
 ))
 
 .SpatialGrid$methods(
   set_final_ctypes = function(ctypes) {
     final_types <<- ctypes
-    if (method == "islands") {
+
+    if (method == "function") {
+      pre_allocated_pos <<- pre_alloc_func(grid_size, ctypes)
+    } else if (method == "islands") {
       #========================================================================
       pre_allocated_pos <<- data.frame(x = rep(0, ncells), y = rep(0, ncells))
       ct_other <- setdiff(unique(final_types), method_param)
@@ -328,13 +332,13 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
       for (ct in method_param) {
         ncells_ct <- sum(final_types == ct)
         if (ncells_ct == 0) stop(sprintf("cell type %d is not found in cell types", ct))
-        clutter <- .gen_clutter(ncells_ct)
+        clutter <- gen_clutter(ncells_ct)
         clutter_loc <- c(clutter_loc, list(clutter))
         ncells_island <- ncells_island + ncells_ct
       }
       # generate the outline
       grid_center <- c(round(grid_size / 2), round(grid_size / 2))
-      outline <- .gen_clutter(ncells_island * 2, grid_size, grid_center)
+      outline <- gen_clutter(ncells_island * 2, grid_size, grid_center)
       # put the islands in the outline
       done <- FALSE
       while (!done) {
@@ -410,11 +414,11 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
     } else if (method == "layers") {
       #========================================================================
       grid_center <- c(round(grid_size / 2), round(grid_size / 2))
-      all_locs <- .gen_clutter(ncells, grid_size, grid_center)
+      all_locs <- gen_clutter(ncells, grid_size, grid_center)
       # center is bottom-left
       left_ones <- which(all_locs[,1] == min(all_locs[,1]))
       new_center <- all_locs[left_ones[which.min(all_locs[left_ones, 2])],]
-      new_locs <- .gen_clutter(ncells, grid_size, new_center, existing_grid = all_locs)
+      new_locs <- gen_clutter(ncells, grid_size, new_center, existing_grid = all_locs)
       rand_cells <- sample(seq_len(ncells), round(ncells * 0.05))
       new_locs[rand_cells,] <- new_locs[sample(rand_cells, length(rand_cells), replace = FALSE),]
       pre_allocated_pos <<- new_locs[order(final_types),]
@@ -515,7 +519,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
       } else {
         find_nearby(icell, cell.type)
       }
-    } else if (method == "islands" || method == "layers") {
+    } else if (method == "islands" || method == "layers" || method == "function") {
       pre_allocated_pos[icell,]
     } else {
       loc <- loc_order[icell]
@@ -567,8 +571,15 @@ CreateSpatialGrid <- function(ncells, max_nbs, .grid.size = NA, .same.type.prob 
   grid_size <- if (is.na(.grid.size)) ceiling(sqrt(ncells) * 3) else .grid.size
   grid <- matrix(NA, grid_size, grid_size)
   loc_order <- sample(1:ncells)
+  if (is.function(.method)) {
+    alloc_func <- .method
+    .method <- "function"
+  } else {
+    alloc_func <- NULL
+  }
   grid <- .SpatialGrid$new(
     method = .method,
+    pre_alloc_func = alloc_func,
     grid_size = grid_size, ncells = ncells, grid = grid,
     same_type_prob = .same.type.prob,
     locs = list(), loc_order = loc_order,
