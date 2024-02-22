@@ -190,7 +190,11 @@
   n_zero <- floor(n_val * OP("atac.p_zero"))
   n_nonzero <- n_val - n_zero
   # sample values
-  sampled <- sort(SampleDen(n_nonzero, den_fun = dens_nonzero,
+  dens <- OP("atac.density")
+  if (class(dens) != "density") {
+    dens <- dens_nonzero
+  }
+  sampled <- sort(SampleDen(n_nonzero, den_fun = dens,
                             reduce.mem = sim$speedup))
   # create the result
   res <- numeric(n_val)

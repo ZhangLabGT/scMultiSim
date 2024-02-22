@@ -280,3 +280,8 @@ sim_example_200_cells_spatial <- function() {
   )
   sim_true_counts(options)
 }
+
+atac_dens_nonzero <- function(data) {
+  x <- data[data > 0]
+  density(x = log2(x + 1), adjust = 1, n = 999)
+}

@@ -206,6 +206,14 @@
     NULL,
     "The proportion of 0s we see in the ATAC-seq data."
   ),
+  atac.density                                                           = list(
+    .default(NA),
+    list(
+      \(x) class(x) == "density",
+      "the value should be a density object."
+    ),
+    "Density of the non-zero ATAC-seq values. Use atac_dens_nonzero() to generate."
+  ),
   riv.mean                                                               = list(
     .default(0),
     .should.be.num.between(0, Inf),
