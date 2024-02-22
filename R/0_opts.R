@@ -277,6 +277,20 @@
     .should.be.num.between(0, Inf),
     "For velocity mode, a factor multiplied by the expected time to transition from kon to koff and back to form the the length of a cycle."
   ),
+  mod.cif.giv = list(
+    .default(NA),
+    list(
+      is.function, "should be a function"
+    ),
+    "modify CIF"
+  ),
+  mod.params = list(
+    .default(NA),
+    list(
+      is.function, "should be a function"
+    ),
+    "modify CIF"
+  ),
   # ========================== Spatial =========================================
   "SIMULATION - SPATIAL",
   cci                                                                    = list(

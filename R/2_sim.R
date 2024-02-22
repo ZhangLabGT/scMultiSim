@@ -79,6 +79,13 @@
   N <- sim$N
   options <- sim$options
 
+  if (is.function(sim$mod_cif)) {
+    res <- sim$mod_cif(1, CIF[[1]], GIV[[1]], sim$CIF_all$meta)
+    CIF[[1]] <- res[[1]]; GIV[[1]] <- res[[2]]
+    res <- sim$mod_cif(2, CIF[[2]], GIV[[2]], sim$CIF_all$meta)
+    CIF[[2]] <- res[[1]]; GIV[[2]] <- res[[2]]
+  }
+
   params <- setNames(
     lapply(1:2, \(i) .matchParamsDen(CIF[[i]] %*% t(GIV[[i]]), sim, i)),
     c("kon", "koff")
@@ -251,7 +258,13 @@
   }
 
   cell_ct <- 1
-  s_base <- CIF_all$cif$s %*% t(GIV_s)
+
+  cif__ <- CIF_all$cif$s
+  giv__ <- GIV_s
+  if (is.function(sim$mod_cif)) {
+    c(cif__, giv__) %<-% sim$mod_cif(3, cif__, giv__, CIF_all$meta)
+  }
+  s_base <- cif__ %*% t(giv__)
 
   oldseed <- .Random.seed
   .prepareHGE(seed, sim, s_base)

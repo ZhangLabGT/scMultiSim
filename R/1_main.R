@@ -154,6 +154,9 @@ sim_true_counts <- function(options) {
     N$regulator
   }
 
+  sim$mod_cif <- OP("mod.cif.giv")
+  sim$mod_params <- OP("mod.params")
+
   # ==== simulation ============================================================
 
   sim$GRN <- GRN
