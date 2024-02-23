@@ -56,6 +56,11 @@
     .should.be.logical,
     "Use experimental speed and memory optimization."
   ),
+  optimize.mem                                                           = list(
+    .default(FALSE),
+    .should.be.logical,
+    "Use experimental memory optimization."
+  ),
   # ========================== Gene ============================================
   "GENE",
   GRN                                                                    = list(

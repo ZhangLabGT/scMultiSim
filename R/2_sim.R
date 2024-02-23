@@ -1,25 +1,39 @@
 .matchParamsDen <- function(X, sim, i) {
-  keep_prev_val <- if (sim$speedup) 10000 else 20000
+  keep_prev_val <- 20000
   N <- sim$N
   if (is.null(sim$param_sample)) {
     sim$param_sample <- list(numeric(), numeric(), numeric())
   }
+  is_vec <- !is(X, "DelayedArray")
   # stopifnot(all(dim(X) == c(N$cell, N$gene)))
-  ncol_X <- if (is.vector(X)) length(X) else ncol(X)
+  ncol_X <- if (is_vec) length(X) else ncol(X)
+  nrow_X <- if (is_vec) NULL else nrow(X)
   stopifnot(ncol_X == N$gene)
 
-  prev_values <- sim$param_sample[[i]]
-  values_X <- as.vector(X)
-  values <- c(values_X, prev_values)
-  ranks <- rank(values)
-  sorted <- sort(SampleDen(nsample = max(ranks),
-                           den_fun = N$params_den[[i]],
-                           reduce.mem = sim$speedup))
-  if (length(prev_values) < keep_prev_val) {
-    sim$param_sample[[i]] <- values
+  # length(X) <= 1e8 ||
+  if (is_vec || !sim$optim_mem) {
+    prev_values <- sim$param_sample[[i]]
+    values_X <- as.vector(X)
+    values <- c(values_X, prev_values)
+    ranks <- rank(values)
+    sorted <- sort(SampleDen(nsample = max(ranks),
+                             den_fun = N$params_den[[i]],
+                             reduce.mem = sim$speedup))
+    if (length(prev_values) < keep_prev_val) {
+      sim$param_sample[[i]] <- values[1:min(length(values), keep_prev_val)]
+    }
+    # return
+    matrix(data = sorted[ranks[seq_along(values_X)]], ncol = ncol_X)
+  } else {
+    gc()
+    ff_apply(X, function(chunk, vp) {
+      ranks <- rank(chunk)
+      sorted <- sort(SampleDen(nsample = max(ranks),
+                               den_fun = N$params_den[[i]],
+                               reduce.mem = sim$speedup))
+      matrix(sorted[ranks], nrow = nrow(chunk), ncol = ncol(chunk))
+    })
   }
-  # return
-  matrix(data = sorted[ranks[seq_along(values_X)]], ncol = ncol_X)
 }
 
 
@@ -86,47 +100,102 @@
     CIF[[2]] <- res[[1]]; GIV[[2]] <- res[[2]]
   }
 
-  params <- setNames(
-    lapply(1:2, \(i) .matchParamsDen(CIF[[i]] %*% t(GIV[[i]]), sim, i)),
-    c("kon", "koff")
-  )
+  message("...params")
+  params <- if (sim$optim_mem) {
+    lapply(1:2, \(i) .matchParamsDen(ff_matmul(CIF[[i]], GIV[[i]], t = TRUE), sim, i))
+  } else {
+    lapply(1:2, \(i) .matchParamsDen(CIF[[i]] %*% t(GIV[[i]]), sim, i))
+  }
+  params <- setNames(params, c("kon", "koff"))
 
   # ==== kon: controlled by atac data
 
+  message("...kon")
   # normalize columns of region_to_gene
-  s <- colSums(Region_to_gene)
-  cols <- s > 1
-  Region_to_gene[, cols] <- Region_to_gene[, cols] / s[cols]
+  if (is(Region_to_gene, "HDF5Array")) {
+    s <- DelayedMatrixStats::colSums2(Region_to_gene)
+    cols <- which(s > 1)
+    assert_that(all(s[cols] == 2))
+    idx_list <- get_batches(length(cols), nrow(Region_to_gene))
+    h5 <- Region_to_gene@seed@filepath
+    name <- Region_to_gene@seed@name
+    for (idx in idx_list) {
+      col_idx <- cols[idx]
+      data_chunk <- h5read(h5, name, index = list(NULL, col_idx))
+      h5write(data_chunk / 2, h5, name, index = list(NULL, col_idx))
+    }
+  } else {
+    s <- colSums(Region_to_gene)
+    cols <- s > 1
+    assert_that(all(s[cols] == 2))
+    Region_to_gene[, cols] <- Region_to_gene[, cols] / 2
+  }
   # atac for kon
-  ATAC_kon <- ATAC_data %*% Region_to_gene
+  # ATAC_kon <- ATAC_data %*% Region_to_gene
+  ATAC_kon <- ff_matmul(ATAC_data, Region_to_gene)
 
   # fill the zero values in ATAC_kon to preserve
   # the orders. Scale the values to less than the minimum value in ATAC_kon.
   # only consider the genes affected by regions
+  message("...kon: match")
   cols <- s > 0
-  atac_holes <- ATAC_kon[, cols] == 0
-  stopifnot(length(atac_holes) > 0)
-  filler <- params$kon[, cols][atac_holes]
-  filler <- filler - min(filler)
-  filler <- filler * (min(ATAC_kon[ATAC_kon > 0]) / 2 / max(filler))
-  ATAC_kon[, cols][atac_holes] <- filler
-  # match density
-  atac_eff <- OP("atac.effect")
-  atac_val <- ATAC_kon[, cols]
-  ranks <- atac_eff * rank(ATAC_kon[, cols]) + (1 - atac_eff) * rank(params$kon[, cols])
-  sorted <- sort(SampleDen(nsample = max(ranks),
-                           den_fun = N$params_den[[1]],
-                           reduce.mem = sim$speedup))
-  params$kon[, cols] <- sorted[ranks]
+  if (sim$optim_mem) {
+    ATAC_sel <- writeHDF5Array(ATAC_kon[, cols])
+    kon_sel <- writeHDF5Array(params$kon[, cols])
+    atac_holes <- writeHDF5Array(ATAC_sel == 0)
+    stopifnot(sum(atac_holes) > 0)
+    filler <- kon_sel * atac_holes
+    filler <- filler - min_nonzero(filler)
+    filler <- filler * (min_nonzero(ATAC_kon) / 2 / max(filler))
+    ATAC_sel <- update_hdf5array(ATAC_sel, filler, mask = atac_holes)
+    # match density
+    atac_eff <- OP("atac.effect")
+    sorted_ranks <- ff_apply(ATAC_sel, function (chunk, vp) {
+      kon_chunk <- read_block(kon_sel, vp)
+      ranks <- atac_eff * rank(chunk) + (1 - atac_eff) * rank(kon_chunk)
+      sorted <- sort(SampleDen(nsample = max(ranks),
+                               den_fun = N$params_den[[1]],
+                               reduce.mem = sim$speedup))
+      matrix(sorted[ranks], nrow = nrow(chunk), ncol = ncol(chunk))
+    })
+    # write back kon[, cols]
+    message("write back kon")
+    new_kon <- matrix(nrow = nrow(params$kon), ncol = ncol(params$kon))
+    new_kon[, cols] <- as.matrix(sorted_ranks)
+    rm(sorted_ranks)
+    new_kon[, !cols] <- as.matrix(params$kon[, !cols])
+    h5write(new_kon, params$kon@seed@filepath, params$kon@seed@name)
+  }
+  else {
+    atac_holes <- ATAC_kon[, cols] == 0
+    stopifnot(length(atac_holes) > 0)
+    filler <- params$kon[, cols][atac_holes]
+    filler <- filler - min(filler)
+    filler <- filler * (min(ATAC_kon[ATAC_kon > 0]) / 2 / max(filler))
+    ATAC_kon[, cols][atac_holes] <- filler
+    # match density
+    atac_eff <- OP("atac.effect")
+    ranks <- atac_eff * rank(ATAC_kon[, cols]) + (1 - atac_eff) * rank(params$kon[, cols])
+    sorted <- sort(SampleDen(nsample = max(ranks),
+                             den_fun = N$params_den[[1]],
+                             reduce.mem = sim$speedup))
+    params$kon[, cols] <- sorted[ranks]
+  }
 
   # ==== adjust parameters with the bimod parameter
+  message("bimod")
   bimod_percentage <- 0.5
   bimod_genes <- sample(1:N$gene, ceiling(N$gene * bimod_percentage))
   bimod_vec <- numeric(N$gene)
   bimod_vec[bimod_genes] <- OP("bimod")
   # decrease kon & koff in some genes to increase the bimod effect
-  params$kon <- apply(t(params$kon), 2, \(x) 10^(x - bimod_vec))
-  params$koff <- apply(t(params$koff), 2, \(x) 10^(x - bimod_vec))
+  if (sim$optim_mem) {
+    params$kon <- ff_rowApply(params$kon, \(x) 10^(x - bimod_vec))
+    params$koff <- ff_rowApply(params$koff, \(x) 10^(x - bimod_vec))
+  } else {
+    params$kon <- apply(params$kon, 1, \(x) 10^(x - bimod_vec))
+    params$koff <- apply(params$koff, 1, \(x) 10^(x - bimod_vec))
+  }
 
   if (is.list(sim$params_mpl_fn)) {
     params$kon <- sim$params_mpl_fn$kon(params$kon)
@@ -186,35 +255,59 @@
 .atacSeq <- function(seed, sim) {
   data(dens_nonzero, envir = environment())
   set.seed(seed)
+  message("Simulating ATAC data")
 
   options <- sim$options
 
   # (cell x cif) x (cif x region) => cell x region
-  params_region <- sim$CIF_atac %*% t(sim$RIV)
-  n_val <- length(params_region)
-  # get the rank of all values as an 1d vector (by column)
-  ranks <- rank(as.vector(params_region))
-  n_zero <- floor(n_val * OP("atac.p_zero"))
-  n_nonzero <- n_val - n_zero
+  # params_region <- sim$CIF_atac %*% sim$RIV
+  params_region <- ff_matmul(sim$CIF_atac, sim$RIV)
+
   # sample values
   dens <- OP("atac.density")
   if (class(dens) != "density") {
     dens <- dens_nonzero
   }
-  sampled <- sort(SampleDen(n_nonzero, den_fun = dens,
-                            reduce.mem = sim$speedup))
-  # create the result
-  res <- numeric(n_val)
-  # replace the non-zero indices in the original value with the corresponding
-  # sampled values
-  # `ranks[ranks > n_zero]` creates a map: orig_idx -> rank
-  res[which(ranks > n_zero)] <- 2^(sampled[ranks[ranks > n_zero] - n_zero]) - 1
 
-  sim$atac_data <- matrix(res, nrow = nrow(params_region))
+  # if optimize.mem is disabled
+  if (!sim$optim_mem) {
+    n_val <- length(params_region)
+    n_zero <- floor(n_val * OP("atac.p_zero"))
+    n_nonzero <- n_val - n_zero
+    # get the rank of all values as an 1d vector (by column)
+    ranks <- rank(as.vector(params_region))
+    sampled <- sort(SampleDen(n_nonzero, den_fun = dens,
+                              reduce.mem = sim$speedup))
+    # create the result
+    res <- numeric(n_val)
+    # replace the non-zero indices in the original value with the corresponding
+    # sampled values
+    # `ranks[ranks > n_zero]` creates a map: orig_idx -> rank
+    res[which(ranks > n_zero)] <- 2^(sampled[ranks[ranks > n_zero] - n_zero]) - 1
+  
+    sim$atac_data <- matrix(res, nrow = nrow(params_region))
+  }
+  # need chunks 
+  else {
+    gc()
+    sim$atac_data <- ff_apply(params_region, function(chunk_data, vp) {
+      n_val <- length(chunk_data)
+      n_zero <- floor(n_val * OP("atac.p_zero"))
+      n_nonzero <- n_val - n_zero
+      # do the same job
+      ranks <- rank(chunk_data)
+      sampled <- sort(SampleDen(n_nonzero, den_fun = dens,
+                                reduce.mem = sim$speedup))
+      res <- numeric(n_val)
+      res[ranks > n_zero] <- 2^(sampled[ranks[ranks > n_zero] - n_zero]) - 1
+      matrix(res, nrow = nrow(chunk_data))
+    })
+  }
 }
 
 
 .rnaSeq <- function(seed, sim) {
+  message("Simulating RNA data")
   set.seed(seed)
 
   CIF_all <- sim$CIF_all
@@ -231,8 +324,14 @@
   neutral <- CIF_all$neutral[1:N$cell,]
 
   # results
-  sim$counts_s <- matrix(nrow = N$cell, ncol = N$gene)
-  sim$params$s <- matrix(nrow = nrow(sim$params$kon), ncol = ncol(sim$params$kon))
+  if (sim$optim_mem) {
+    sim$counts_s <- create_hdf5array(nrow = N$cell, ncol = N$gene, chunkdim = c(100, N$gene))
+    sim$params$s <- create_hdf5array(nrow = nrow(sim$params$kon), ncol = ncol(sim$params$kon),
+                                     chunkdim = c(nrow(sim$params$kon), 100))
+  } else {
+    sim$counts_s <- matrix(nrow = N$cell, ncol = N$gene)
+    sim$params$s <- matrix(nrow = nrow(sim$params$kon), ncol = ncol(sim$params$kon))
+  }
 
   if (do_velo) {
     sim$root_state <- sample(c(1, 2), size = N$gene, replace = TRUE)
@@ -264,7 +363,11 @@
   if (is.function(sim$mod_cif)) {
     c(cif__, giv__) %<-% sim$mod_cif(3, cif__, giv__, CIF_all$meta)
   }
-  s_base <- cif__ %*% t(giv__)
+  if (sim$optim_mem) {
+    s_base <- ff_matmul(cif__, giv__, t = TRUE)
+  } else {
+    s_base <- cif__ %*% t(giv__)
+  }
 
   oldseed <- .Random.seed
   .prepareHGE(seed, sim, s_base)
@@ -276,7 +379,29 @@
     } else {
       rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma"))
     }
-    .rnaSimEdge(sim, 1:N$cell, s_base, curr_cif, NULL)
+  {
+    batches <- list()
+    n_8 <- floor(N$cell / 8)
+    for (i_b in 1:8) {
+      curr_cif <- if (no_grn) {
+        NULL
+      } else {
+        rnorm(GRN$n_reg, OP("cif.center"), OP("cif.sigma"))
+      }
+      batches[[i_b]] <- list(
+        ((i_b - 1) * n_8 + 1):(if (i_b == 8) N$cell else i_b * n_8),
+        curr_cif
+      )
+    }
+    sim$bpid <- ipcid()
+    bplapply(batches,
+             \(item, sim, s_base) {
+               .rnaSimEdge(sim, item[[1]], s_base, item[[2]], NULL)
+             },
+             sim, s_base,
+             BPPARAM = BiocParallel::MulticoreParam(workers = 8))
+  }
+    # .rnaSimEdge(sim, 1:N$cell, s_base, curr_cif, NULL)
     return()
   }
 
@@ -308,6 +433,8 @@
 
 
 .rnaSimEdge <- function(sim, cell_idx, s_base, curr_cif, last_parent) {
+  message("RNA Edge", min(cell_idx), ":", max(cell_idx))
+
   N <- sim$N
   options <- sim$options
   no_grn <- is.null(curr_cif)
@@ -330,24 +457,38 @@
     F
   }
 
+  temp_counts <- matrix(nrow = 1000, ncol = N$gene)
+  temp_s <- matrix(nrow = nrow(sim$params$kon), ncol = 1000)
+  temp_idx <- 0
+  temp_sbase <- as.matrix(s_base[cell_idx[1:min(1000, length(cell_idx))],])
+  temp_kon <- as.matrix(sim$params$kon[, cell_idx[1:min(1000, length(cell_idx))]])
+  temp_koff <- as.matrix(sim$params$koff[, cell_idx[1:min(1000, length(cell_idx))]])
+
   # each cell
   for (n in seq_along(cell_idx)) {
+    time_ <- Sys.time()
     i_cell <- cell_idx[n]
+    if (i_cell %% 100 == 0) {
+      message("cell ", i_cell, ":", format(Sys.time() - time_))
+      time_ <- Sys.time()
+    }
 
     if (sim$is_dyn_grn) {
       sim$dyngrn_ver_map[i_cell] <- sim$GRN$update()
     }
 
+    temp_idx <- temp_idx + 1
     done <- 2
     while (done > 0) {
       if (done == 1) {
         done <- 0
       }
 
+      s_base_i <- temp_sbase[temp_idx,]
       s_cell <- if (no_grn) {
-        .matchParamsDen(s_base[i_cell,], sim, 3)
+        .matchParamsDen(s_base_i, sim, 3)
       } else {
-        .matchParamsDen(s_base[i_cell,] + curr_cif %*% t(sim$GRN$geff) * grn_effect, sim, 3)
+        .matchParamsDen(s_base_i + curr_cif %*% t(sim$GRN$geff) * grn_effect, sim, 3)
       }
 
       # scale s
@@ -358,7 +499,8 @@
       }
       s_cell <- (10^s_cell) *
         scale_s_cell *
-        sim$hge_scale %>% as.vector()
+        sim$hge_scale
+      s_cell <- as.vector(s_cell)
 
       if (is.list(sim$params_mpl_fn$s)) {
         s_cell <- sim$params_mpl_fn$s(s_cell)
@@ -395,23 +537,33 @@
         sim$counts_s[i_cell,] <- result$counts_s[, cycles]
       } else {
         # Beta-poisson model
-        sim$counts_s[i_cell,] <- if (sim$speedup) {
-            .betaPoisson.vec(
-              kon = sim$params$kon[, i_cell],
-              koff = sim$params$koff[, i_cell],
-              s = s_cell,
-              intr.noise = intr_noise
-            )
+        counts_cell <- if (sim$speedup) {
+          .betaPoisson.vec(
+            kon = temp_kon[, temp_idx],
+            koff = temp_koff[, temp_idx],
+            s = s_cell,
+            intr.noise = intr_noise
+          )
         } else {
+          kon_cell <- sim$params$kon[, i_cell]
+          koff_cell <- sim$params$koff[, i_cell]
           vapply(1:N$gene, function(i_gene) {
             .betaPoisson(
-              kon = sim$params$kon[i_gene, i_cell],
-              koff = sim$params$koff[i_gene, i_cell],
+              kon = kon_cell[i_gene],
+              koff = koff_cell[i_gene],
               s = s_cell[i_gene],
               intr.noise = intr_noise
             )
           }, double(1))
         }
+        # update_delayed(sim, "counts_s", counts_cell, i_cell)
+        if (sim$optim_mem) {
+          temp_counts[temp_idx,] <- counts_cell
+        } else {
+          sim$counts_s[i_cell,] <- counts_cell
+        }
+
+        counts_cell
       }
 
       if (is_discrete && done > 0) {
@@ -427,7 +579,37 @@
       counts_regu <- counts[sim$GRN$regulators]
       sim$cif_regu[i_cell,] <- curr_cif <- counts_regu / (counts_regu + mean(counts))
     }
-    sim$params$s[, i_cell] <- s_cell
+    if (sim$optim_mem) {
+      # h5write(s_cell, sim$params$s@seed@filepath, sim$params$s@seed@name,
+      #         index = list(NULL, i_cell))
+      temp_s[, temp_idx] <- s_cell
+    } else {
+      sim$params$s[, i_cell] <- s_cell
+    }
+
+    if (temp_idx %% 1000 == 0 || temp_idx == length(cell_idx)) {
+      time_ <- Sys.time()
+      message("write ", cell_idx[(n - temp_idx + 1)], ":", cell_idx[n])
+      range_ <- cell_idx[(n - temp_idx + 1):n]
+      next_range_ <- cell_idx[min(n + 1, ncells):min(n + 1000, ncells)]
+      if (temp_idx > 0 && sim$optim_mem) {
+        if (!is.null(sim$bpid)) {
+          BiocParallel::ipclock(sim$bpid)
+        }
+        h5write(temp_counts[1:temp_idx,], sim$counts_s@seed@filepath, sim$counts_s@seed@name,
+                index = list(range_, NULL))
+        h5write(temp_s[,1:temp_idx], sim$params$s@seed@filepath, sim$params$s@seed@name,
+                index = list(NULL, range_))
+        if (!is.null(sim$bpid)) {
+          BiocParallel::ipcunlock(sim$bpid)
+        }
+        temp_idx <- 0
+        temp_sbase <- as.matrix(s_base[next_range_,])
+        temp_kon <- as.matrix(sim$params$kon[, next_range_])
+        temp_koff <- as.matrix(sim$params$koff[, next_range_])
+      }
+      message("write: ", format(Sys.time() - time_))
+    }
   }
 
   stopifnot(n == ncells)
@@ -870,8 +1052,17 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
 
 
 .atacIntrNoise <- function(atac) {
-  m <- mean(atac)
-  res <- atac + rnorm(length(atac), 0, m * 1.5)
-  res[res < 0] <- 0
-  res
+  if (is(atac, "DelayedArray")) {
+    m <- mean(atac)
+    ff_apply(atac, function (chunk, vp) {
+      res <- chunk + rnorm(length(chunk), 0, m * 1.5)
+      res[res < 0] <- 0
+      matrix(res, nrow = nrow(chunk))
+    })
+  } else {
+    m <- mean(atac)
+    res <- atac + rnorm(length(atac), 0, m * 1.5)
+    res[res < 0] <- 0
+    res
+  }
 }

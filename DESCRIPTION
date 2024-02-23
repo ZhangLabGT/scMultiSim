@@ -44,6 +44,7 @@ Imports:
     zeallot,
     crayon,
     assertthat,
+    HDF5Array,
     igraph,
     methods,
     grDevices,

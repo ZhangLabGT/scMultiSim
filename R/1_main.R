@@ -76,6 +76,11 @@ sim_true_counts <- function(options) {
   if (sim$speedup) {
     message("Experimental speed optimization enabled.")
   }
+  sim$optim_mem <- OP("optimize.mem")
+  if (sim$optim_mem) {
+    message("Experimental memory optimization enabled.")
+  }
+  DelayedArray::setAutoRealizationBackend("HDF5Array")
 
   # seeds
   set.seed(OP("rand.seed"))
@@ -169,28 +174,32 @@ sim_true_counts <- function(options) {
 
   # 1.1 CIF
   if (!sim$do_spatial) {
-    sim$CIF_all <- if (is_discrete) {
+    sim$CIF_all <- (if (is_discrete) {
       sim$curr_cif <- "rna"
       .discreteCIF(seed[2], N, options, sim)
     } else {
       .continuousCIF(seed[2], N, options)
-    }
+    }) %>% to_ff_cif(sim$optim_mem)
   }
 
   # 1.2 RIV
-  sim$RIV <- .regionIdentityVectors(seed[3], GRN, N, options)
+  sim$RIV <- .regionIdentityVectors(seed[3], GRN, N, options) %>%
+    t() %>% to_ff(sim$optim_mem)
 
   # 1.3 GIV
-  sim$GIV <- .geneIdentifyVectors(seed[4], sim, options)
+  sim$GIV <- .geneIdentifyVectors(seed[4], sim, options) %>%
+    to_ff_iv(sim$optim_mem)
 
   # region-to-gene matrix
   if (is.null(sim$region_to_gene)) {
-    sim$region_to_gene <- .regionToGeneMatrix(seed[5], N, options)
+    sim$region_to_gene <- .regionToGeneMatrix(seed[5], N, options) %>%
+      to_ff(sim$optim_mem, chunkdim = c(N$region, 100))
     # TG = TR * RG
-    if (!is.null(GRN)) {
+    if (!is.null(GRN) && !sim$optim_mem) {
       sim$region_to_tf <- .regionToTFMatrix(GRN, sim$region_to_gene)
     }
   }
+  print("1.3")
 
   # 1.4 ATAC-seq & CIF (for spatial)
   if (sim$do_spatial) {
@@ -207,7 +216,7 @@ sim_true_counts <- function(options) {
       sim$path_len <- .getPathLen(atac_neutral, paths, N)
     }
     # atac
-    sim$CIF_atac <- CIF_atac_all$cif$s
+    sim$CIF_atac <- CIF_atac_all$cif$s %>% to_ff(sim$optim_mem)
     .atacSeq(seed[7], sim)
     # CIF
     cat("Get CIF...")
@@ -232,14 +241,16 @@ sim_true_counts <- function(options) {
     sim$CIF_spatial <- cif
   } else {
     # ==== not spatial ====
-    sim$CIF_atac <- if (is_discrete) {
+    CIF_atac <- if (is_discrete) {
       sim$curr_cif <- "atac"
       .discreteCIF(seed[6], N, options, sim)$cif$s
     } else {
       .continuousCIF(seed[6], N, options)$cif$s
     }
+    sim$CIF_atac <- CIF_atac %>% to_ff(sim$optim_mem)
     .atacSeq(seed[7], sim)
   }
+  print("1.4")
 
   # 1.5 Params
   if (sim$do_spatial) {
@@ -252,6 +263,7 @@ sim_true_counts <- function(options) {
   } else {
     sim$params <- .getParams(seed[8], sim)
   }
+  print_size(sim)
 
   # check result
   if (is_debug) {
@@ -266,6 +278,7 @@ sim_true_counts <- function(options) {
   }
 
   .print_time(sim)
+  print_size(sim)
 
   # Results
   .getResult(sim, do_velocity, is_debug)

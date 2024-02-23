@@ -21,4 +21,5 @@
 #' @importFrom dplyr %>%
 #' @importFrom zeallot %<-% %->%
 #' @importFrom matrixStats colVars
+#' @importFrom ff as.ff
 NULL
