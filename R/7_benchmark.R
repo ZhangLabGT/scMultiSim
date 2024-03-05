@@ -621,7 +621,7 @@ gene_corr_cci <- function(
     dist_obj <- dist(current_counts_s_tsne)
     dist_mat <- as.matrix(dist_obj)
     n_cells <- nrow(dist_mat)
-    k <- ceiling(n_cells / 50)
+    k <- max(2, ceiling(n_cells / 50))
 
     vx_knn <- KernelKnn::distMat.KernelKnn(dist_mat, TEST_indices = NULL, weights_function = 'gaussian', y = vx_raw, k = k, regression = TRUE)
     vy_knn <- KernelKnn::distMat.KernelKnn(dist_mat, TEST_indices = NULL, weights_function = 'gaussian', y = vy_raw, k = k, regression = TRUE)
