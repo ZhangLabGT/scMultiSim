@@ -32,3 +32,7 @@ A 3D matrix of (n_cell_type, n_cell_type, n_lr). The value at (i, j, k) is 1 if 
 \description{
 See the return value if you want to specify the cell-type level ground truth.
 }
+\examples{
+cci_cell_type_params(Phyla3(), 100, 4:6, 0.5, TRUE, FALSE)
+
+}

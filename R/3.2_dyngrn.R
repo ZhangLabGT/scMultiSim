@@ -12,7 +12,7 @@
   restructure = function() {
     # set all deleted edges' weights to 0
     if (!is.null(del_edges)) {
-      geff[del_edges[,1:2]] <<- 0
+      geff[del_edges[,seq_len(2)]] <<- 0
     }
     grn_region <- geff[involved_genes,]
     edges <- which(grn_region != 0, arr.ind = TRUE)
@@ -31,8 +31,8 @@
     del_edges <<- cbind(dedges, geff[dedges])
     gedges <- nonedges[sample(nrow(nonedges), N_changed_edges),]
     gen_edges <<- cbind(gedges, rnorm(N_changed_edges, mean = weight_mean, sd = weight_sd))
-    stopifnot(all(geff[del_edges[,1:2]] != 0))
-    stopifnot(all(geff[gen_edges[,1:2]] == 0))
+    stopifnot(all(geff[del_edges[,seq_len(2)]] != 0))
+    stopifnot(all(geff[gen_edges[,seq_len(2)]] == 0))
   }
 )
 

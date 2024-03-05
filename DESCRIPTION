@@ -25,9 +25,9 @@ Description:
     and to assist in experimental design of wet-lab experiments.
 License: Artistic-2.0
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Depends:
-    R (>= 3.5.0)
+    R (>= 4.3.0)
 Imports:
     foreach,
     rlang,
@@ -55,8 +55,9 @@ Suggests:
     rmarkdown,
     roxygen2,
     testthat (>= 3.0.0)
-biocViews: SingleCell, Transcriptomics
+biocViews: SingleCell, Transcriptomics, GeneExpression, Sequencing, ExperimentalDesign
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 BugReports: https://github.com/ZhangLabGT/scMultiSim/issues
+URL: https://github.com/ZhangLabGT/scMultiSim
 Config/testthat/edition: 3

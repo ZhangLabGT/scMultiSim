@@ -62,7 +62,7 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
                       continuous = FALSE, labels2 = NULL, lim = NULL) {
   # set.seed(rand.seed)
 
-  data_tsne = Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
+  data_tsne <- Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
   if (!continuous) {
     labels <- factor(labels)
   }
@@ -119,7 +119,7 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
 #' plot_grid(results)
 plot_grid <- function(results = .getResultsFromGlobal()) {
   grid <- results$grid
-  locs <- sapply(grid$locs, \(a) a)
+  locs <- vapply(grid$locs, \(a) a, numeric(2))
   data <- data.frame(
     label = "cell",
     x = locs[1,],
@@ -233,7 +233,7 @@ plot_cell_loc <- function(
   if (is.null(.cell.pop))
     .cell.pop <- results$cell_meta$pop
 
-  locs <- sapply(results$grid$locs, \(a) a)
+  locs <- vapply(results$grid$locs, \(a) a, numeric(2))
   data <- data.frame(
     x = locs[1,],
     y = locs[2,],
@@ -439,7 +439,7 @@ gene_corr_cci <- function(
     regulators <- unique(sp_params[, 2])
     cor_list <- lapply(regulators, function(rg) {
       # each target; return cor(rg, all_tg)
-      sapply(seq(ngenes), function(tg) {
+      vapply(seq(ngenes), function(tg) {
         rg_list <- numeric()
         tg_list <- numeric()
         # each pair
@@ -453,7 +453,7 @@ gene_corr_cci <- function(
           }
         }
         cor(rg_list, tg_list)
-      })
+      }, numeric(1))
     })
 
     tg_ordered <- lapply(regulators, function(rg) {
@@ -667,6 +667,9 @@ gene_corr_cci <- function(
 #' @param ... Other parameters passed to ggplot
 #' @return The plot
 #' @export
+#' @examples
+#' results <- sim_example(ncells = 10, velocity = TRUE)
+#' plot_rna_velocity(results)
 plot_rna_velocity <- function(
   results = .getResultsFromGlobal(),
   velocity = results$velocity,
@@ -765,11 +768,11 @@ plot_rna_velocity <- function(
   y1 <- current_counts_s_tsne[, 2]
 
 
-  corr <- sapply(seq_along(x1), function(i)
+  corr <- vapply(seq_along(x1), function(i)
     .cosineSim(
       c(vx_knn_normalized[i], vy_knn_normalized[i]),
       c(vx_knn_normalized2[i], vy_knn_normalized2[i])
-    ))
+    ), numeric(1))
   plot_data <- data.frame(
     x = x1, y = y1,
     corr = corr
@@ -787,7 +790,7 @@ plot_rna_velocity <- function(
     depth_min <- min(depth_in_pop)
     depth_max <- max(depth_in_pop)
     span <- (depth_max - depth_min) / 20
-    for (i in 1:20) {
+    for (i in seq_len(20)) {
       lo <- depth_min + (i - 1) * span
       hi <- depth_min + i * span
       cls_label[pop == p & depth >= lo & depth <= hi] <- paste0(p, "_", i)
@@ -814,7 +817,11 @@ plot_rna_velocity <- function(
     )
   }
 
-  sapply(seq(nrow(gt_velo_mean)), function(i) .cosineSim(gt_velo_mean[i,], res_velo_mean[i,]))
+  vapply(
+    seq(nrow(gt_velo_mean)),
+    function(i) .cosineSim(gt_velo_mean[i,], res_velo_mean[i,]),
+    numeric(1)
+  )
   # paired_simil(gt_velo_mean, res_velo_mean, margin = 1, method = "cosine")
 }
 
@@ -826,7 +833,7 @@ plot_rna_velocity <- function(
   count_correlation_matrix <- cor(t(counts), method = "spearman")
   if (any(is.na(count_correlation_matrix))) {
     print('some genes have no counts across all cells; the correlation with these genes will be set to 0 in the heatmap')
-    count_correlation_matrix = replace(count_correlation_matrix, which(is.na(count_correlation_matrix)), 0)
+    count_correlation_matrix <- replace(count_correlation_matrix, which(is.na(count_correlation_matrix)), 0)
   }
   return(count_correlation_matrix)
 }
@@ -838,14 +845,16 @@ plot_rna_velocity <- function(
 #' @return the correlation value
 #' @export
 #' @examples
+#' \donttest{
 #' results <- sim_example(ncells = 10)
 #' Get_1region_ATAC_correlation(results$counts, results$atacseq_data, results$region_to_gene)
+#' }
 Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
   target_genes <- which(colSums(region2gene > 0) == 1)
   ATAC_1region_correlation <- numeric()
   for (gene_index in target_genes) {
     region <- which(region2gene[, gene_index] > 0)
-    correlation <- suppressWarnings(cor(atacseq_data[region,], counts[gene_index,], method = "spearman"))
+    correlation <- cor(atacseq_data[region,], counts[gene_index,], method = "spearman")
     ATAC_1region_correlation <- c(ATAC_1region_correlation, correlation)
   }
   ATAC_1region_correlation <- mean(ATAC_1region_correlation, na.rm = TRUE)
@@ -864,7 +873,9 @@ Get_1region_ATAC_correlation <- function(counts, atacseq_data, region2gene) {
 Get_ATAC_correlation <- function(counts, atacseq_data, num_genes) {
   ATAC_correlation <- numeric()
   for (gene_index in seq(num_genes)) {
-    ATAC_correlation <- c(ATAC_correlation, suppressWarnings(cor(atacseq_data[gene_index,], counts[gene_index,], method = "spearman")))
+    ATAC_correlation <- c(
+      ATAC_correlation,
+      cor(atacseq_data[gene_index,], counts[gene_index,], method = "spearman"))
   }
   ATAC_correlation <- mean(ATAC_correlation, na.rm = TRUE)
   return(ATAC_correlation)

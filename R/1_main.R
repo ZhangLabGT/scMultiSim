@@ -75,7 +75,7 @@ sim_true_counts <- function(options) {
 
   # seeds
   # set.seed(OP("rand.seed"))
-  seed <- sample(1:1e5, size = 9)
+  seed <- sample(seq_len(1e5), size = 9)
 
   # get the GRN info and the numbers
   sim$do_spatial <- is.list(spatial_params)
@@ -423,7 +423,7 @@ sim_true_counts <- function(options) {
     return(NULL)
   }
 
-  if (nrow(unique(params[, 1:2])) != nrow(params)) {
+  if (nrow(unique(params[, seq_len(2)])) != nrow(params)) {
     stop("Duplicated edges found in the GRN.")
   }
 
@@ -504,8 +504,8 @@ sim_true_counts <- function(options) {
 
   # data: param density
   data(param_realdata.zeisel.imputed, envir = environment())
-  match_params[, 1:3] <- log(base = 10, match_params[, 1:3])
-  N$params_den <- lapply(1:3, function(i) {
+  match_params[, seq_len(3)] <- log(base = 10, match_params[, seq_len(3)])
+  N$params_den <- lapply(seq_len(3), function(i) {
     density(match_params[, i], n = 2000)
   })
 
@@ -561,16 +561,16 @@ sim_true_counts <- function(options) {
   vcv_evf_mean <- vcv.phylo(phyla, corr = TRUE)
   param_name <- c("kon", "koff", "s")
 
-  evfs <- lapply(1:3, function(iparam) {
+  evfs <- lapply(seq_len(3), function(iparam) {
     n_nd_cif <- N$nd.cif[iparam]
     n_diff_cif <- N$diff.cif[iparam]
 
     # ========== nd_cif ==========
     if (n_nd_cif > 0) {
       pop_evf_nonDE <- lapply(seq(npop), function(ipop) {
-        evf <- sapply(seq(n_nd_cif), function(ievf) {
+        evf <- vapply(seq(n_nd_cif), function(ievf) {
           rnorm(ncells_pop[ipop], cif_center, cif_sigma)
-        })
+        }, double(ncells_pop[ipop]))
         return(evf)
       })
       pop_evf_nonDE <- do.call(rbind, pop_evf_nonDE)
@@ -581,10 +581,10 @@ sim_true_counts <- function(options) {
 
     # if (iparam == 3) {
     #   if (sim$curr_cif == "rna") {
-    #     pop_evf_nonDE[, 1:10] <- ex_rna_cif
+    #     pop_evf_nonDE[, seq_len(10)] <- ex_rna_cif
     #     message("rna cif")
     #   } else if (sim$curr_cif == "atac") {
-    #     pop_evf_nonDE[, 1:10] <- ex_atac_cif
+    #     pop_evf_nonDE[, seq_len(10)] <- ex_atac_cif
     #     message("atac_cif")
     #   } else {
     #     stop("? cif")
@@ -595,9 +595,9 @@ sim_true_counts <- function(options) {
     if (n_diff_cif > 0) {
       pop_evf_mean_DE <- MASS::mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
       pop_evf_DE <- lapply(seq(npop), function(ipop) {
-        evf <- sapply(seq(n_diff_cif), function(ievf) {
+        evf <- vapply(seq(n_diff_cif), function(ievf) {
           rnorm(ncells_pop[ipop], pop_evf_mean_DE[ievf, ipop], cif_sigma)
-        })
+        }, double(ncells_pop[ipop]))
         return(evf)
       })
       pop_evf_DE <- do.call(rbind, pop_evf_DE)
@@ -681,7 +681,7 @@ sim_true_counts <- function(options) {
     c(cif, list(neutral = neutral))
   } else {
     meta <- data.frame(
-      pop = apply(neutral[, 1:2], 1, \(X) paste0(X, collapse = "_")),
+      pop = apply(neutral[, seq_len(2)], 1, \(X) paste0(X, collapse = "_")),
       depth = neutral[, 3]
     )[seq(ncells), ]
 
@@ -735,7 +735,7 @@ sim_true_counts <- function(options) {
 
   # calculate initial gene effect values with original Symsim approach
   param_names <- c("kon", "koff", "s")
-  giv <- lapply(1:3, function(i) {
+  giv <- lapply(seq_len(3), function(i) {
     .identityVectors(N$gene, N$cif,
       prob = OP("giv.prob"),
       mean = OP("giv.mean"),

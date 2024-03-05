@@ -39,7 +39,7 @@
 
     if (i_cell %% 100 == 0) cat(sprintf("%i..", i_cell))
     # for each cell, generate n_layer x n_cif
-    cif_cell <- lapply(1:3, function(i) {
+    cif_cell <- lapply(seq_len(3), function(i) {
       param_name <- param_names[i]
       n_nd_cif <- N_nd.cif[i]
       n_diff_cif <- N_diff.cif[i]
@@ -66,8 +66,8 @@
             impulse <- Impulsecifpertip(phyla, edges, root, tips, internal, neutral, tip[cif_i], cif_sigma, cif_center, step_size)
             # if (.plot) { PlotRoot2Leave(impulse, tips, edges, root, internal) }
             re_order <- match(
-              apply(neutral[, 1:3], 1, \(X) paste0(X, collapse = "_")),
-              apply(impulse[, 1:3], 1, \(X) paste0(X, collapse = "_"))
+              apply(neutral[, seq_len(3)], 1, \(X) paste0(X, collapse = "_")),
+              apply(impulse[, seq_len(3)], 1, \(X) paste0(X, collapse = "_"))
             )
             return(impulse[re_order,])
           })
@@ -107,7 +107,7 @@
   cat("Done\n")
   # gather diff_cif
   diff_cif_all <- list(NULL, NULL, NULL)
-  for (i in 1:3) {
+  for (i in seq_len(3)) {
     d_cif <- cif[[1]][[i]]$diff
     if (!is.logical(d_cif)) {
       # if this param has diff cif, move it to diff_cif_all and replace it as FALSE
@@ -156,7 +156,7 @@
     idx <- layer_idx_by_path[[i_path]]
     n <- neutral[idx,]
     data.frame(
-      pop = apply(n[, 1:2], 1, \(X) paste0(X, collapse = "_")),
+      pop = apply(n[, seq_len(2)], 1, \(X) paste0(X, collapse = "_")),
       depth = n[, 3],
       cell.type = cell_types[idx]
     )
@@ -186,7 +186,7 @@
 ) {
   param_names <- c("kon", "koff", "s")
 
-  cif <- lapply(1:3, function(i) {
+  cif <- lapply(seq_len(3), function(i) {
     param_name <- param_names[i]
     n_nd_cif <- N_nd.cif[i]
     n_diff_cif <- N_diff.cif[i]
@@ -208,8 +208,8 @@
           impulse <- Impulsecifpertip(phyla, edges, root, tips, internal, neutral, tip[cif_i], cif_sigma, cif_center, step_size)
           # if (.plot) { PlotRoot2Leave(impulse, tips, edges, root, internal) }
           re_order <- match(
-            apply(neutral[, 1:3], 1, \(X) paste0(X, collapse = "_")),
-            apply(impulse[, 1:3], 1, \(X) paste0(X, collapse = "_"))
+            apply(neutral[, seq_len(3)], 1, \(X) paste0(X, collapse = "_")),
+            apply(impulse[, seq_len(3)], 1, \(X) paste0(X, collapse = "_"))
           )
           return(impulse[re_order,])
         })
@@ -297,7 +297,7 @@
     n_layers <- N$cell
 
     # for each cell, generate n_layer x n_cif
-    cif_cell <- lapply(1:3, function(i) {
+    cif_cell <- lapply(seq_len(3), function(i) {
       param_name <- param_names[i]
       n_nd_cif <- N$nd.cif[i]
       n_diff_cif <- N$diff.cif[i]
@@ -326,15 +326,15 @@
 
 
   # diff cif
-  diff_cif <- lapply(1:3, function(i) {
+  diff_cif <- lapply(seq_len(3), function(i) {
     n_diff_cif <- N$diff.cif[i]
     need_diff_cif <- n_diff_cif > 0
     if (need_diff_cif) {
       pop_diff_cif_mean <- MASS::mvrnorm(n_diff_cif, rep(cif_center, npop), vcv_evf_mean)
       dcif <- lapply(seq(npop), function(ipop) {
-        evf <- sapply(seq(n_diff_cif), function(ievf) {
+        evf <- vapply(seq(n_diff_cif), function(ievf) {
           rnorm(ncells_pop[ipop], pop_diff_cif_mean[ievf, ipop], cif_sigma)
-        })
+        }, numeric(ncells_pop[ipop]))
         return(evf)
       }) %>% do.call(rbind, .)
       colnames(dcif) <- rep("DE", n_diff_cif)
@@ -372,7 +372,8 @@ SampleEdge <- function(edge, depth, anc_state, edges, ncells, step_size, t_sampl
     t_sample <- sort(c(0, t_sample - depth))
   }
   t_interval <- diff(t_sample)
-  x_change <- sapply(t_interval, function(sig) { rnorm(1, 0, sqrt(sig)) })
+  x_change <- vapply(t_interval, function(sig) rnorm(1, 0, sqrt(sig)),
+                     numeric(1))
   x_sample <- cumsum(x_change)
   col_time <- depth + t_sample[-1]
   col_state <- anc_state + x_sample

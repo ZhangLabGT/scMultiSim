@@ -274,7 +274,7 @@
 # utils: check if the option is valid
 .check_opt <- function(options) {
   opt_list <- .opt_list()
-  opt_list <- opt_list[!sapply(opt_list, is.character)]
+  opt_list <- opt_list[!vapply(opt_list, is.character, logical(1))]
   for (name in names(opt_list)) {
     c(val, checker, desc) %<-% opt_list[[name]]
     required <- val[[1]]

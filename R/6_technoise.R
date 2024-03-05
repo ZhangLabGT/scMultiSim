@@ -202,33 +202,48 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
       frag_vec[igene] <- sum(sample(len2nfrag[as.character(gene_len[igene]),],
                                     amp_mol_count[igene], replace = TRUE)) }
     # another 8 rounds of amplification to the fragments (fragmentation bias gets amplified)
-    for (iPCR in 1:2) {
-      frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n = 1, x, prob = rate_2PCR))
+    for (iPCR in seq_len(2)) {
+      frag_vec <- frag_vec + vapply(
+        frag_vec,\(x) rbinom(n = 1, x, prob = rate_2PCR), numeric(1))
     }
     for (iPCR in 3:nPCR2) {
       frag_vec <- frag_vec + round(frag_vec * rate_2PCR)
     }
-    SEQ_efficiency = N_molecules_SEQ / sum(frag_vec)
-    if (SEQ_efficiency >= 1) { read_count <- frag_vec } else {
-      read_count <- sapply(frag_vec, function(Y) { rbinom(n = 1, size = Y, prob = SEQ_efficiency) }) }
+    SEQ_efficiency <- N_molecules_SEQ / sum(frag_vec)
+    if (SEQ_efficiency >= 1) {
+      read_count <- frag_vec
+    } else {
+      read_count <- vapply(
+        frag_vec,
+        \(Y) rbinom(n = 1, size = Y, prob = SEQ_efficiency), numeric(1))
+    }
     return(read_count)
   } else if (protocol == "UMI") {
 
-    prob_vec <- sapply(gene_len[trans_idx[seq(length(trans_idx) - 1)]], .getProb)
+    prob_vec <- vapply(
+      gene_len[trans_idx[seq(length(trans_idx) - 1)]], .getProb, numeric(1))
     # fragmentation:
-    frag_vec <- sapply(seq(length(PCRed_vec) - 1), function(igene)
-    { return(rbinom(n = 1, size = PCRed_vec[igene], prob = prob_vec[igene])) })
+    frag_vec <- vapply(
+      seq(length(PCRed_vec) - 1),
+      \(igene) rbinom(n = 1, size = PCRed_vec[igene], prob = prob_vec[igene]),
+      numeric(1))
 
     # another 10 rounds of amplification to the fragments (fragmentation bias gets amplified)
-    for (iPCR in 1:2) {
-      frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n = 1, x, prob = rate_2PCR))
+    for (iPCR in seq_len(2)) {
+      frag_vec <- frag_vec + vapply(
+        frag_vec, \(x) rbinom(n = 1, x, prob = rate_2PCR), numeric(1))
     }
 
     frag_vec <- round(frag_vec * (1 + rate_2PCR)^(nPCR2 - 1))
 
     SEQ_efficiency <- N_molecules_SEQ / sum(frag_vec)
-    if (SEQ_efficiency >= 1) { sequenced_vec <- frag_vec } else {
-      sequenced_vec <- sapply(frag_vec, function(Y) { rbinom(n = 1, size = Y, prob = SEQ_efficiency) }) }
+    if (SEQ_efficiency >= 1) {
+      sequenced_vec <- frag_vec
+    } else {
+      sequenced_vec <- vapply(
+        frag_vec, \(Y) rbinom(n = 1, size = Y, prob = SEQ_efficiency),
+        numeric(1))
+    }
 
     temp_vec <- c(sequenced_vec, 1)
     for (i in seq(2, 1, -1)) {
@@ -272,6 +287,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #' @return if UMI, a list with two elements, the first is the observed count matrix, the second is the metadata; if nonUMI, a matrix
 #' @export
 #' @examples
+#' \donttest{
 #' results <- sim_example(ncells = 10)
 #' data(gene_len_pool)
 #' gene_len <- sample(gene_len_pool, results$num_genes, replace = FALSE)
@@ -279,6 +295,7 @@ divide_batches <- function(results, nbatch = 2, effect = 3, randseed = 0) {
 #'   results$counts, results$cell_meta, protocol = "nonUMI", randseed = 1,
 #'   alpha_mean = 0.1, alpha_sd = 0.05, gene_len = gene_len, depth_mean = 1e5, depth_sd = 3e3
 #' )
+#' }
 True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alpha_mean = 0.1, alpha_sd = 0.002,
                                 alpha_gene_mean = 1, alpha_gene_sd = 0,
                                 gene_len, depth_mean, depth_sd, lenslope = 0.02, nbins = 20,
@@ -308,7 +325,7 @@ True2ObservedCounts <- function(true_counts, meta_cell, protocol, randseed, alph
   if (protocol == "UMI") {
     UMI_counts <- do.call(cbind, lapply(observed_counts, "[[", 1))
     nreads_perUMI <- lapply(observed_counts, "[[", 2)
-    nUMI2seq <- sapply(observed_counts, "[[", 3)
+    nUMI2seq <- vapply(observed_counts, "[[", numeric(1), 3)
     observed_counts <- UMI_counts
   } else
     observed_counts <- do.call(cbind, observed_counts)
@@ -405,11 +422,12 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
   vec1 <- rnorm(n, mean = mean, sd = sd)
   beyond_idx <- which(vec1 < a | vec1 > b)
   if (length(beyond_idx) > 0) { # for each value < rate_2cap_lb
-    substi_vec <- sapply(seq_along(beyond_idx), function(i) {
+    substi_vec <- vapply(seq_along(beyond_idx), function(i) {
       while (TRUE) {
         temp <- rnorm(1, mean = mean, sd = sd)
         if (temp > a | temp > b) { break } }
-      return(temp) })
+      return(temp)
+    }, numeric(1))
     vec1[beyond_idx] <- substi_vec
   }
   return(vec1)

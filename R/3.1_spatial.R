@@ -1,7 +1,7 @@
 # parse the spatial parameters
 .parseSpatialParams <- function(params, num_genes, phyla, is_discrete) {
   max_nb <- params$max.neighbors
-  if (!is.numeric(max_nb) || !(max_nb %in% 1:4)) max_nb <- 4
+  if (!is.numeric(max_nb) || !(max_nb %in% seq_len(4))) max_nb <- 4
   effects <- NULL
   regulators <- list()
 
@@ -9,7 +9,7 @@
     stop("cci$params should be a data frame")
   }
 
-  if (!all(lig_param[, 1:2] > 0) && all(lig_param[, 1:2] <= num_genes)) {
+  if (!all(lig_param[, seq_len(2)] > 0) && all(lig_param[, seq_len(2)] <= num_genes)) {
     stop("spatial genes should be integres smaller than num.genes")
   }
 
@@ -145,7 +145,7 @@
     getPaths(root, numeric())
   }
 
-  path_abs_len <- sapply(seq_along(paths), function(i) {
+  path_abs_len <- vapply(seq_along(paths), function(i) {
     path <- paths[[i]]
     len <- 0
     for (j in seq(length(path) - 1)) {
@@ -154,7 +154,7 @@
       len <- len + edges[edges[, 2] == parent & edges[, 3] == child, 4]
     }
     len
-  })
+  }, numeric(1))
   total_ncell <- ceiling((ncell - 2) / max(path_abs_len) * sum(phyla$edge.length))
   if (total_ncell < ncell) {
     total_ncell <- ncell
@@ -169,12 +169,12 @@
 
 # get the length of each path (number of cells along the path)
 .getPathLen <- function(atac_neutral, paths, N) {
-  edge_len <- apply(unique(atac_neutral[, 1:2]), 1, function(edge) {
+  edge_len <- apply(unique(atac_neutral[, seq_len(2)]), 1, function(edge) {
     c(edge,
       sum(atac_neutral[, 1] == edge[1] & atac_neutral[, 2] == edge[2], na.rm = TRUE))
   }) %>% t()
 
-  path_len <- sapply(paths, function(path) {
+  path_len <- vapply(paths, function(path) {
     len <- 0
     for (j in seq(length(path) - 1)) {
       parent <- path[j]
@@ -183,7 +183,7 @@
       len <- len + edge_len[edge_len[, 1] == parent & edge_len[, 2] == child, 3]
     }
     len
-  })
+  }, numeric(1))
 
   path_len
 }
@@ -216,6 +216,7 @@
 #'
 #' @return A 3D matrix of (n_cell_type, n_cell_type, n_lr). The value at (i, j, k) is 1 if there exist CCI of LR-pair k between cell type i and cell type j.
 #' @export
+#' @examples cci_cell_type_params(Phyla3(), 100, 4:6, 0.5, TRUE, FALSE)
 #'
 cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, rand = TRUE, discrete = FALSE) {
   .tree_info(tree) %->% c(edges, root, tips, internal)
@@ -293,7 +294,7 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
       # randomly pick a cell
       idx <- sample(seq(i - 1), 1)
       # pick a neighbor
-      for (j in sample(1:4, 4)) {
+      for (j in sample(seq_len(4), 4)) {
         nb <- locs[idx,] + nb_list[[j]]
         if (.in_grid(nb[1], nb[2]) &&
           !any((locs[, 1] == nb[1]) & (locs[, 2] == nb[2]))) {
@@ -389,9 +390,9 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
         done <- FALSE
         while (!done) {
           # randomly pick a cell
-          idx <- sample(1:(i - 1), 1)
+          idx <- sample(seq_len(i - 1), 1)
           # pick a neighbor
-          for (j in sample(1:4, 4)) {
+          for (j in sample(seq_len(4), 4)) {
             nb <- all_loc[idx,] + nb_list[[j]]
             if (.in_grid(nb[1], nb[2]) &&
               !any((all_loc[, 1] == nb[1]) & (all_loc[, 2] == nb[2]), na.rm = TRUE)) {
@@ -454,10 +455,10 @@ cci_cell_type_params <- function(tree, total.lr, ctype.lr = 4:6, step.size = 1, 
   find_nearby = function(icell, cell.type) {
     # get available locations
     nb_list <- list(c(-1, 0), c(1, 0), c(0, -1), c(0, 1))
-    locs_all = list()
-    locs_same_type = list()
-    locs_diff_type = list()
-    for (i in 1:(icell - 1)) {
+    locs_all <- list()
+    locs_same_type <- list()
+    locs_diff_type <- list()
+    for (i in seq_len(icell - 1)) {
       loc <- locs[[i]]
       ctype <- cell_types[[i]]
       for (nb in nb_list) {

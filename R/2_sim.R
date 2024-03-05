@@ -36,7 +36,7 @@
 
   CIF <- if (is_spatial) {
     setNames(
-      lapply(1:2, function(i) {
+      lapply(seq_len(2), function(i) {
         # get CIF for param i and current cell
         if (is_discrete) {
           # discrete spatial
@@ -78,7 +78,7 @@
   options <- sim$options
 
   params <- setNames(
-    lapply(1:2, \(i) .matchParamsDen(CIF[[i]] %*% t(GIV[[i]]), sim, i)),
+    lapply(seq_len(2), \(i) .matchParamsDen(CIF[[i]] %*% t(GIV[[i]]), sim, i)),
     c("kon", "koff")
   )
 
@@ -151,7 +151,7 @@
   var_rank <- dnorm(gene_var[chosen_hge], 0, max_var / 5)
   d <- dnorm(0, 0, max_var / 5)
 
-  multi_factors <- sapply(seq_along(chosen_hge), function(igene) {
+  multi_factors <- vapply(seq_along(chosen_hge), function(igene) {
     if (runif(1, 0, 1) < 1) {
       1 + mean_hge *
         (var_rank[igene] / d) *
@@ -159,7 +159,7 @@
     } else {
       mean_hge
     }
-  })
+  }, double(1))
 
   scales <- rep(1, N$gene)
   scales[chosen_hge] <- multi_factors
