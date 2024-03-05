@@ -669,7 +669,7 @@ gene_corr_cci <- function(
 #' @export
 #' @examples
 #' results <- sim_example(ncells = 10, velocity = TRUE)
-#' plot_rna_velocity(results)
+#' plot_rna_velocity(results, perplexity = 3)
 plot_rna_velocity <- function(
   results = .getResultsFromGlobal(),
   velocity = results$velocity,

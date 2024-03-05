@@ -2,6 +2,7 @@
 #'
 #' @md
 #' @param options See scMultiSim_help().
+#' @param return_summarized_exp Whether to return a SummarizedExperiment object.
 #'
 #' @return scMultiSim returns an environment with the following fields:
 #'
@@ -49,7 +50,7 @@
 #'   num.cifs = 50,
 #'   tree = Phyla5()
 #' ))
-sim_true_counts <- function(options) {
+sim_true_counts <- function(options, return_summarized_exp = FALSE) {
   # ==== options ===============================================================
 
   options <- .check_opt(options)
@@ -248,12 +249,12 @@ sim_true_counts <- function(options) {
   .print_time(sim)
 
   # Results
-  .getResult(sim, do_velocity, is_debug)
+  .getResult(sim, do_velocity, is_debug, return_summarized_exp)
 }
 
 
 # return the result of the simulation
-.getResult <- function(sim, do_velocity, is_debug) {
+.getResult <- function(sim, do_velocity, is_debug, return_summarized_exp) {
   cell_meta <- if (sim$do_spatial) {
     sim$meta_spatial
   } else {
@@ -367,6 +368,10 @@ sim_true_counts <- function(options) {
     result <- c(result, list(
       sim = sim
     ))
+  }
+
+  if (return_summarized_exp) {
+    return(.summarizeExp(result))
   }
 
   resenv <- new.env()
@@ -834,4 +839,20 @@ sim_true_counts <- function(options) {
 
   # return
   res
+}
+
+
+.summarizeExp <- function (result) {
+  se <- SummarizedExperiment(
+    assays = list(
+      counts = result$counts
+    ),
+    colData = result$cell_meta
+  )
+  result$atac_counts <- NULL
+  result$cell_meta <- NULL
+
+  metadata(se) <- result
+
+  se
 }

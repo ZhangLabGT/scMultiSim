@@ -8,4 +8,5 @@
 #' @importFrom utils data write.csv
 #' @importFrom dplyr %>%
 #' @importFrom zeallot %<-% %->%
+#' @importFrom SummarizedExperiment SummarizedExperiment
 NULL

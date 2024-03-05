@@ -4,10 +4,12 @@
 \alias{sim_true_counts}
 \title{Simulate true scRNA and scATAC counts from the parameters}
 \usage{
-sim_true_counts(options)
+sim_true_counts(options, return_summarized_exp = FALSE)
 }
 \arguments{
 \item{options}{See scMultiSim_help().}
+
+\item{return_summarized_exp}{Whether to return a SummarizedExperiment object.}
 }
 \value{
 scMultiSim returns an environment with the following fields:

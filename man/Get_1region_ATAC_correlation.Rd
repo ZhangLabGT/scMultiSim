@@ -20,6 +20,8 @@ the correlation value
 This function gets the average correlation rna seq counts and region effect on genes for genes which are only associated with 1 chromatin region
 }
 \examples{
+\donttest{
 results <- sim_example(ncells = 10)
 Get_1region_ATAC_correlation(results$counts, results$atacseq_data, results$region_to_gene)
+}
 }
