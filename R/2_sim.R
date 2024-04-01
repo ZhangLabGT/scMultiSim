@@ -44,7 +44,6 @@
           # discrete spatial
           cif_ <- sim$CIF_spatial$cif[[sp_cell_i]][[i]]
           cif_diff <- sim$CIF_spatial$diff_cif[[i]]
-          cbind(cif_$nd, cif_diff, cif_$reg)
         } else {
           # continuous spatial
           cif_ <- sim$CIF_spatial$cif[[sp_cell_i]][[i]]
@@ -54,8 +53,9 @@
           } else {
             NULL
           }
-          cbind(cif_$nd, cif_diff, cif_$reg)
         }
+        max_layer <- min(sim$path_len[sim$cell_path[sp_cell_i]], nrow(cif_$nd))
+        cbind(cif_$nd, cif_diff, cif_$reg)[seq(max_layer),]
       }),
       c("kon", "koff")
     )
@@ -80,14 +80,24 @@
   options <- sim$options
 
   if (is.function(sim$mod_cif)) {
-    res <- sim$mod_cif(1, CIF[[1]], GIV[[1]], sim$CIF_all$meta)
-    CIF[[1]] <- res[[1]]; GIV[[1]] <- res[[2]]
-    res <- sim$mod_cif(2, CIF[[2]], GIV[[2]], sim$CIF_all$meta)
-    CIF[[2]] <- res[[1]]; GIV[[2]] <- res[[2]]
+    for (i in 1:2) {
+      if (is_spatial) {
+        res <- sim$mod_cif(i, sp_cell_i, sp_path_i, CIF[[i]], GIV[[i]])
+      } else {
+        res <- sim$mod_cif(i, CIF[[i]], GIV[[i]], sim$CIF_all$meta)
+      }
+      CIF[[i]] <- res[[1]]; GIV[[i]] <- res[[2]]
+    }
   }
 
   params <- setNames(
-    lapply(1:2, \(i) .matchParamsDen(CIF[[i]] %*% t(GIV[[i]]), sim, i)),
+    lapply(1:2, \(i) {
+      p <- CIF[[i]] %*% t(GIV[[i]])
+      if (!is.null(sim$ext_params) && !is.null(sim$ext_params[[i]])) {
+        p <- p + sim$ext_params[[i]]
+      }
+      .matchParamsDen(p, sim, i)}
+    ),
     c("kon", "koff")
   )
 
@@ -99,6 +109,9 @@
   Region_to_gene[, cols] <- Region_to_gene[, cols] / s[cols]
   # atac for kon
   ATAC_kon <- ATAC_data %*% Region_to_gene
+  if (is_spatial) {
+    ATAC_kon <- ATAC_kon[seq(nrow(params$kon)),, drop = FALSE]
+  }
 
   # fill the zero values in ATAC_kon to preserve
   # the orders. Scale the values to less than the minimum value in ATAC_kon.
@@ -265,6 +278,9 @@
     c(cif__, giv__) %<-% sim$mod_cif(3, cif__, giv__, CIF_all$meta)
   }
   s_base <- cif__ %*% t(giv__)
+  if (!is.null(sim$ext_params) && !is.null(sim$ext_params[[3]])) {
+    s_base <- s_base + sim$ext_params[[3]]
+  }
 
   oldseed <- .Random.seed
   .prepareHGE(seed, sim, s_base)
@@ -433,6 +449,43 @@
   stopifnot(n == ncells)
 }
 
+.setSpatialFinalCellType <- function(sim, is_discrete) {
+  grid <- sim$grid
+  CIF <- sim$CIF_spatial
+  N <- sim$N
+  # final cell type at the last layer
+  final_ctype <- integer(length = N$cell)
+  for (i in seq_len(N$cell)) {
+    final_ctype[i] <- if (is_discrete) {
+      CIF$meta[i, "cell.type.idx"]
+    } else {
+      path_i <- sim$cell_path[i]
+      layer <- N$cell - i + 1
+      CIF$meta_by_path[[path_i]][layer, "cell.type.idx"]
+    }
+  }
+  grid$set_final_ctypes(final_ctype)
+  sim$sp_final_ctype <- final_ctype
+}
+
+.getExtraCIF <- function(sim) {
+  if (!is.function(sim$ext_cif)) {
+    sim$ext_params <- NULL
+    return()
+  }
+  sim$ext_params <- lapply(1:3, \(i) {
+    res <- sim$ext_cif(i)
+    if (is.null(res)) {
+      NULL
+    } else {
+      if (!is.list(res) || length(res) != 2 || !is.matrix(res[[1]]) || !is.matrix(res[[2]])) {
+        stop("ext_cif must return a list of 2 matrices: CIF and GIV")
+      }
+      res[[1]] %*% t(res[[2]])
+    }
+  })
+}
+
 .rnaSeqSpatial <- function(seed, sim) {
   set.seed(seed)
 
@@ -484,6 +537,7 @@
   oldseed <- .Random.seed
   .prepareHGE(seed, sim, s_base)
   .Random.seed <- oldseed
+  rm(s_base)
   # end hge
 
   c(edges, root, tips, internal) %<-% .tree_info(phyla)
@@ -538,21 +592,9 @@
   }
   curr_lig_cif <- lapply(1:N$cell, \(.)  rnorm(N$sp_regulators, OP("cif.center"), OP("cif.sigma")))
   
-  # final cell type at the last layer
-  final_ctype <- integer(length = N$cell)
-  for (i in seq_len(N$cell)) {
-    final_ctype[i] <- if (is_discrete) {
-      CIF$meta[i, "cell.type.idx"] 
-    } else {
-      path_i <- sim$cell_path[i]
-      layer <- N$cell - i + 1
-      CIF$meta_by_path[[path_i]][layer, "cell.type.idx"] 
-    }
-  }
-  grid$set_final_ctypes(final_ctype)
-  
   # stationary cci ground truth
   if (sim$sp_sc_gt) {
+    final_ctype <- sim$sp_final_ctype
     sim$cci_single_cell <- array(0, dim = c(N$cell, N$cell, N$sp_regulator))
     # for each LR pair
     full_gt <- sim$sp_ctype_param[final_ctype, final_ctype,]
@@ -648,10 +690,18 @@
       }
       # get s
       params <- sim$params_spatial[[icell]]
-      s_cell <- CIF_s_base[[icell]][layer,] %*% t(GIV_s) +
+      cif__ <- CIF_s_base[[icell]][layer,]
+      giv__ <- GIV_s
+      if (is.function(sim$mod_cif)) {
+        c(cif__, giv__) %<-% sim$mod_cif(3, i, path_i, cif__, giv__)
+      }
+      s_cell <- cif__ %*% t(giv__) +
         (regu_cif %*% t(cbind(geff, sim$sp_effect))) * grn_effect
+      if (!is.null(sim$ext_params) && !is.null(sim$ext_params[[3]])) {
+        s_cell <- s_cell + sim$ext_params[[3]][icell,]
+      }
       s_cell <- .matchParamsDen(s_cell, sim, 3)
-      
+
       # scale s 
       scale_s_cell <- if (scale_s_is_vector) {
         scale_s[CIF$meta[icell, "cell.type.idx"]]

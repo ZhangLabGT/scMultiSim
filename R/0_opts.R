@@ -284,6 +284,13 @@
     ),
     "modify CIF"
   ),
+  ext.cif.giv = list(
+    .default(NA),
+    list(
+      is.function, "should be a function"
+    ),
+    "Add customized CIF and GIV"
+  ),
   mod.params = list(
     .default(NA),
     list(

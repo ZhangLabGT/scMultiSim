@@ -64,9 +64,6 @@ sim_true_counts <- function(options) {
   # ==== initialization ========================================================
 
   cores <- OP("threads")
-  if (cores != 1) {
-    stop("Multithreading is not supported yet.")
-  }
 
   # create session
   sim <- new.env()
@@ -155,6 +152,7 @@ sim_true_counts <- function(options) {
   }
 
   sim$mod_cif <- OP("mod.cif.giv")
+  sim$ext_cif <- OP("ext.cif.giv")
   sim$mod_params <- OP("mod.params")
 
   # ==== simulation ============================================================
@@ -230,6 +228,7 @@ sim_true_counts <- function(options) {
       }
     }
     sim$CIF_spatial <- cif
+    .setSpatialFinalCellType(sim, is_discrete)
   } else {
     # ==== not spatial ====
     sim$CIF_atac <- if (is_discrete) {
@@ -240,14 +239,24 @@ sim_true_counts <- function(options) {
     }
     .atacSeq(seed[7], sim)
   }
+  .getExtraCIF(sim)
 
   # 1.5 Params
   if (sim$do_spatial) {
     cat("Get params...")
-    sim$params_spatial <- lapply(1:N$cell, \(i) .getParams(
-      seed[8] + i, sim,
-      sp_cell_i = i, sp_path_i = sim$cell_path[i]
-    ))
+    n_threads <- OP("threads")
+    if (n_threads > 1) {
+      library(BiocParallel)
+      sim$params_spatial <- BiocParallel::bplapply(1:N$cell, \(i, sim) .getParams(
+          seed[8] + i, sim,
+          sp_cell_i = i, sp_path_i = sim$cell_path[i]
+      ), sim = sim, BPPARAM = BiocParallel::MulticoreParam(workers = n_threads))
+    } else {
+      sim$params_spatial <- lapply(1:N$cell, \(i) .getParams(
+        seed[8] + i, sim,
+        sp_cell_i = i, sp_path_i = sim$cell_path[i]
+      ))
+    }
     cat("Done\n")
   } else {
     sim$params <- .getParams(seed[8], sim)

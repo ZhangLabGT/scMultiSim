@@ -58,8 +58,12 @@ plot_phyla <- function(tree) {
 #' results <- sim_example_200_cells()
 #' plot_tsne(log2(results$counts + 1), results$cell_meta$pop)
 plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = FALSE, rand.seed = 0,
-                      continuous = FALSE, labels2 = NULL, lim = NULL) {
+                      continuous = FALSE, labels2 = NULL, lim = NULL, runPCA = FALSE) {
   set.seed(rand.seed)
+
+  if (runPCA) {
+    data <- t(prcomp(t(data))$x[, 1:30])
+  }
 
   data_tsne = Rtsne(t(data), perplexity = perplexity, check_duplicates = FALSE)
   if (!continuous) {
@@ -227,12 +231,12 @@ plot_gene_module_cor_heatmap <- function(
 #' plot_cell_loc(results)
 plot_cell_loc <- function(
   results = .getResultsFromGlobal(),
-  size = 4, show.label = FALSE, show.arrows = TRUE, lr.pair = 1, .cell.pop = NULL
+  size = 4, show.label = FALSE, show.arrows = TRUE, lr.pair = 1, .cell.pop = NULL, .locs = NULL
 ) {
   if (is.null(.cell.pop))
     .cell.pop <- results$cell_meta$pop
 
-  locs <- sapply(results$grid$locs, \(a) a)
+  locs <- if (is.null(.locs)) sapply(results$grid$locs, \(a) a) else .locs
   data <- data.frame(
     x = locs[1,],
     y = locs[2,],
