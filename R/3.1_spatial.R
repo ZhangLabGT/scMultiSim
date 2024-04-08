@@ -61,6 +61,7 @@
   del_lr_pair <- params$del.lr.pair %||% TRUE
   layout <- params$layout %||% "enhanced"
   nb_radius <- params$radius %||% 1
+  start_layer <- params$start.layer %||% -1
 
   grid_ex_params <- NULL
   if (is.function(layout) || layout %in% c("basic", "enhanced", "enhanced2", "layers")) {
@@ -113,7 +114,8 @@
     grid_ex_params = grid_ex_params,
     sc_gt = sc_gt,
     static_steps = static_steps,
-    nb_radius = nb_radius
+    nb_radius = nb_radius,
+    start_layer = start_layer
   )
 }
 

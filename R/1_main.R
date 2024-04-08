@@ -123,8 +123,23 @@ sim_true_counts <- function(options) {
       sim$sp_layout_param,
       sim$sp_sc_gt,
       sim$sp_static_steps,
-      sim$sp_radius
+      sim$sp_radius,
+      sim$sp_start_layer
     )
+
+    # skip initial layers to speed up
+    sim$sp_start_layer <- if (sim$sp_start_layer < 0) {
+      # -1 means automatically determine the start layer
+      # simulate all layers when n_cell <= 800 for compatibility
+      if (N$cell > 800) N$cell else 1
+    } else {
+      sim$sp_start_layer
+    }
+    if (sim$sp_start_layer == N$cell) {
+      message("Spatial: only the last layer will be simulated.")
+    } else if (sim$sp_start_layer != 1) {
+      stop("Spatial: start.layer values other than 1 or n_cells are not supported yet.")
+    }
 
     sim$grid <- CreateSpatialGrid(
       N$cell, N$max_nbs,
