@@ -55,6 +55,7 @@ Suggests:
     knitr,
     rmarkdown,
     roxygen2,
+    shiny,
     testthat (>= 3.0.0)
 biocViews: SingleCell, Transcriptomics
 VignetteBuilder: knitr

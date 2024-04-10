@@ -568,6 +568,114 @@ gene_corr_cci <- function(
 }
 
 
+gene_coexpr_cci <- function(
+  results = .getResultsFromGlobal(),
+  .pair = NULL,
+  .exclude.same.types = TRUE
+) {
+  options <- results$.options
+  ncells <- options$num.cells
+  ngenes <- nrow(results$counts)
+
+  if (!("cci" %in% names(options))) {
+    warn("CCI is not enabled in the result object")
+    return()
+  }
+  sp_params <- options$cci$params
+
+  nb_list <- list()
+  non_nb_list <- list()
+  for (icell in 1:ncells) {
+    nb_list[[icell]] <- nbs <- na.omit(results$grid$get_neighbours(icell))
+    non_nb_list[[icell]] <- sample(setdiff(1:ncells, nbs), size = 4)
+  }
+
+  # coexpresion: CCI regulator - CCI target
+  target <- numeric()
+  regulator <- numeric()
+  mean.ct.rg <- list()
+  mean.ct.tg <- list()
+  mean.non.ct <- list()
+  mean.non.nbs <- list()
+  res_pair <- NULL
+  ctp <- results$cci_cell_type_param
+
+  for (j in 1:nrow(sp_params)) {
+    rg <- sp_params[j, 2]
+    tg <- sp_params[j, 1]
+
+    rg_list <- numeric()
+    tg_list <- numeric()
+    nct_tg_list <- numeric()  # cell types without cci
+    nct_rg_list <- numeric()
+    non_rg_list <- numeric()
+    non_tg_list <- numeric()
+
+    rg_cells <- rep(0, ncells)
+    for (icell in 1:ncells) {
+      nbs <- nb_list[[icell]]
+      rg_cnt <- results$counts[rg, icell]
+      ct1 <- results$cell_meta$cell.type.idx[icell]
+
+      for (nb in nbs) {
+        tg_cnt <- results$counts[tg, nb]
+        ct2 <- results$cell_meta$cell.type.idx[nb]
+        # if (.exclude.same.types && ct1 == ct2) next
+        if (any(
+          ctp$ligand == rg &
+            ctp$receptor == tg &
+            ctp$ct1 == ct1 &
+            ctp$ct2 == ct2
+        )) {
+          rg_list <- c(rg_list, rg_cnt)
+          tg_list <- c(tg_list, tg_cnt)
+        } else {
+          nct_rg_list <- c(nct_rg_list, rg_cnt)
+          nct_tg_list <- c(nct_tg_list, tg_cnt)
+        }
+      }
+      non_nbs <- non_nb_list[[icell]]
+      for (nb in non_nbs) {
+        tg_cnt <- results$counts[tg, nb]
+        non_rg_list <- c(non_rg_list, rg_cnt)
+        non_tg_list <- c(non_tg_list, tg_cnt)
+      }
+    }
+
+    target <- c(target, tg)
+    regulator <- c(regulator, rg)
+    mean.ct.rg[[j]] <- rg_list
+    mean.ct.tg[[j]] <- tg_list
+    mean.non.ct[[j]] <- c(nct_tg_list, nct_rg_list)
+    mean.non.nbs[[j]] <- c(non_rg_list, non_tg_list)
+    if (!is.null(.pair) && all(.pair == c(rg, tg))) {
+      res_pair <- list(rg = rg_list, tg = tg_list)
+    }
+  }
+
+  res <- data.frame(target, regulator,
+                    mean.cci.rg = vapply(mean.ct.rg, mean, numeric(1)),
+                    mean.cci.tg = vapply(mean.ct.tg, mean, numeric(1)),
+                    mean.non.cci = vapply(mean.non.ct, mean, numeric(1)),
+                    mean.non.nbs = vapply(mean.non.nbs, mean, numeric(1)))
+
+  plot_df <- rbind(
+    data.frame(name = "With CCI (ligand)", value = unlist(mean.ct.rg)),
+    data.frame(name = "With CCI (receptor)", value = unlist(mean.ct.tg)),
+    data.frame(name = "Without CCI", value = unlist(mean.non.ct)),
+    data.frame(name = "Non-nbs", value = unlist(mean.non.nbs)))
+  plot_df$name <- factor(plot_df$name, levels = c("With CCI (ligand)", "With CCI (receptor)", "Without CCI", "Non-nbs"))
+  p_mean <- ggplot(plot_df, aes(x = name, y = value, fill = name)) +
+    geom_boxplot()
+
+  if (is.null(.pair)) {
+    dots_list(res, p_mean)
+  } else {
+    res_pair
+  }
+}
+
+
 .processVelocity <- function(counts_s, velocity, velocity2 = NULL, perplexity = 70) {
   assertthat::assert_that(
     nrow(counts_s) == nrow(velocity),

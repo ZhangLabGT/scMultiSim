@@ -1,0 +1,23 @@
+.text-small {
+    font-size: 85%;
+}
+
+.bi {
+    width: 1em;
+    height: 1em;
+    vertical-align: -.125em;
+    fill: currentcolor;
+}
+
+.legend-rect {
+    width: 16px;
+    display: inline-block;
+    height: 16px;
+    border: 1px solid black;
+    margin-right: 4px;
+    transform: translateY(2px);
+}
+
+#cif-svg {
+
+}
