@@ -422,3 +422,27 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
   }
   return(prob)
 }
+
+add_outliers <- function (
+  res, prob = 0.01, factor = 2, sd = 0.5, cell.num = 1, max.var = Inf
+) {
+  if (is.null(res$counts_obs)) {
+    stop("No counts found in the result object")
+  }
+  ngenes <- nrow(res$counts_obs)
+  ncells <- ncol(res$counts_obs)
+  gene_range <- if (is.null(res$.grn)) {
+    seq(ngenes)
+  } else {
+    (max(res$.grn$name_map) + 1):ngenes
+  }
+  gene_range <- setdiff(gene_range, which(rowVars(res$counts_obs) > max.var))
+  chosen_genes <- sample(gene_range, floor(ngenes * prob))
+  for (i in chosen_genes) {
+    # chosen_cells <- sample(which(res$counts_obs[i,] > 0), cell.num)
+    chosen_cells <- sample(seq(ncells), cell.num)
+    q <- rnorm(1, factor, sd)
+    message(sprintf("Gene %d, cells %s, factor %.2f", i, paste(chosen_cells, collapse = ", "), q))
+    res$counts_obs[i, chosen_cells] <- res$counts_obs[i, chosen_cells] * q
+  }
+}
