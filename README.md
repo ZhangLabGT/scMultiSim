@@ -25,8 +25,8 @@ scMultiSim is an in silico simulator that generates multi-modality data of singl
 
 Please refer to the following vignettes for examples and tutorials.
 
-- Basics: how to use scMultiSim, how to adjust the simulation parameters, and how to inspect the output.
-  - [scMultisim Basics](https://zhanglabgt.github.io/scMultiSim/doc/basics.html)
+- Basic Multimodal Dataset: how to use scMultiSim, how to adjust the simulation parameters, and how to inspect the output.
+  - [Simulating Multimodal Datasets](https://zhanglabgt.github.io/scMultiSim/doc/basics.html)
 - Spatial Cell-Cell Interaction: how to simulate spatial data with cell-cell interaction, how to specify the CCI network ground truth, how to specify the spatial layout and other parameters such as cell-cell communication range.
   - [Simulating Spatial Cell-Cell Interactions](https://zhanglabgt.github.io/scMultiSim/doc/spatialCCI.html)
 

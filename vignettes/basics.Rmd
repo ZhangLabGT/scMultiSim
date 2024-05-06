@@ -153,7 +153,7 @@ The `results` contains the following important data:
 
 ## Visualize the Results
 
-We can visualize the true counts and ATAC-seq data using `ploTSNE(data, labels)`:
+We can visualize the true counts and ATAC-seq data using `plot_tsne(data, labels)`:
 ```{r plot-counts, fig.width = 4, fig.height = 3.5, out.width = "60%"}
 plot_tsne(log2(results$counts + 1),
          results$cell_meta$pop,
@@ -170,6 +170,11 @@ Since we also have RNA velocity enabled, the `results` also contains the followi
 
 ```{r plot-velocity, fig.width = 4, fig.height = 3.5, out.width = "60%"}
 plot_rna_velocity(results, arrow.length = 2)
+```
+
+We can inspect the gene-gene correlation using `plot_gene_module_cor_heatmap(results)`:
+```{r plot-gene-correlation, fig.width = 4, fig.height = 3.5, out.width = "60%"}
+plot_gene_module_cor_heatmap(results)
 ```
 
 ## Adding Technical Variation
