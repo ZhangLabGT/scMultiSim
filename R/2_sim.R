@@ -472,7 +472,7 @@
       CIF$meta[i, "cell.type.idx"]
     } else {
       path_i <- sim$cell_path[i]
-      layer <- N$cell - i + 1
+      layer <- min(N$cell - i + 1, sim$path_len[path_i])
       CIF$meta_by_path[[path_i]][layer, "cell.type.idx"]
     }
   }

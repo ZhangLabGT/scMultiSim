@@ -420,10 +420,11 @@ gen_clutter <- function(n_cell, grid_size = NA, center = c(0, 0),
       # center is bottom-left
       left_ones <- which(all_locs[,1] == min(all_locs[,1]))
       new_center <- all_locs[left_ones[which.min(all_locs[left_ones, 2])],]
-      new_locs <- gen_clutter(ncells, grid_size, new_center, existing_grid = all_locs)
+      dist_to_center <- sqrt(colSums((t(all_locs) - new_center)^2))
+      new_locs <- all_locs[order(dist_to_center),]
       rand_cells <- sample(seq_len(ncells), round(ncells * 0.05))
       new_locs[rand_cells,] <- new_locs[sample(rand_cells, length(rand_cells), replace = FALSE),]
-      pre_allocated_pos <<- new_locs[order(final_types),]
+      pre_allocated_pos <<- new_locs[rank(final_types, ties.method="random"),]
     } else {
       return()
     }
