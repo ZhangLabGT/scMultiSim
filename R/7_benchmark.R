@@ -58,7 +58,7 @@ plot_phyla <- function(tree) {
 #' results <- sim_example_200_cells()
 #' plot_tsne(log2(results$counts + 1), results$cell_meta$pop)
 plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = '', save = FALSE, rand.seed = 0,
-                      continuous = FALSE, labels2 = NULL, lim = NULL, runPCA = FALSE) {
+                      continuous = FALSE, labels2 = NULL, lim = NULL, runPCA = FALSE, alpha = 1) {
   set.seed(rand.seed)
 
   if (runPCA) {
@@ -79,11 +79,11 @@ plot_tsne <- function(data, labels, perplexity = 60, legend = '', plot.name = ''
 
   if (is.null(labels2)) {
     p <- p +
-      geom_point(aes(colour = .data[['label']]), shape = 20) +
+      geom_point(aes(colour = .data[['label']]), shape = 20, alpha = alpha) +
       labs(color = legend)
   } else {
     p <- p +
-      geom_point(aes(colour = .data[['label']], shape = factor(labels2))) +
+      geom_point(aes(colour = .data[['label']], shape = factor(labels2)), alpha = alpha) +
       scale_shape_manual(values = c(4, 15, 5)) +
       labs(color = legend)
   }
