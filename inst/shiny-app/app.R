@@ -20,13 +20,28 @@ getGlobalObjects <- function() {
   res
 }
 
+getOptDefaults <- function() {
+  opt_list <- .opt_list()
+  names <- names(opt_list)
+  opts <- seq_along(names)
+  res <- list()
+  
+  for (i in opts) {
+    n <- names[i]
+    opt <- opt_list[[i]]
+    if (n == "") next;
+    val <- opt[[1]]
+    if (!val[[1]]) {
+      res[[n]] <- val[[2]]
+    }
+  }
+
+  res
+}
+
 
 # Define server logic for random distribution app ----
 server <- function(input, output, session) {
-
-  # Reactive expression to generate the requested distribution ----
-  # This is called whenever the inputs change. The output functions
-  # defined below then use the value computed from this expression
   grn_info <- reactive({
     print(input$GRN)
     error <- NULL
@@ -162,6 +177,23 @@ server <- function(input, output, session) {
   })
   observe({
     session$sendCustomMessage(type = "Grid", grid())
+  })
+  observe({
+    session$sendCustomMessage(type = "Defaults", getOptDefaults())
+  })
+
+  observe({
+    print(input$generatedOptions)
+    if (!is.null(input$generatedOptions)) {
+      eval(parse(text=input$generatedOptions), envir=.GlobalEnv)
+    }
+  })
+
+  observe({
+    print(input$stopApp)
+    if (is.character(input$stopApp) && input$stopApp == "YES") {
+      stopApp()
+    }
   })
 }
 

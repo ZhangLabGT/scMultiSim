@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 
-<body class="px-2">
+<body class="p-0">
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
         <symbol id="check-circle-fill" viewBox="0 0 16 16">
             <path
@@ -27,21 +27,23 @@
                 d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
         </symbol>
     </svg>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" id="mainNav">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">scMultiSim</a>
+            <a class="navbar-brand" href="#">
+                <img src="scm_logo.png" alt="" height="40" style="margin: -5px 0;">
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <!-- <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Home</a>
-                    </li> -->
+                    <button type="button" class="btn btn-light" data-bs-toggle="modal"
+                        data-bs-target="#usageModal">Usage</button>
                 </ul>
                 <div class="d-flex">
-                    <button class="btn btn-outline-primary me-2" type="button" id="runButton">Output Parameters</button>
+                    <button class="btn btn-outline-primary me-2" type="button" id="outputButton">Output
+                        Parameters</button>
                     <button class="btn btn-outline-secondary" type="button" id="resetButton">Reset</button>
                 </div>
             </div>
@@ -73,7 +75,7 @@
                     Spatial Data
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
+            <li class="nav-item d-none" role="presentation">
                 <button class="nav-link" id="recipe-tab" data-bs-toggle="tab" data-bs-target="#pane-recipes"
                     type="button" role="tab">
                     Recipes
@@ -110,8 +112,8 @@
                                         <h6 class="mb-2">Cell Identity Factors (CIF)</h6>
                                         <div class="input-group">
                                             <span class="input-group-text">Num. CIF</span>
-                                            <input name="num.cifs" type="number" class="form-control" placeholder="20"
-                                                value="20" data-v="i:10-1000" />
+                                            <input name="num.cifs" type="number" class="form-control" placeholder="50"
+                                                value="50" data-v="i:10-1000" />
                                             <div class="invalid-feedback"></div>
                                         </div>
                                         <div class="text-secondary text-small p-2">
@@ -141,11 +143,11 @@
                                         </h6>
                                         <div class="input-group">
                                             <span class="input-group-text">μ</span>
-                                            <input name="cif.mean" type="number" class="form-control" placeholder="0"
-                                                value="0" data-v="f:0-1000" />
+                                            <input name="cif.center" type="number" class="form-control" placeholder="1"
+                                                value="1" data-v="f:0-1000" />
                                             <span class="input-group-text">σ</span>
-                                            <input name="cif.sd" type="number" class="form-control" placeholder="0.3"
-                                                value="0.3" data-v="f:0-1000" />
+                                            <input name="cif.sigma" type="number" class="form-control" placeholder="0.1"
+                                                value="0.1" data-v="f:0-1000" />
                                             <div class="invalid-feedback"></div>
                                         </div>
                                         <div class="text-secondary text-small px-2 py-2">
@@ -290,8 +292,8 @@
                                         <div class="border rounded p-2">
                                             <div class="input-group input-group-sm mb-2">
                                                 <span class="input-group-text"> Smallest Cluster Size </span>
-                                                <input name="minPopSize" class="form-control" placeholder="70"
-                                                    value="70" data-v="i:1-10000000" />
+                                                <input name="discrete.min.pop.size" class="form-control"
+                                                    placeholder="70" value="70" data-v="i:1-10000000" />
                                                 <div class="invalid-feedback"></div>
                                             </div>
                                             <div class="text-secondary text-small my-2">
@@ -503,7 +505,7 @@
                                 </h6>
                                 <div class="input-group">
                                     <span class="input-group-text">ATAC Prob. Zero</span>
-                                    <input name="atacPZero" type="number" class="form-control" placeholder="0.8"
+                                    <input name="atac.p_zero" type="number" class="form-control" placeholder="0.8"
                                         value="0.8" data-v="f:0-1" />
                                     <div class="invalid-feedback"></div>
                                 </div>
@@ -519,7 +521,7 @@
                                 </div>
                                 <div class="input-group mb-3">
                                     <span class="input-group-text">Custom Density</span>
-                                    <input name="atacDensity" type="text" class="form-control" placeholder="my_dens"
+                                    <input name="atac.density" type="text" class="form-control" placeholder="my_dens"
                                         value="" data-v="n">
                                     <button class="btn btn-outline-secondary dropdown-toggle" type="button"
                                         data-bs-toggle="dropdown">
@@ -547,7 +549,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text">Speed Optimization (Experimental)</span>
                                     <span class="input-group-text">
-                                        <input class="form-check-input mt-0" type="checkbox" name="speedUp" value="" />
+                                        <input class="form-check-input mt-0" type="checkbox" name="speed.up" value="" />
                                     </span>
                                 </div>
                             </div>
@@ -557,7 +559,7 @@
                             <div class="card-body">
                                 <div class="input-group">
                                     <span class="input-group-text">Scale `s`</span>
-                                    <input name="scaleS" type="text" class="form-control" placeholder="1" value="1"
+                                    <input name="scale.s" type="text" class="form-control" placeholder="1" value="1"
                                         data-v="f:1-1000">
                                     <div class="invalid-feedback"></div>
                                 </div>
@@ -568,8 +570,8 @@
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-text">Bimodality</span>
-                                    <input name="bimodality" type="number" class="form-control" placeholder="0"
-                                        value="0" data-v="f:0-1" />
+                                    <input name="bimod" type="number" class="form-control" placeholder="0" value="0"
+                                        data-v="f:0-1" />
                                     <div class="invalid-feedback"></div>
                                 </div>
                                 <div class="text-secondary text-small p-2">
@@ -672,6 +674,24 @@
             </div>
             <div class="tab-pane" id="pane-spatial" role="tabpanel" tabindex="0">
                 <div class="row pt-3">
+                    <div class="col">
+                        <div class="card border-dark mb-3">
+                            <div class="card-body">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <input class="form-check-input" type="checkbox" name="_spatialEnabled" value=""
+                                            id="spatialEnabled" />
+                                    </span>
+                                    <span class="input-group-text">
+                                        <label for="spatialEnabled">Enable simulating spatial
+                                            data</label>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row pt-2">
                     <div class="col-7">
                         <div class="card border-dark mb-3">
                             <div class="card-header">Layout Preview</div>
@@ -790,6 +810,20 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end" id="R_cciSelect"></ul>
                                 </div>
+                                <div class="text-secondary text-small p-2">
+                                    Specify an existing R dataframe here. The dataframe should have three columns:
+                                    target, regulator, and effect. target and regulator can be an integer representing
+                                    the gene.
+                                    effect is the strength of the interaction.
+                                    For example:
+                                    <pre class="p-0">
+data.frame(
+    target    = c(101, 102),
+    regulator = c(103, 104),
+    effect    = c(5.2, 5.9)
+)
+                                    </pre>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -879,8 +913,78 @@
         </div>
     </section>
 
+    <div class="modal fade" id="usageModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">scMultiSim Shiny App Usage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-secondary">
+                        Welcome to the scMultiSim Shiny App!
+                        As a powerful de novo simulation tool,
+                        scMultiSim provides numerous options to generate single-cell datasets with various biological
+                        effects.
+                        This app is designed to help you decide simulation parameters and output them to an R object,
+                        which can therefore be used to run the simulation.
+                    </p>
+                    <p>
+                        To get started, simply navigate through the tabs on the top and set the parameters as needed.
+                        Each tab corresponds to a specific aspect of the simulation.
+                    </p>
+                    <p>
+                        When finished setting the parameters,
+                        simply click the <b>"Output Parameters" button</b> to write the options to an R object named
+                        <code>opt</code>.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" tabindex="-1" id="outputModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Options written to R</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        The parameters has been written into the R object <code>opt</code>.
+                    </p>
+                    <div class="alert alert-info" role="alert">
+                        Need to change the options or add more custom options?
+                        You can modify the <code>opt</code> object directly:
+                        <pre class="my-2">opt$cif.sigma = 0.8</pre>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        Ready to run the simulation?
+                        Close this Shiny App and run the following code in R:
+                        <pre class="mt-2 mb-3">res <- sim_true_counts(opt)</pre>
+                        <button type="button" class="btn btn-danger btn-sm" id="stopApp">Stop this Shiny App</button>
+                    </div>
+                    <div class="alert alert-dark" role="alert">
+                        Need to go back and change some options?
+                        Simply close this dialog and make the changes.
+                        The <code>opt</code> object will be updated next time you click the "Output Parameters" button.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="options.js"></script>
     <script src="validate.js"></script>
+    <script src="output.js"></script>
 </body>
 
 </html>

@@ -30,8 +30,8 @@ function renderCIFSummary() {
 
   const isDiscrete = document.querySelector("[name=_cellPop]:checked").value === "discrete";
   const ncells = parseInt(document.querySelector("[name='num.cells']").value);
-  const cifMean = parseFloat(document.querySelector("[name='cif.mean']").value);
-  const cifSD = parseFloat(document.querySelector("[name='cif.sd']").value);
+  const cifMean = parseFloat(document.querySelector("[name='cif.center']").value);
+  const cifSD = parseFloat(document.querySelector("[name='cif.sigma']").value);
   const treeName = document.querySelector("[name='tree']:checked").value;
   const givMean = parseFloat(document.querySelector("[name='giv.mean']").value);
   const givSD = parseFloat(document.querySelector("[name='giv.sd']").value);
@@ -396,7 +396,7 @@ function init() {
     const grnSelect = document.getElementById("R_grnSelect");
     const cciSelect = document.getElementById("R_cciSelect");
     [grnSelect, cciSelect].forEach((e, i) => {
-      const name = i === 0 ? "GRN" : "CCI";
+      const name = i === 0 ? "GRN" : "_CCI";
       e.innerHTML = objList
         .flatMap((obj) => (obj.type === "data.frame" ? `<li><a class="dropdown-item" href="#">${obj.name}</a></li>` : []))
         .join("");
@@ -460,7 +460,7 @@ function init() {
   });
 
   observe(
-    ["num.cifs", "diff.cif.fraction", "_cellPop", "num.cells", "cif.mean", "cif.sd", "tree", "giv.mean", "giv.sd", "giv.prob"],
+    ["num.cifs", "diff.cif.fraction", "_cellPop", "num.cells", "cif.center", "cif.sigma", "tree", "giv.mean", "giv.sd", "giv.prob"],
     renderCIFSummary
   );
   observe(
