@@ -4,6 +4,9 @@ output:
   BiocStyle::html_document:
   toc: true
   toc_depth: 2
+  html_document:
+    toc: true
+    theme: united
 vignette: >
   %\VignetteEngine{knitr::knitr}
   %\VignetteIndexEntry{scMultiSim Basics}
@@ -12,6 +15,8 @@ vignette: >
 ```{r "setup", include=FALSE}
 require("knitr")
 opts_chunk$set(fig.width=4, fig.height=3)
+library("devtools")
+devtools::load_all(".")
 ```
 
 The following chunk will install all the required packages.
@@ -51,8 +56,6 @@ list_modify <- function (curr_list, ...) {
 ```
 
 ```{r load-package, quietly=TRUE, message=FALSE, warning=FALSE}
-# library("devtools")
-# devtools::load_all(".")
 library("scMultiSim")
 library(dplyr)
 ```
@@ -140,6 +143,20 @@ options <- list(
 )
 ```
 
+### Minimal Input
+
+Note that the minimal input to scMultiSim is the cell population structure (differentiation tree) and number of cells.
+You can omit the GRN by using `GRN = NA`:
+```
+options <- list(
+  GRN = NA
+  num.cells = 1000,
+  tree = Phyla5(),
+)
+```
+
+### Running the Simulation
+
 Now we run the simulation and check what kind of data is in the returned result:
 ```{r run-simulation}
 results <- sim_true_counts(options)
@@ -173,7 +190,7 @@ plot_rna_velocity(results, arrow.length = 2)
 ```
 
 We can inspect the gene-gene correlation using `plot_gene_module_cor_heatmap(results)`:
-```{r plot-gene-correlation, fig.width = 4, fig.height = 3.5, out.width = "60%"}
+```{r plot-gene-correlation, fig.width = 8, fig.height = 8}
 plot_gene_module_cor_heatmap(results)
 ```
 
@@ -189,6 +206,16 @@ divide_batches(results, nbatch = 2)
 plot_tsne(log2(results$counts_with_batches + 1),
          results$cell_meta$pop,
          legend = 'pop', plot.name = 'RNA Counts Tsne with Batches')
+```
+
+
+# The Shiny App
+
+scMultiSim provides a Shiny app to help you generate the options list and visualize the effects of different parameters.
+You can run the app by calling `run_shiny()`.
+
+```{r run-shiny, eval=FALSE}
+run_shiny()
 ```
 
 # Adjusting Parameters
