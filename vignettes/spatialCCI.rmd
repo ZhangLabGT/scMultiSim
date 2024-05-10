@@ -97,7 +97,7 @@ The `results$cell_meta` will contain the cell type information used in CCI.
 We can plot the cell spatial locations using `plotCellLoc()`.
 The arrows indicate cell-cell interactions between two cells (for the first ligand-receptor pair).
 
-```{r plot-cell-loc, fig.width=4.5, fig.height=4}
+```{r plot-cell-loc, fig.width=6, fig.height=6}
 plot_cell_loc(results)
 ```
 
@@ -105,6 +105,285 @@ The cell locations are available in `results$cci_locs`.
 
 ```{r print-cell-loc}
 head(results$cci_locs)
+```
+
+## Speeding up the Simulation
+
+Simulating spatial cell-cell interactions can be computationally expensive.
+Setting these two options can speed up the simulation:
+
+```
+options_ <- list(
+    # ...
+    speed.up = T,
+    cci = list(
+        # ...
+        start.layer = ncells
+    )
+)
+```
+
+First of all, it is recommended to set the experimental `speed.up = T` option. This option will become default in later versions of scMultiSim.
+
+Next, it is possible to set the CCI option `start.layer = n_cells`, where `n_cells` is the number of cells.
+scMultiSim simulates a spatial dataset by following `n_cells` steps, adding one more cell to the spatial grid in each step.
+Only the final step is outputted as the result.
+The CCI option `start.layer` can be used to start simulation from a specific time step.
+When set to `n_cells`, the simulation will skip all previous steps by adding all cells at once.
+By default, `start.layer` will be set to `n_cells` when number of cells is greater than 800.
+
+
+# Spatial layouts
+
+scMultiSim provides powerful customization options for spatial cell layouts.
+
+## Built-in layouts
+
+scMultiSim ships with several built-in spatial layouts.
+The `enhanced` layout is the default layout, where cells are added to the grid one by one.
+When adding a new cell, it has a higher probability of being placed near the existing cells of the same cell type.
+```{r layout-enhanced, fig.width=6, fig.height=6}
+# helper function to add `layout` to options, to make the code more readable
+spatial_options <- function (...) {
+  cci_opt <- list(
+    params = lig_params,
+    max.neighbors = 4,
+    start.layer = 300,
+    grid.size = 28,
+    cell.type.interaction = "random"
+  )
+  list(
+    rand.seed = 0,
+    GRN = GRN_params_100,
+    num.genes = 200,
+    num.cells = 300,
+    num.cifs = 50,
+    tree = Phyla3(),
+    cci = c(cci_opt, list(...))
+  )
+}
+
+
+results <- sim_true_counts(spatial_options(
+  layout = "enhanced"
+))
+plot_cell_loc(results, show.arrows = FALSE)
+```
+
+An option `same.type.prob` decides the probability of a new cell being placed near the existing cells of the same cell type.
+By default, it is 0.8; and if we use a lower value, the new cell will be placed more randomly.
+```{r layout-random, fig.width=6, fig.height=6}
+
+results <- sim_true_counts(spatial_options(
+  layout = "enhanced",
+  same.type.prob = 0.1
+))
+plot_cell_loc(results, show.arrows = FALSE)
+```
+
+The `layers` layout arranges cells in layers.
+
+```{r layout-layers, fig.width=6, fig.height=6}
+results <- sim_true_counts(spatial_options(
+  layout = "layers"
+))
+plot_cell_loc(results, show.arrows = FALSE)
+```
+
+The `islands` layout will put some cell types in the center like islands, and others around them.
+You may specify which cell type should be islands in the format `islands:1,2,3`.
+The number here can be looked up in `results$cci_cell_types`.
+
+```{r}
+results$cci_cell_types
+```
+
+```{r layout-islands, fig.width=6, fig.height=6}
+results <- sim_true_counts(spatial_options(
+  # cell type 4_1_2 should be the island
+  layout = "islands:5"
+))
+plot_cell_loc(results, show.arrows = FALSE)
+```
+
+## Custom layouts
+
+It is also possible to layout the cells programmatically.
+The `layout` option can be a function that takes the cell type information and returns the spatial locations of the cells:
+```
+# grid_size is a number
+# cell_types is an integer vector, representing the cell types
+function(grids_size, cell_types) {
+  # return a matrix with two columns, representing the x and y coordinates of the cells
+  return matrix(nrow = 2, ncol = ncells)
+}
+```
+
+For example, the following layout function will place the cells sequentially in the grid,
+starting from the bottom-left corner.
+
+```{r layout-custom, fig.width=6, fig.height=6}
+results <- sim_true_counts(spatial_options(
+  layout = function (grid_size, cell_types) {
+    ncells <- length(cell_types)
+    new_locs <- matrix(nrow = ncells, ncol = 2)
+    # for each cell...
+    for (i in 1:ncells) {
+      # ...place it in the grid
+      new_locs[i,] <- c(i %% grid_size, i %/% grid_size)
+    }
+    return(new_locs)
+  }
+))
+plot_cell_loc(results, show.arrows = FALSE)
+```
+
+## Spatial domains
+
+Next, we demonstrate how to use custom layout function to create spatial domains.
+We want to have three spatial domains in a layered layout, and we have four cell types.
+Each cell type has a different probability of being in each domain.
+
+The following layout function will do this job: First of all, it generates a set of locations that form a circular shape.
+Next, it assigns cells to these locations; the leftmost cell is selected as the origin.
+Then, we can create a layered layout by sorting the locations based on their euclidian distance to the origin.
+The three domains are determined by the distance to the origin.
+We have a matrix `ct_matrix` that specifies the probability of each cell type being in each domain.
+Finally, we sample the cells based on the probabilities and assign them to the domains.
+
+```{r layout-domains}
+layout_fn <- function(grid_size, final_types) {
+  ncells <- length(final_types)
+  grid_center <- c(round(grid_size / 2), round(grid_size / 2))
+  all_locs <- gen_clutter(ncells, grid_size, grid_center)
+  # center is bottom-left
+  left_ones <- which(all_locs[,1] == min(all_locs[,1]))
+  new_center <<- all_locs[left_ones[which.min(all_locs[left_ones, 2])],]
+  dist_to_center <- sqrt(colSums((t(all_locs) - new_center)^2))
+  new_locs <- all_locs[order(dist_to_center),]
+  # prob of a cell type being in a zone (cell_type x zone)
+  ct_matrix <- matrix(c(
+    0.9, 0.1, 0.0,
+    0.1, 0.8, 0.1,
+    0.1, 0.7, 0.2,
+    0.0, 0.1, 0.9
+  ), nrow = 4, byrow = TRUE)
+  # number of cells per type
+  ct_pop <- c(160, 80, 100, 140)
+  pop_mtx <- round(ct_matrix * ct_pop)
+  if (sum(pop_mtx) != ncells) {
+    diffrence <- ncells - sum(pop_mtx)
+    pop_mtx[1, 1] <- pop_mtx[1, 1] + diffrence
+  }
+  # number of cells per zone
+  zone_pop <- colSums(pop_mtx)
+  # assign cells to zones
+  cs <- cumsum(zone_pop)
+  # sample cells
+  cell_idx <- lapply(1:3, function(izone) {
+    sample(rep(1:4, pop_mtx[,izone]), zone_pop[izone])
+  }) %>% unlist()
+  locs <<- new_locs[order(cell_idx),]
+  zone_gt <<- rep(1:3, zone_pop)[order(cell_idx)]
+  return(locs)
+}
+```
+
+Inspecting the result, we can see the three spatial domains, where the middle one contains a mix of two cell types.
+
+```{r layout-domains-plot, fig.width=6, fig.height=6}
+results <- sim_true_counts(list2(
+  num.cells = 500,
+  num.genes = 300,
+  num.cifs = 40,
+  GRN = NA,
+  speed.up = T,
+  cif.sigma = 0.8,
+  tree = ape::read.tree(text = "(A:1,B:1,C:1,D:1);"),
+  diff.cif.fraction = 0.8,
+  discrete.cif = T,
+  discrete.pop.size = as.integer(c(120,150,100,130)),
+  cci = list(
+    params = lig_params,
+    max.neighbors = 4,
+    start.layer = 500,
+    cell.type.interaction = "random",
+    layout = layout_fn,
+    step.size = 1
+  )
+))
+
+plot_cell_loc(results, show.arrows = FALSE)
+```
+
+## Spatially variable genes
+
+The `ext.cif.giv` option allows us to append custom CIF and GIV entries for each cell and gene.
+We can use this option to simulate spatially variable genes.
+This option should be a function that takes the kinetic parameter index and returns a list of extra CIF and GIV matrices.
+
+```{r}
+scmultisim_help("ext.cif.giv")
+```
+
+Using the previous layout function, we can add extra CIF with value based on the distance to the origin.
+
+```{r}
+ext_cif <- function(i) {
+  # We manually set genes 290-300 to be spatially variable
+  spatial_genes <- 290:300
+  dist_to_center <- colSums((t(locs) - new_center)^2)
+  dist_to_center <- dist_to_center / max(dist_to_center)
+  # 3 is the s parameter
+  if (i == 3) {
+    # n_extra_cif x n_cells
+    ex_cif <- cbind(
+      # the two CIFs have large values when distance to the center is near 0.5
+      rnorm(500, 0.5 * dnorm(abs(dist_to_center - 0.5), 0, 0.04), 0.02),
+      rnorm(500, 0.5 * dnorm(abs(dist_to_center - 0.5), 0, 0.04), 0.02)
+    )
+    # n_genes x n_extra_cif
+    ex_giv <- matrix(0, nrow = 300, ncol = 2)
+    for (i in spatial_genes) {
+      # odd genes affected by the first two CIF, even genes affected by the last two CIF
+      ex_giv[i, ] <- rnorm(2, 1, 0.5)
+    }
+    list(ex_cif, ex_giv * 2)
+  } else {
+    NULL
+  }
+}
+```
+
+```{r}
+results <- sim_true_counts(list2(
+  num.cells = 500,
+  num.genes = 300,
+  num.cifs = 40,
+  GRN = NA,
+  speed.up = T,
+  cif.sigma = 0.8,
+  tree = ape::read.tree(text = "(A:1,B:1,C:1,D:1);"),
+  diff.cif.fraction = 0.8,
+  ext.cif.giv = ext_cif,
+  discrete.cif = T,
+  discrete.pop.size = as.integer(c(120,150,100,130)),
+  cci = list(
+    params = lig_params,
+    max.neighbors = 4,
+    start.layer = 500,
+    cell.type.interaction = "random",
+    layout = layout_fn,
+    step.size = 1
+  )
+))
+```
+
+Try plotting one of the spatially variable genes. We can see that the gene expression is higher in the specific spatial
+region.
+```{r spatially-variable-gene, fig.width=6, fig.height=6}
+plot_cell_loc(results, show.arrows = FALSE,
+              .cell.pop = log(results$counts[299,] + 1)) + scale_colour_viridis_c()
 ```
 
 # Session Information

@@ -92,6 +92,13 @@ A typical workflow consists these three main steps:
 
 ## Options
 
+### Shiny App
+
+A Shiny app is provided to help users visualize the effect of each parameter and adjust the simulation options.
+To run the app, simply call `run_shiny()`.
+
+<img src="https://github.com/ZhangLabGT/scMultiSim/raw/img/img/shiny_app_sc.png" height="400">
+
 scMultiSim requires users to provide the following options:
 
 - [`GRN`](#grn): The Gene Regulatory Network.
