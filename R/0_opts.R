@@ -282,21 +282,14 @@
     list(
       is.function, "should be a function"
     ),
-    "modify CIF"
+    "Modify the generated CIF and GIV. The function takes four arguments: the kinetic parameter index (1=kon, 2=koff, 3=s), the current CIF matrix, the GIV matrix, and the cell metadata dataframe. It should return a list of two elements: the modified CIF matrix and the modified GIV matrix."
   ),
   ext.cif.giv = list(
     .default(NA),
     list(
       is.function, "should be a function"
     ),
-    "Add customized CIF and GIV"
-  ),
-  mod.params = list(
-    .default(NA),
-    list(
-      is.function, "should be a function"
-    ),
-    "modify CIF"
+    "Add customized CIF and GIV. The function takes one argument, the kinetic parameter index (1=kon, 2=koff, 3=s). It should return a list of two elements: the extra CIF matrix (n_extra_cif x n_cells) and the GIV matrix (n_genes x n_extra_cif). Return NULL for no extra CIF and GIV."
   ),
   # ========================== Spatial =========================================
   "SIMULATION - SPATIAL",

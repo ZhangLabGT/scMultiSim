@@ -234,13 +234,13 @@ plot_cell_loc <- function(
   size = 4, show.label = FALSE, show.arrows = TRUE, lr.pair = 1, .cell.pop = NULL, .locs = NULL
 ) {
   if (is.null(.cell.pop))
-    .cell.pop <- results$cell_meta$pop
+    .cell.pop <- results$cell_meta$cell.type
 
   locs <- if (is.null(.locs)) sapply(results$grid$locs, \(a) a) else .locs
   data <- data.frame(
     x = locs[1,],
     y = locs[2,],
-    cell_type = if (is.null(.cell.pop)) results$cell_meta$cell.type else .cell.pop
+    cell_type = .cell.pop
   )
   p <- ggplot()
   p <- p +

@@ -91,12 +91,11 @@
   
   if (!is.null(params$single.cell.gt) && params$single.cell.gt == TRUE) {
     sc_gt <- T
-    static_steps <- params$static.state.len %||% 50
   } else {
     sc_gt <- F
-    static_steps <- 10 
   }
-  
+  static_steps <- params$static.state.len %||% 10
+
   list(
     params = spatial_list,
     regulators = regulators,
@@ -345,7 +344,7 @@ gen_clutter <- function(n_cell, grid_size = NA, center = c(0, 0),
       done <- FALSE
       while (!done) {
         # sample center for the islands
-        centers <- outline[sample(1:nrow(outline), n_islands),]
+        centers <- outline[sample(1:nrow(outline), n_islands), , drop = FALSE]
         if (n_islands == 1) {
           break
         }

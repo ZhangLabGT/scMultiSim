@@ -126,6 +126,9 @@ sim_true_counts <- function(options) {
       sim$sp_radius,
       sim$sp_start_layer
     )
+    if (is.numeric(grid_size) && N$cell >= grid_size ^ 2) {
+      stop("The grid size should be large enough to hold all cells.")
+    }
 
     # skip initial layers to speed up
     sim$sp_start_layer <- if (sim$sp_start_layer < 0) {
@@ -168,7 +171,6 @@ sim_true_counts <- function(options) {
 
   sim$mod_cif <- OP("mod.cif.giv")
   sim$ext_cif <- OP("ext.cif.giv")
-  sim$mod_params <- OP("mod.params")
 
   # ==== simulation ============================================================
 
