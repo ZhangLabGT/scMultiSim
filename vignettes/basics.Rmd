@@ -217,6 +217,16 @@ run_shiny()
 
 scMultiSim provides various parameters to control each type of biological effect.
 
+## Deciding Number of CIFs
+
+In scMultiSim, user use `num.cifs` to control the total number of diff-CIF and non-diff-CIFs.
+The number of CIFs should be large enough to represent the cell population structure and gene information.
+By default, `num.cifs` is set to 50, which is a good starting point for most cases.
+However, each gene's base expression is affected by two random diff-CIF entries,
+therefore if you have a large number of genes, they may have similar expression patterns, which may not be ideal.
+It is recommended to increase `num.cifs` to 50-100 if you have more than 2000 genes.
+If you have a small number of genes (less than 1000), you can also decrease `num.cifs` to 20-40.
+
 ## Discrete Cell Population
 
 We can also simulate discrete cell population by setting `discrete.cif = TRUE`.
