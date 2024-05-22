@@ -1,5 +1,5 @@
 ---
-title: "scMultiSim Basics"
+title: "scMultiSim Tutorial"
 output:
   BiocStyle::html_document:
   toc: true
@@ -12,10 +12,11 @@ vignette: >
 ```{r "setup", include=FALSE}
 require("knitr")
 opts_chunk$set(fig.width=4, fig.height=3)
+devtools::load_all(".")
 ```
 
-The following chunk will install all the required packages.
 ```{r install-packages, include=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
+# The following chunk will install all the required packages.
 (function() {
   installed <- installed.packages()[,"Package"]
   install <- function(list, fn) {
@@ -38,8 +39,45 @@ The following chunk will install all the required packages.
 })()
 ```
 
-We define a utility function to modify a list.
-```{r}
+
+# Simulation Basics
+
+scMultiSim is a simulation tool for single-cell multi-omics data.
+It can simulate RNA counts, ATAC-seq data, RNA velocity,
+and spatial locations of continuous or discrete cell populations.
+It can model the effects of gene regulatory networks (GRN), chromatin accessibility,
+and cell-cell interactions on the simulated data.
+In this tutorial, we will demonstrate how to use scMultiSim to simulate multi-omics data
+with different biological effects, including:
+
+- Simulating true RNA counts and ATAC-seq data
+- Controlling the cell population and GRN effects
+- Adding technical variation and batch effect to the true counts
+- Adjusting the parameters to control different biological effects
+
+We first load the package:
+
+```{r load-package, quietly=TRUE, message=FALSE, warning=FALSE}
+library("scMultiSim")
+```
+
+
+scMultiSim first generates the true RNA counts, and then add technical variation and batch effect to the true counts.
+To simulate true counts, call `sim_true_counts(options)` where `options` is a
+list. You can use `scmultisim_help()` to get help on the options,
+or like `scmulti_help("num.cells")` to get help on the options for a specific function.
+
+```{r scmultisim-help, echo = TRUE, results = "hide"}
+scmultisim_help("options")
+```
+
+## GRN and Differentiation Tree
+
+Before start, we define a utility function to modify a list.
+```{r load-dplyr, quietly=TRUE, message=FALSE, warning=FALSE}
+library(dplyr)
+```
+```{r define-list-modify}
 list_modify <- function (curr_list, ...) {
   args <- list(...)
   for (i in names(args)) {
@@ -47,24 +85,7 @@ list_modify <- function (curr_list, ...) {
   }
   curr_list
 }
-
 ```
-
-```{r load-package, quietly=TRUE, message=FALSE, warning=FALSE}
-library("scMultiSim")
-library(dplyr)
-```
-
-# Simulation Basics
-
-Simulate true counts by calling `sim_true_counts(options)` where `options` is a
-list. Use `scmultisim_help()` to get help.
-
-```{r scmultisim-help, echo = TRUE, results = "hide"}
-scmultisim_help("options")
-```
-
-## GRN and Differentiation Tree
 
 The minimal input to scMultiSim is a **differentiation tree**, and you can optionally provide
 ground truth for GRN and cell-cell interactions.
@@ -79,7 +100,7 @@ for benchmarking trajectory inference and clustering methods.
 
 If generating a continuous population, this tree
 specifies the cell differentiation trajectory; if generating a discrete population, the
-tips of this tree will be the clusters (cell types).
+tips of this tree will be the clusters (cell types are the terminal cell states).
 
 scMultiSim also provides three differentiation trees.
 `Phyla5()` and `Phyla3()` return bifurcating trees with 5 and 3 leaves respectively.
@@ -91,6 +112,12 @@ Phyla3(plotting = TRUE)
 
 # It's not possible to plot Phyla1() because it only contains 1 branch connecting two nodes.
 Phyla1()
+```
+
+If you only need `n` cell clusters without any specific trajectory, you can use code like below to generate a simple tree with `n` leaves.
+```{r random-tree}
+# tree with four leaves
+ape::read.tree(text = "(A:1,B:1,C:1,D:1);")
 ```
 
 The GRN should be a data frame with 3 columns, each representing the `target`, `regulator`, and `effect`.
@@ -327,6 +354,7 @@ intrinsic noise during the transcription process.
 By default, `intrinsic.noise` is set to 1, which means the true counts will be sampled from the Beta-Poisson
 model. If we set `intrinsic.noise` to a smaller value like 0.5,
 the true counts will be 0.5 * (theoretical mean) + 0.5 * (sampled from the Beta-Poisson model).
+_More intrinsic noise will make the encoded effects (e.g. GRN) harder to be inferred._
 
 
 ```{r adjust-intrinsic-noise, fig.width = 4, fig.height = 3.5, out.width = "60%"}
