@@ -322,10 +322,12 @@ sim_true_counts <- function(options, return_summarized_exp = FALSE) {
   # name other genes
   L <- length(sim$gene_name_map)
   N_other <- sim$N$gene - L
-  sim$gene_name_map <- c(
-    sim$gene_name_map,
-    setNames(seq(N_other) + L, paste0("gene", seq(N_other) + L))
-  )
+  if (N_other > 0) {
+    sim$gene_name_map <- c(
+      sim$gene_name_map,
+      setNames(seq(N_other) + L, paste0("gene", seq(N_other) + L))
+    )
+  }
 
   counts <- t(sim$counts_s)
   rownames(counts) <- names(sim$gene_name_map)
