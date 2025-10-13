@@ -291,6 +291,8 @@ sim_true_counts <- function(options, return_summarized_exp = FALSE) {
     .rnaSeq(seed[9], sim)
   }
 
+  .proteinSeq(sim)
+
   .print_time(sim)
 
   # Results
@@ -409,6 +411,15 @@ sim_true_counts <- function(options, return_summarized_exp = FALSE) {
         cci_gt = sim$cci_single_cell
       ))
     }
+  }
+
+  if (!is.null(sim$counts_prot)) {
+    counts_prot <- t(sim$counts_prot)
+    rownames(counts_prot) <- names(sim$gene_name_map)[sim$gene_to_prot]
+    colnames(counts_prot) <- paste0("cell", seq(sim$N$cell))
+    result <- c(result, list(
+      counts_prot = t(counts_prot)
+    ))
   }
 
   if (is_debug) {

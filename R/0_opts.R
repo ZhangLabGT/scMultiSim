@@ -230,6 +230,41 @@
     .should.be.num.between(0, Inf),
     "Stddev of the Region Identity Vectors."
   ),
+  # ========================== Protein =========================================
+  "SIMULATION - PROTEIN",
+  gene.to.prot = list(
+    .default(integer()),
+    list(
+      \(x) is.null(x) || is.character(x) || is.numeric(x),
+      "It should be a vector of gene indices or names."
+    ),
+    "Mapping from genes to proteins. If NULL, the first 30 genes will be used."
+  ),
+  prot.noise = list(
+    .default(0.01),
+    .should.be.num.between(0, Inf),
+    "Noise level in protein expression simulation. Default is 0.01."
+  ),
+  prot.alpha.mean = list(
+    .default(1.8),
+    .should.be.num.between(0, Inf),
+    "Control the alpha parameter of the protein gamma distribution."
+  ),
+  prot.alpha.sd = list(
+    .default(0.1),
+    .should.be.num.between(0, Inf),
+    "Control the alpha parameter of the protein gamma distribution."
+  ),
+  prot.theta.mean = list(
+    .default(50),
+    .should.be.num.between(0, Inf),
+    "Control the theta parameter of the protein gamma distribution."
+  ),
+  prot.theta.sd = list(
+    .default(40),
+    .should.be.num.between(0, Inf),
+    "Control the theta parameter of the protein gamma distribution."
+  ),
   # ========================== Simulation ======================================
   "SIMULATION - RNA",
   vary                                                                   = list(
