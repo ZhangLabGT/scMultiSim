@@ -807,6 +807,7 @@
     }
   }
 
+  sim$CIF_spatial_s <- t(sapply(CIF_s_base, \(x) x[nrow(x), ]))
   cat("\n")
 }
 
@@ -993,8 +994,7 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
 
   noise_sd <- OP("prot.noise")
 
-  # cell x protein
-  cif <- sim$CIF_all$cif$s
+  cif <- sim$CIF_spatial_s %||% sim$CIF_all$cif$s
   piv <- sim$GIV$s[prot_idx,]
   piv <- piv + matrix(rnorm(length(piv), 0, noise_sd), ncol = N$cif)
 
@@ -1011,5 +1011,5 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
     x_tg[rank(x[, i])]
   }) %>% do.call(cbind, .)
 
-  sim$counts_prot <- counts
+  sim$counts_prot <- t(counts)
 }
