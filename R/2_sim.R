@@ -1011,5 +1011,5 @@ gen_1branch <- function(kinet_params, start_state, start_s, start_u, randpoints1
     x_tg[rank(x[, i])]
   }) %>% do.call(cbind, .)
 
-  sim$counts_prot <- t(counts)
+  sim$counts_prot <- counts
 }
