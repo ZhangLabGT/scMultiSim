@@ -430,7 +430,7 @@ True2ObservedATAC <- function(atacseq_data, randseed, observation_prob = 0.3, sd
     substi_vec <- vapply(seq_along(beyond_idx), function(i) {
       while (TRUE) {
         temp <- rnorm(1, mean = mean, sd = sd)
-        if (temp > a & temp < b) { break } }
+        if (temp > a | temp > b) { break } }
       return(temp)
     }, numeric(1))
     vec1[beyond_idx] <- substi_vec
