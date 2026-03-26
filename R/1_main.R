@@ -315,8 +315,9 @@ sim_true_counts <- function(options, return_summarized_exp = FALSE) {
   } else {
     grn_params <- sim$GRN$params
     colnames(grn_params) <- c("target", "regulator", "effect")
-    grn_params$regulator <- paste0("gene", grn_params$regulator)
-    grn_params$target <- paste0("gene", grn_params$target)
+    rev_map <- names(sim$gene_name_map)
+    grn_params$regulator <- rev_map[grn_params$regulator]
+    grn_params$target <- rev_map[grn_params$target]
   }
 
   # name other genes
@@ -325,7 +326,7 @@ sim_true_counts <- function(options, return_summarized_exp = FALSE) {
   if (N_other > 0) {
     sim$gene_name_map <- c(
       sim$gene_name_map,
-      setNames(seq(N_other) + L, paste0("gene", seq(N_other) + L))
+      setNames(seq(N_other) + L, as.character(seq(N_other) + L))
     )
   }
 

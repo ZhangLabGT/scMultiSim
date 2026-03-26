@@ -55,7 +55,9 @@ Imports:
     utils,
     markdown,
     SummarizedExperiment,
-    BiocParallel
+    BiocParallel,
+    Rcpp
+LinkingTo: Rcpp
 Suggests:
     knitr,
     rmarkdown,
