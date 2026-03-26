@@ -101,3 +101,8 @@ vignettes/common.Rmd
 R/.Rhistory
 scMultiSim.Rproj
 docs
+
+# Compiled Rcpp artifacts
+src/*.o
+src/*.so
+src/*.dll

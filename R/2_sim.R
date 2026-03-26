@@ -363,7 +363,40 @@
     FALSE
   }
 
-  # each cell
+  # C++ fast path: Beta-Poisson, continuous CIF, no dynamic GRN / velocity / custom fn
+  can_use_cpp <- !do_velo && !is_discrete && !sim$is_dyn_grn &&
+                 !is.list(sim$params_mpl_fn$s)
+
+  if (can_use_cpp) {
+    result <- rnaSimEdgeCpp(
+      s_base      = s_base,
+      kon         = sim$params$kon,
+      koff        = sim$params$koff,
+      geff        = if (no_grn) matrix(0, 0, 0) else sim$GRN$geff,
+      regulators  = if (no_grn) integer(0) else as.integer(sim$GRN$regulators),
+      curr_cif_in = if (no_grn) numeric(0) else as.numeric(curr_cif),
+      grn_effect  = grn_effect,
+      hge_scale   = as.vector(sim$hge_scale),
+      scale_s     = as.numeric(scale_s),
+      cell_pop    = if (scale_s_is_vector) as.integer(sim$CIF_all$meta$pop) else integer(0),
+      intr_noise  = intr_noise,
+      den_x       = sim$N$params_den[[3]]$x,
+      den_y       = sim$N$params_den[[3]]$y,
+      cell_idx    = as.integer(cell_idx),
+      prev_values_in = sim$param_sample[[3]] %||% numeric(0),
+      keep_prev_val = if (sim$speedup) 10000L else 20000L,
+      no_grn      = no_grn
+    )
+
+    # Write results back to sim environment
+    sim$counts_s[cell_idx, ] <- result$counts_s
+    sim$params$s[, cell_idx] <- result$params_s
+    if (!no_grn) sim$cif_regu[cell_idx, ] <- result$cif_regu
+    sim$param_sample[[3]] <- result$prev_values
+    return()
+  }
+
+  # each cell (R fallback for unsupported configurations)
   for (n in seq_along(cell_idx)) {
     i_cell <- cell_idx[n]
 
